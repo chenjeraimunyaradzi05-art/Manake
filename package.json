@@ -1,0 +1,40 @@
+{
+  "name": "manake-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo for Manake Rehabilitation Center Platform",
+  "workspaces": [
+    "manake-web",
+    "manake-mobile"
+  ],
+  "scripts": {
+    "start": "npm run dev:web",
+    "dev:web": "npm run dev --workspace=manake-web",
+    "build:web": "npm run build --workspace=manake-web",
+    "start:mobile": "npm run start --workspace=manake-mobile",
+    "android": "npm run android --workspace=manake-mobile",
+    "ios": "npm run ios --workspace=manake-mobile",
+    "install:all": "npm install",
+    "prepare": "husky"
+  },
+  "keywords": [
+    "manake",
+    "rehabilitation",
+    "platform"
+  ],
+  "author": "GitHub Copilot",
+  "license": "ISC",
+  "dependencies": {
+    "react-dom": "^18.2.0",
+    "react-native-web": "^0.21.2"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "typescript": "5.3.3"
+  },
+  "overrides": {
+    "react-test-renderer": "18.2.0",
+    "typescript": "5.3.3"
+  }
+}
