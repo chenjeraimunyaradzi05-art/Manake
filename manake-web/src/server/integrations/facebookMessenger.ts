@@ -2,10 +2,11 @@
  * Facebook Messenger Integration
  * Uses Meta Graph API for Messenger
  */
-import axios, { AxiosInstance } from 'axios';
-import { BadRequestError, UnauthorizedError } from '../errors';
+import crypto from "crypto";
+import axios, { AxiosInstance } from "axios";
+import { BadRequestError, UnauthorizedError } from "../errors";
 
-const GRAPH_API_VERSION = 'v19.0';
+const GRAPH_API_VERSION = "v19.0";
 const GRAPH_BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
 
 export interface MessengerSendOptions {
@@ -13,7 +14,11 @@ export interface MessengerSendOptions {
   message: string;
   accessToken: string;
   pageId: string;
-  quickReplies?: Array<{ content_type: 'text'; title: string; payload: string }>;
+  quickReplies?: Array<{
+    content_type: "text";
+    title: string;
+    payload: string;
+  }>;
 }
 
 export interface MessengerSendResult {
@@ -49,19 +54,19 @@ function getClient(accessToken: string): AxiosInstance {
  * Send a Messenger message
  */
 export async function sendMessengerMessage(
-  options: MessengerSendOptions
+  options: MessengerSendOptions,
 ): Promise<MessengerSendResult> {
   const { recipientId, message, accessToken, pageId, quickReplies } = options;
 
-  if (!accessToken) throw new UnauthorizedError('Page access token required');
-  if (!pageId) throw new BadRequestError('Page ID required');
+  if (!accessToken) throw new UnauthorizedError("Page access token required");
+  if (!pageId) throw new BadRequestError("Page ID required");
 
   const client = getClient(accessToken);
 
   const payload: Record<string, unknown> = {
     recipient: { id: recipientId },
     message: { text: message },
-    messaging_type: 'RESPONSE',
+    messaging_type: "RESPONSE",
   };
 
   if (quickReplies?.length) {
@@ -71,16 +76,19 @@ export async function sendMessengerMessage(
   try {
     const response = await client.post(`/${pageId}/messages`, payload);
 
-    const data = response.data as { recipient_id?: string; message_id?: string };
+    const data = response.data as {
+      recipient_id?: string;
+      message_id?: string;
+    };
     return {
       recipientId: data.recipient_id || recipientId,
-      messageId: data.message_id || 'unknown',
+      messageId: data.message_id || "unknown",
       timestamp: new Date(),
     };
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Messenger send error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to send Messenger message');
+    console.error("Messenger send error", axiosErr.response?.data || err);
+    throw new BadRequestError("Failed to send Messenger message");
   }
 }
 
@@ -91,27 +99,33 @@ export async function sendMessengerTemplate(
   pageId: string,
   accessToken: string,
   recipientId: string,
-  template: Record<string, unknown>
+  template: Record<string, unknown>,
 ): Promise<MessengerSendResult> {
   const client = getClient(accessToken);
 
   try {
     const response = await client.post(`/${pageId}/messages`, {
       recipient: { id: recipientId },
-      message: { attachment: { type: 'template', payload: template } },
-      messaging_type: 'RESPONSE',
+      message: { attachment: { type: "template", payload: template } },
+      messaging_type: "RESPONSE",
     });
 
-    const data = response.data as { recipient_id?: string; message_id?: string };
+    const data = response.data as {
+      recipient_id?: string;
+      message_id?: string;
+    };
     return {
       recipientId: data.recipient_id || recipientId,
-      messageId: data.message_id || 'unknown',
+      messageId: data.message_id || "unknown",
       timestamp: new Date(),
     };
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Messenger template send error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to send Messenger template');
+    console.error(
+      "Messenger template send error",
+      axiosErr.response?.data || err,
+    );
+    throw new BadRequestError("Failed to send Messenger template");
   }
 }
 
@@ -121,14 +135,14 @@ export async function sendMessengerTemplate(
 export async function getMessengerConversations(
   pageId: string,
   accessToken: string,
-  limit = 25
+  limit = 25,
 ): Promise<MessengerConversation[]> {
   const client = getClient(accessToken);
 
   try {
     const response = await client.get(`/${pageId}/conversations`, {
       params: {
-        fields: 'id,participants,updated_time',
+        fields: "id,participants,updated_time",
         limit,
       },
     });
@@ -143,14 +157,17 @@ export async function getMessengerConversations(
 
     return (data.data || []).map((conv) => ({
       id: conv.id,
-      participantId: conv.participants?.data?.[0]?.id || '',
+      participantId: conv.participants?.data?.[0]?.id || "",
       participantName: conv.participants?.data?.[0]?.name,
-      updatedTime: conv.updated_time || '',
+      updatedTime: conv.updated_time || "",
     }));
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Messenger conversations fetch error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to fetch Messenger conversations');
+    console.error(
+      "Messenger conversations fetch error",
+      axiosErr.response?.data || err,
+    );
+    throw new BadRequestError("Failed to fetch Messenger conversations");
   }
 }
 
@@ -160,14 +177,14 @@ export async function getMessengerConversations(
 export async function getMessengerMessages(
   conversationId: string,
   accessToken: string,
-  limit = 50
+  limit = 50,
 ): Promise<MessengerMessage[]> {
   const client = getClient(accessToken);
 
   try {
     const response = await client.get(`/${conversationId}/messages`, {
       params: {
-        fields: 'id,from,to,message,created_time',
+        fields: "id,from,to,message,created_time",
         limit,
       },
     });
@@ -176,8 +193,11 @@ export async function getMessengerMessages(
     return data.data || [];
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Messenger messages fetch error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to fetch Messenger messages');
+    console.error(
+      "Messenger messages fetch error",
+      axiosErr.response?.data || err,
+    );
+    throw new BadRequestError("Failed to fetch Messenger messages");
   }
 }
 
@@ -186,16 +206,20 @@ export async function getMessengerMessages(
  */
 export async function getMessengerUserProfile(
   userId: string,
-  accessToken: string
+  accessToken: string,
 ): Promise<{ id: string; name?: string; profilePic?: string }> {
   const client = getClient(accessToken);
 
   try {
     const response = await client.get(`/${userId}`, {
-      params: { fields: 'id,name,profile_pic' },
+      params: { fields: "id,name,profile_pic" },
     });
 
-    const data = response.data as { id: string; name?: string; profile_pic?: string };
+    const data = response.data as {
+      id: string;
+      name?: string;
+      profile_pic?: string;
+    };
     return {
       id: data.id,
       name: data.name,
@@ -203,8 +227,11 @@ export async function getMessengerUserProfile(
     };
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Messenger user profile fetch error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to fetch Messenger user profile');
+    console.error(
+      "Messenger user profile fetch error",
+      axiosErr.response?.data || err,
+    );
+    throw new BadRequestError("Failed to fetch Messenger user profile");
   }
 }
 
@@ -222,7 +249,9 @@ export interface MessengerWebhookMessage {
   postback?: { title: string; payload: string };
 }
 
-export function parseMessengerWebhook(body: unknown): MessengerWebhookMessage | null {
+export function parseMessengerWebhook(
+  body: unknown,
+): MessengerWebhookMessage | null {
   const payload = body as {
     entry?: Array<{
       messaging?: Array<{
@@ -250,10 +279,10 @@ export function parseMessengerWebhook(body: unknown): MessengerWebhookMessage | 
   if (!message && !postback) return null;
 
   return {
-    senderId: msgEvent.sender?.id || '',
-    recipientId: msgEvent.recipient?.id || '',
+    senderId: msgEvent.sender?.id || "",
+    recipientId: msgEvent.recipient?.id || "",
     timestamp: msgEvent.timestamp || Date.now(),
-    messageId: message?.mid || '',
+    messageId: message?.mid || "",
     text: message?.text,
     attachments: message?.attachments,
     quickReply: message?.quick_reply,
@@ -267,12 +296,16 @@ export function parseMessengerWebhook(body: unknown): MessengerWebhookMessage | 
 export function verifyMessengerWebhook(
   payload: string,
   signature: string,
-  appSecret: string
+  appSecret: string,
 ): boolean {
-  const crypto = require('crypto') as typeof import('crypto');
-  const expected = 'sha256=' + crypto.createHmac('sha256', appSecret).update(payload).digest('hex');
+  const expected =
+    "sha256=" +
+    crypto.createHmac("sha256", appSecret).update(payload).digest("hex");
   try {
-    return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    return crypto.timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(signature),
+    );
   } catch {
     return false;
   }

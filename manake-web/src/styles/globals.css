@@ -1,3 +1,8 @@
+/* Import design system styles */
+@import './variables.css';
+@import './animations.css';
+@import './utilities.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

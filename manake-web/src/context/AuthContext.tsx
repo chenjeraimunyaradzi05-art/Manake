@@ -1,7 +1,18 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { fetchProfile, refreshTokens, UserProfile } from '../services/auth';
-import { useAppStore } from '../store/store';
-import { setupAuthInterceptors, setupAuthRequestInterceptor } from '../services/apiAuth';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { fetchProfile, refreshTokens, UserProfile } from "../services/auth";
+import { useAppStore } from "../store/store";
+import {
+  setupAuthInterceptors,
+  setupAuthRequestInterceptor,
+} from "../services/apiAuth";
 
 interface AuthContextValue {
   user: {
@@ -16,7 +27,12 @@ interface AuthContextValue {
   handleAuthSuccess: (payload: {
     accessToken: string;
     refreshToken?: string;
-    user?: { name?: string; email?: string | null; avatar?: string | null; role?: string | null };
+    user?: {
+      name?: string;
+      email?: string | null;
+      avatar?: string | null;
+      role?: string | null;
+    };
   }) => void;
   logout: () => void;
 }
@@ -24,15 +40,15 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function persistTokens(accessToken: string, refreshToken?: string) {
-  localStorage.setItem('auth_token', accessToken);
+  localStorage.setItem("auth_token", accessToken);
   if (refreshToken) {
-    localStorage.setItem('refresh_token', refreshToken);
+    localStorage.setItem("refresh_token", refreshToken);
   }
 }
 
 function clearTokens() {
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('refresh_token');
+  localStorage.removeItem("auth_token");
+  localStorage.removeItem("refresh_token");
 }
 
 type AuthProviderProps = { children: ReactNode };
@@ -47,18 +63,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const setUserFromProfile = useCallback(
     (profile: UserProfile) => {
       setUser({
-        name: profile.name || profile.email || 'User',
+        name: profile.name || profile.email || "User",
         email: profile.email || null,
         avatar: profile.avatar ?? null,
         role: profile.role ?? null,
       });
     },
-    [setUser]
+    [setUser],
   );
 
   const bootstrap = useCallback(async () => {
-    const accessToken = localStorage.getItem('auth_token');
-    const refreshToken = localStorage.getItem('refresh_token');
+    const accessToken = localStorage.getItem("auth_token");
+    const refreshToken = localStorage.getItem("refresh_token");
 
     if (!accessToken && !refreshToken) {
       setLoading(false);
@@ -76,7 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const profile = await fetchProfile();
           setUserFromProfile(profile);
         } catch (refreshError) {
-          console.error('Refresh failed', refreshError);
+          console.error("Refresh failed", refreshError);
           clearTokens();
           logoutStore();
         }
@@ -98,7 +114,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     setupAuthRequestInterceptor();
     setupAuthInterceptors(undefined, {
-      getRefreshToken: () => localStorage.getItem('refresh_token'),
+      getRefreshToken: () => localStorage.getItem("refresh_token"),
       onTokens: (tokens) => {
         persistTokens(tokens.accessToken, tokens.refreshToken);
       },
@@ -112,7 +128,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [interceptorsReady, logoutStore]);
 
   const refreshSession = useCallback(async () => {
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = localStorage.getItem("refresh_token");
     if (!refreshToken) return;
     try {
       const tokens = await refreshTokens(refreshToken);
@@ -120,25 +136,34 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const profile = await fetchProfile();
       setUserFromProfile(profile);
     } catch (err) {
-      console.error('Manual refresh failed', err);
+      console.error("Manual refresh failed", err);
       clearTokens();
       logoutStore();
     }
   }, [setUserFromProfile, logoutStore]);
 
   const handleAuthSuccess = useCallback(
-    (payload: { accessToken: string; refreshToken?: string; user?: { name?: string; email?: string | null; avatar?: string | null; role?: string | null } }) => {
+    (payload: {
+      accessToken: string;
+      refreshToken?: string;
+      user?: {
+        name?: string;
+        email?: string | null;
+        avatar?: string | null;
+        role?: string | null;
+      };
+    }) => {
       persistTokens(payload.accessToken, payload.refreshToken);
       if (payload.user) {
         setUser({
-          name: payload.user.name || payload.user.email || 'User',
+          name: payload.user.name || payload.user.email || "User",
           email: payload.user.email || null,
           avatar: payload.user.avatar ?? null,
           role: payload.user.role ?? null,
         });
       }
     },
-    [setUser]
+    [setUser],
   );
 
   const logout = useCallback(() => {
@@ -148,16 +173,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value = useMemo(
     () => ({ user, loading, refreshSession, handleAuthSuccess, logout }),
-    [user, loading, refreshSession, handleAuthSuccess, logout]
+    [user, loading, refreshSession, handleAuthSuccess, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return ctx;
 };

@@ -3,7 +3,7 @@
  * Fetches and aggregates posts from Instagram, Facebook, and Twitter/X
  */
 
-export type SocialPlatform = 'instagram' | 'facebook' | 'twitter';
+export type SocialPlatform = "instagram" | "facebook" | "twitter";
 
 export interface SocialAuthor {
   name: string;
@@ -16,7 +16,7 @@ export interface SocialPost {
   platform: SocialPlatform;
   content: string;
   mediaUrl?: string;
-  mediaType?: 'image' | 'video' | 'carousel';
+  mediaType?: "image" | "video" | "carousel";
   thumbnailUrl?: string;
   permalink: string;
   timestamp: string;
@@ -54,12 +54,12 @@ function makeDemoPost(platform: SocialPlatform, index: number): SocialPost {
     content: `Sample ${platform} post #${index + 1}. This is a demo post showing what a real ${platform} update would look like in Manake's aggregated social feed.`,
     mediaUrl:
       index % 2 === 0
-        ? 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600'
+        ? "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=600"
         : undefined,
-    mediaType: index % 2 === 0 ? 'image' : undefined,
+    mediaType: index % 2 === 0 ? "image" : undefined,
     thumbnailUrl:
       index % 2 === 0
-        ? 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=300'
+        ? "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=300"
         : undefined,
     permalink: `https://${platform}.com/manake/posts/${index}`,
     timestamp: new Date(hourAgo).toISOString(),
@@ -67,33 +67,40 @@ function makeDemoPost(platform: SocialPlatform, index: number): SocialPost {
     comments: Math.floor(Math.random() * 50),
     shares: Math.floor(Math.random() * 20),
     author: {
-      name: 'Manake Rehab',
-      username: 'manakerehab',
-      avatarUrl: 'https://ui-avatars.com/api/?name=Manake&background=FF6B35&color=fff',
+      name: "Manake Rehab",
+      username: "manakerehab",
+      avatarUrl:
+        "https://ui-avatars.com/api/?name=Manake&background=FF6B35&color=fff",
     },
   };
 }
 
 function getCacheKey(filters: SocialFeedFilters): string {
   return JSON.stringify({
-    platforms: filters.platforms?.sort() ?? ['all'],
-    cursor: filters.cursor ?? 'start',
+    platforms: filters.platforms?.sort() ?? ["all"],
+    cursor: filters.cursor ?? "start",
   });
 }
 
 /**
  * Fetch aggregated social feed
  */
-export async function getSocialFeed(filters: SocialFeedFilters = {}): Promise<SocialFeedResponse> {
+export async function getSocialFeed(
+  filters: SocialFeedFilters = {},
+): Promise<SocialFeedResponse> {
   const limit = filters.limit ?? 20;
   const platforms: SocialPlatform[] = filters.platforms?.length
     ? filters.platforms
-    : ['instagram', 'facebook', 'twitter'];
+    : ["instagram", "facebook", "twitter"];
 
   const cacheKey = getCacheKey(filters);
   const cached = feedCache.get(cacheKey);
   if (cached && Date.now() - cached.cachedAt < CACHE_TTL_MS) {
-    return { posts: cached.posts.slice(0, limit), nextCursor: undefined, hasMore: false };
+    return {
+      posts: cached.posts.slice(0, limit),
+      nextCursor: undefined,
+      hasMore: false,
+    };
   }
 
   // In production, call Meta Graph API / Twitter API here.
@@ -107,11 +114,17 @@ export async function getSocialFeed(filters: SocialFeedFilters = {}): Promise<So
   }
 
   // Sort by timestamp descending
-  posts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  posts.sort(
+    (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+  );
 
   feedCache.set(cacheKey, { posts, cachedAt: Date.now() });
 
-  return { posts: posts.slice(0, limit), nextCursor: undefined, hasMore: posts.length > limit };
+  return {
+    posts: posts.slice(0, limit),
+    nextCursor: undefined,
+    hasMore: posts.length > limit,
+  };
 }
 
 /**
@@ -119,31 +132,42 @@ export async function getSocialFeed(filters: SocialFeedFilters = {}): Promise<So
  */
 export async function getInstagramFeed(
   limit = 20,
-  _cursor?: string
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _cursor?: string,
 ): Promise<SocialFeedResponse> {
-  return getSocialFeed({ platforms: ['instagram'], limit });
+  return getSocialFeed({ platforms: ["instagram"], limit });
 }
 
 /**
  * Fetch Facebook-only feed
  */
-export async function getFacebookFeed(limit = 20, _cursor?: string): Promise<SocialFeedResponse> {
-  return getSocialFeed({ platforms: ['facebook'], limit });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getFacebookFeed(
+  limit = 20,
+  _cursor?: string,
+): Promise<SocialFeedResponse> {
+  return getSocialFeed({ platforms: ["facebook"], limit });
 }
 
 /**
  * Fetch Twitter-only feed
  */
-export async function getTwitterFeed(limit = 20, _cursor?: string): Promise<SocialFeedResponse> {
-  return getSocialFeed({ platforms: ['twitter'], limit });
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getTwitterFeed(
+  limit = 20,
+  _cursor?: string,
+): Promise<SocialFeedResponse> {
+  return getSocialFeed({ platforms: ["twitter"], limit });
 }
 
 /**
  * Like a post (placeholder – would call platform API)
  */
 export async function likeSocialPost(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _postId: string,
-  _platform: SocialPlatform
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _platform: SocialPlatform,
 ): Promise<void> {
   // In production, call platform API
 }
@@ -152,8 +176,10 @@ export async function likeSocialPost(
  * Unlike a post
  */
 export async function unlikeSocialPost(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _postId: string,
-  _platform: SocialPlatform
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _platform: SocialPlatform,
 ): Promise<void> {
   // In production, call platform API
 }
@@ -162,8 +188,10 @@ export async function unlikeSocialPost(
  * Share/repost a post
  */
 export async function shareSocialPost(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _postId: string,
-  _platform: SocialPlatform
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _platform: SocialPlatform,
 ): Promise<void> {
   // In production, call platform API
 }
