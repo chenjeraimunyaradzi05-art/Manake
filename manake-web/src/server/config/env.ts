@@ -14,7 +14,16 @@ const envSchema = z.object({
   PORT: z.string().transform(Number).default("5000"),
 
   // Database
-  MONGODB_URI: z.string().url().optional(),
+  MONGODB_URI: z
+    .string()
+    .optional()
+    .refine(
+      (value) =>
+        !value ||
+        value.startsWith("mongodb://") ||
+        value.startsWith("mongodb+srv://"),
+      { message: "Invalid MongoDB connection string" },
+    ),
 
   // JWT
   JWT_SECRET: z.string().min(32).optional(),

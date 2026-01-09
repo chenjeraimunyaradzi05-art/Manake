@@ -11,6 +11,7 @@
     "start": "npm run dev:web",
     "dev:web": "npm run dev --workspace=manake-web",
     "build:web": "npm run build --workspace=manake-web",
+    "test": "npm test --workspace=manake-web && npm test --workspace=manake-mobile",
     "start:mobile": "npm run start --workspace=manake-mobile",
     "android": "npm run android --workspace=manake-mobile",
     "ios": "npm run ios --workspace=manake-mobile",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "prettier": "^3.6.2",
     "typescript": "5.3.3"
   },
   "lint-staged": {
