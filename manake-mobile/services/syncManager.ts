@@ -3,35 +3,41 @@
  * Handles background synchronization of offline data
  */
 
-import NetInfo from '@react-native-community/netinfo';
-import { Platform } from 'react-native';
-import { getAuthToken } from './api';
-import offlineStorage, { PendingSync } from './offlineStorage';
+import NetInfo from "@react-native-community/netinfo";
+import { Platform } from "react-native";
+import { getAuthToken } from "./api";
+import offlineStorage, { PendingSync } from "./offlineStorage";
 
 // API Configuration
-const API_BASE_URL = __DEV__ 
+const API_BASE_URL = __DEV__
   ? Platform.select({
-      ios: 'http://localhost:3001/api',
-      android: 'http://10.0.2.2:3001/api',
-      default: 'http://localhost:3001/api'
+      ios: "http://localhost:3001/api",
+      android: "http://10.0.2.2:3001/api",
+      default: "http://localhost:3001/api",
     })
-  : 'https://manake.netlify.app/api';
+  : "https://manake.netlify.app/api";
 
-async function fetchApi(endpoint: string, options: RequestInit = {}): Promise<unknown> {
+async function fetchApi(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<unknown> {
   const token = getAuthToken();
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-  
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.message || `HTTP ${response.status}`);
   }
-  
+
   return response.json();
 }
 
@@ -69,7 +75,7 @@ class SyncManager {
     // Listen for network changes
     NetInfo.addEventListener((state) => {
       if (state.isConnected && state.isInternetReachable) {
-        console.log('Network restored, triggering sync...');
+        console.log("Network restored, triggering sync...");
         this.syncAll();
       }
     });
@@ -122,13 +128,13 @@ class SyncManager {
     // Check network connectivity
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected || !netInfo.isInternetReachable) {
-      console.log('No network connection, skipping sync');
+      console.log("No network connection, skipping sync");
       return { success: 0, failed: 0 };
     }
 
     // Prevent concurrent syncs
     if (this.isSyncing) {
-      console.log('Sync already in progress');
+      console.log("Sync already in progress");
       return { success: 0, failed: 0 };
     }
 
@@ -149,7 +155,7 @@ class SyncManager {
         success++;
       } catch (error) {
         console.error(`Sync failed for ${operation.id}:`, error);
-        
+
         if (operation.retryCount >= MAX_RETRIES) {
           // Max retries reached, remove from queue
           console.log(`Max retries reached for ${operation.id}, removing`);
@@ -160,8 +166,8 @@ class SyncManager {
           await offlineStorage.incrementSyncRetry(operation.id);
           failed++;
         }
-        
-        this.lastError = error instanceof Error ? error.message : 'Sync failed';
+
+        this.lastError = error instanceof Error ? error.message : "Sync failed";
       }
     }
 
@@ -189,10 +195,10 @@ class SyncManager {
    * Queue an operation for sync
    */
   async queueOperation(
-    type: 'create' | 'update' | 'delete',
+    type: "create" | "update" | "delete",
     endpoint: string,
-    method: PendingSync['method'],
-    payload: unknown
+    method: PendingSync["method"],
+    payload: unknown,
   ): Promise<string> {
     const id = await offlineStorage.addToSyncQueue({
       type,

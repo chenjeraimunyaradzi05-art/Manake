@@ -1,17 +1,17 @@
 /**
  * Authentication Routes - API v1
  */
-import { Router } from 'express';
-import { asyncHandler } from '../../middleware/errorHandler';
+import { Router } from "express";
+import { asyncHandler } from "../../middleware/errorHandler";
 import {
   validate,
   loginSchema,
   registerSchema,
   passwordResetRequestSchema,
   passwordResetSchema,
-} from '../../middleware/validation';
-import { strictRateLimit } from '../../middleware/rateLimit';
-import { authenticate } from '../../utils/jwt';
+} from "../../middleware/validation";
+import { strictRateLimit } from "../../middleware/rateLimit";
+import { authenticate } from "../../utils/jwt";
 import {
   login,
   register,
@@ -21,47 +21,44 @@ import {
   updateProfile,
   requestPasswordReset,
   resetPassword,
-} from '../../controllers/authController';
+} from "../../controllers/authController";
 
 const router = Router();
 
 // Public routes
 router.post(
-  '/login',
+  "/login",
   strictRateLimit,
-  validate(loginSchema, 'body'),
-  asyncHandler(login)
+  validate(loginSchema, "body"),
+  asyncHandler(login),
 );
 
 router.post(
-  '/register',
+  "/register",
   strictRateLimit,
-  validate(registerSchema, 'body'),
-  asyncHandler(register)
+  validate(registerSchema, "body"),
+  asyncHandler(register),
+);
+
+router.post("/refresh", asyncHandler(refreshToken));
+
+router.post(
+  "/password-reset/request",
+  strictRateLimit,
+  validate(passwordResetRequestSchema, "body"),
+  asyncHandler(requestPasswordReset),
 );
 
 router.post(
-  '/refresh',
-  asyncHandler(refreshToken)
-);
-
-router.post(
-  '/password-reset/request',
+  "/password-reset",
   strictRateLimit,
-  validate(passwordResetRequestSchema, 'body'),
-  asyncHandler(requestPasswordReset)
-);
-
-router.post(
-  '/password-reset',
-  strictRateLimit,
-  validate(passwordResetSchema, 'body'),
-  asyncHandler(resetPassword)
+  validate(passwordResetSchema, "body"),
+  asyncHandler(resetPassword),
 );
 
 // Protected routes
-router.post('/logout', authenticate, asyncHandler(logout));
-router.get('/profile', authenticate, asyncHandler(getProfile));
-router.patch('/profile', authenticate, asyncHandler(updateProfile));
+router.post("/logout", authenticate, asyncHandler(logout));
+router.get("/profile", authenticate, asyncHandler(getProfile));
+router.patch("/profile", authenticate, asyncHandler(updateProfile));
 
 export default router;

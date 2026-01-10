@@ -1,7 +1,7 @@
 type EnvString = string | undefined;
 
 function pickFirst(...values: EnvString[]) {
-  return values.find((v) => typeof v === 'string' && v.length > 0);
+  return values.find((v) => typeof v === "string" && v.length > 0);
 }
 
 export const env = {
@@ -25,7 +25,7 @@ export function isGoogleConfigured() {
     env.google.expoClientId,
     env.google.iosClientId,
     env.google.androidClientId,
-    env.google.webClientId
+    env.google.webClientId,
   );
   return !!anyId;
 }

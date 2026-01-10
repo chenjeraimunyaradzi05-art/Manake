@@ -8,7 +8,6 @@ dist/
 build/
 .next/
 out/
-storybook-static/
 
 # Testing
 coverage/
@@ -69,6 +68,9 @@ ios/Pods/
 # Serverless
 .netlify/
 .vercel/
+
+# Storybook
+storybook-static/
 
 # MongoDB
 mongo-data/

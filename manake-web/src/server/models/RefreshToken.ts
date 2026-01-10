@@ -2,7 +2,7 @@
  * Refresh Token Model
  * Stores refresh tokens for token rotation and revocation
  */
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from "mongoose";
 
 export interface IRefreshToken extends Document {
   userId: mongoose.Types.ObjectId;
@@ -20,7 +20,7 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     tokenHash: {
@@ -51,7 +51,7 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes
@@ -61,11 +61,11 @@ refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL in
 
 // Static method to revoke all tokens for a user
 refreshTokenSchema.statics.revokeAllForUser = async function (
-  userId: mongoose.Types.ObjectId
+  userId: mongoose.Types.ObjectId,
 ): Promise<number> {
   const result = await this.updateMany(
     { userId, revoked: false },
-    { revoked: true, revokedAt: new Date() }
+    { revoked: true, revokedAt: new Date() },
   );
   return result.modifiedCount;
 };
@@ -79,6 +79,6 @@ refreshTokenSchema.statics.cleanupExpired = async function (): Promise<number> {
 };
 
 export const RefreshToken = mongoose.model<IRefreshToken>(
-  'RefreshToken',
-  refreshTokenSchema
+  "RefreshToken",
+  refreshTokenSchema,
 );

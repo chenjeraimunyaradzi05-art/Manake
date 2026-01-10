@@ -3,7 +3,7 @@
  * Allows users to share their stories with optional media uploads
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -16,23 +16,30 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants';
-import { useAuth, useConnectivity } from '../../hooks';
-import { useMediaPicker, MediaAsset } from '../../hooks/useMediaPicker';
-import { useToast } from '../../components';
-import storyUploadService, { StoryUploadData, UploadProgress } from '../../services/storyUpload';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { theme } from "../../constants";
+import { useAuth, useConnectivity } from "../../hooks";
+import { useMediaPicker, MediaAsset } from "../../hooks/useMediaPicker";
+import { useToast } from "../../components";
+import storyUploadService, {
+  StoryUploadData,
+  UploadProgress,
+} from "../../services/storyUpload";
 
-type Category = StoryUploadData['category'];
+type Category = StoryUploadData["category"];
 
-const CATEGORIES: { value: Category; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: 'survivor', label: 'Survivor', icon: 'heart-outline' },
-  { value: 'volunteer', label: 'Volunteer', icon: 'hand-left-outline' },
-  { value: 'donor', label: 'Donor', icon: 'gift-outline' },
-  { value: 'community', label: 'Community', icon: 'people-outline' },
-  { value: 'staff', label: 'Staff', icon: 'briefcase-outline' },
+const CATEGORIES: {
+  value: Category;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { value: "survivor", label: "Survivor", icon: "heart-outline" },
+  { value: "volunteer", label: "Volunteer", icon: "hand-left-outline" },
+  { value: "donor", label: "Donor", icon: "gift-outline" },
+  { value: "community", label: "Community", icon: "people-outline" },
+  { value: "staff", label: "Staff", icon: "briefcase-outline" },
 ];
 
 export default function CreateStoryScreen() {
@@ -53,33 +60,35 @@ export default function CreateStoryScreen() {
   } = useMediaPicker({
     allowsMultipleSelection: true,
     maxSelection: 5,
-    mediaTypes: 'all',
+    mediaTypes: "all",
   });
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [category, setCategory] = useState<Category>('community');
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState<Category>("community");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(
+    null,
+  );
 
   const isValid = title.trim().length >= 5 && content.trim().length >= 20;
 
   const handleSubmit = useCallback(async () => {
     if (!isAuthenticated) {
-      Alert.alert('Sign In Required', 'Please sign in to share your story.');
+      Alert.alert("Sign In Required", "Please sign in to share your story.");
       return;
     }
 
     if (!isConnected) {
       // Save as draft for later
       Alert.alert(
-        'No Connection',
-        'Would you like to save this story as a draft?',
+        "No Connection",
+        "Would you like to save this story as a draft?",
         [
-          { text: 'Cancel', style: 'cancel' },
+          { text: "Cancel", style: "cancel" },
           {
-            text: 'Save Draft',
+            text: "Save Draft",
             onPress: async () => {
               const data: StoryUploadData = {
                 title: title.trim(),
@@ -94,17 +103,20 @@ export default function CreateStoryScreen() {
                 })),
               };
               await storyUploadService.saveDraft(data);
-              showToast('Story saved as draft', 'success');
+              showToast("Story saved as draft", "success");
               router.back();
             },
           },
-        ]
+        ],
       );
       return;
     }
 
     if (!isValid) {
-      showToast('Please add a title (5+ chars) and content (20+ chars)', 'error');
+      showToast(
+        "Please add a title (5+ chars) and content (20+ chars)",
+        "error",
+      );
       return;
     }
 
@@ -125,15 +137,18 @@ export default function CreateStoryScreen() {
         })),
       };
 
-      const response = await storyUploadService.createStory(data, (progress) => {
-        setUploadProgress(progress);
-      });
+      const response = await storyUploadService.createStory(
+        data,
+        (progress) => {
+          setUploadProgress(progress);
+        },
+      );
 
-      showToast(response.message || 'Story submitted for review!', 'success');
-      router.replace('/stories');
+      showToast(response.message || "Story submitted for review!", "success");
+      router.replace("/stories");
     } catch (error) {
-      console.error('Failed to submit story:', error);
-      showToast('Failed to submit story. Please try again.', 'error');
+      console.error("Failed to submit story:", error);
+      showToast("Failed to submit story. Please try again.", "error");
     } finally {
       setSubmitting(false);
       setUploadProgress(null);
@@ -166,7 +181,7 @@ export default function CreateStoryScreen() {
     };
 
     await storyUploadService.saveDraft(data);
-    showToast('Draft saved', 'success');
+    showToast("Draft saved", "success");
   }, [title, content, category, isAnonymous, selectedMedia, showToast]);
 
   const renderMediaPreview = () => {
@@ -189,8 +204,11 @@ export default function CreateStoryScreen() {
         >
           {selectedMedia.map((media) => (
             <View key={media.uri} style={styles.mediaItem}>
-              <Image source={{ uri: media.uri }} style={styles.mediaThumbnail} />
-              {media.type === 'video' && (
+              <Image
+                source={{ uri: media.uri }}
+                style={styles.mediaThumbnail}
+              />
+              {media.type === "video" && (
                 <View style={styles.videoIndicator}>
                   <Ionicons name="play" size={16} color="#fff" />
                 </View>
@@ -224,17 +242,30 @@ export default function CreateStoryScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Share Your Story</Text>
-          <TouchableOpacity onPress={handleSaveDraft} style={styles.draftButton}>
-            <Ionicons name="save-outline" size={24} color={theme.colors.primary} />
+          <TouchableOpacity
+            onPress={handleSaveDraft}
+            style={styles.draftButton}
+          >
+            <Ionicons
+              name="save-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
           </TouchableOpacity>
         </View>
 
@@ -272,7 +303,9 @@ export default function CreateStoryScreen() {
                 <Ionicons
                   name={cat.icon}
                   size={18}
-                  color={category === cat.value ? '#fff' : theme.colors.textSecondary}
+                  color={
+                    category === cat.value ? "#fff" : theme.colors.textSecondary
+                  }
                 />
                 <Text
                   style={[
@@ -314,7 +347,11 @@ export default function CreateStoryScreen() {
                 onPress={openCamera}
                 disabled={mediaLoading}
               >
-                <Ionicons name="camera-outline" size={28} color={theme.colors.primary} />
+                <Ionicons
+                  name="camera-outline"
+                  size={28}
+                  color={theme.colors.primary}
+                />
                 <Text style={styles.mediaButtonText}>Camera</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -322,7 +359,11 @@ export default function CreateStoryScreen() {
                 onPress={openGallery}
                 disabled={mediaLoading}
               >
-                <Ionicons name="images-outline" size={28} color={theme.colors.primary} />
+                <Ionicons
+                  name="images-outline"
+                  size={28}
+                  color={theme.colors.primary}
+                />
                 <Text style={styles.mediaButtonText}>Gallery</Text>
               </TouchableOpacity>
             </View>
@@ -338,7 +379,7 @@ export default function CreateStoryScreen() {
         >
           <View style={styles.anonymousInfo}>
             <Ionicons
-              name={isAnonymous ? 'eye-off-outline' : 'eye-outline'}
+              name={isAnonymous ? "eye-off-outline" : "eye-outline"}
               size={24}
               color={theme.colors.text}
             />
@@ -349,13 +390,13 @@ export default function CreateStoryScreen() {
               </Text>
             </View>
           </View>
-          <View
-            style={[
-              styles.toggle,
-              isAnonymous && styles.toggleActive,
-            ]}
-          >
-            <View style={[styles.toggleKnob, isAnonymous && styles.toggleKnobActive]} />
+          <View style={[styles.toggle, isAnonymous && styles.toggleActive]}>
+            <View
+              style={[
+                styles.toggleKnob,
+                isAnonymous && styles.toggleKnobActive,
+              ]}
+            />
           </View>
         </TouchableOpacity>
 
@@ -414,9 +455,9 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginBottom: 24,
     paddingTop: 8,
   },
@@ -425,7 +466,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
   },
   draftButton: {
@@ -436,7 +477,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginBottom: 8,
   },
@@ -452,15 +493,15 @@ const styles = StyleSheet.create({
   charCount: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    textAlign: 'right',
+    textAlign: "right",
     marginTop: 4,
   },
   categoryScroll: {
     flexGrow: 0,
   },
   categoryChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
@@ -479,8 +520,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   categoryTextActive: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   contentInput: {
     backgroundColor: theme.colors.surface,
@@ -493,7 +534,7 @@ const styles = StyleSheet.create({
     minHeight: 160,
   },
   mediaButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   mediaButton: {
@@ -501,16 +542,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
     borderWidth: 2,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderColor: theme.colors.border,
   },
   mediaButtonText: {
     marginTop: 8,
     fontSize: 14,
     color: theme.colors.primary,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   mediaPreviewContainer: {
     backgroundColor: theme.colors.surface,
@@ -518,25 +559,25 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   mediaPreviewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   mediaPreviewTitle: {
     fontSize: 14,
     color: theme.colors.text,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   clearMediaText: {
     fontSize: 14,
-    color: '#DC2626',
+    color: "#DC2626",
   },
   mediaScroll: {
     flexGrow: 0,
   },
   mediaItem: {
-    position: 'relative',
+    position: "relative",
     marginRight: 8,
   },
   mediaThumbnail: {
@@ -546,18 +587,18 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   videoIndicator: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 4,
     left: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     borderRadius: 4,
     padding: 2,
   },
   removeMediaButton: {
-    position: 'absolute',
+    position: "absolute",
     top: -8,
     right: -8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
   },
   addMediaButton: {
@@ -565,24 +606,24 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 2,
-    borderStyle: 'dashed',
+    borderStyle: "dashed",
     borderColor: theme.colors.border,
   },
   anonymousToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
   },
   anonymousInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   anonymousText: {
@@ -590,7 +631,7 @@ const styles = StyleSheet.create({
   },
   anonymousTitle: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
     color: theme.colors.text,
   },
   anonymousSubtitle: {
@@ -612,7 +653,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   toggleKnobActive: {
     transform: [{ translateX: 22 }],
@@ -629,16 +670,16 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     backgroundColor: theme.colors.border,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressFill: {
-    height: '100%',
+    height: "100%",
     backgroundColor: theme.colors.primary,
   },
   submitButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: theme.colors.primary,
     borderRadius: 12,
     padding: 16,
@@ -650,13 +691,13 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   disclaimer: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 32,
     lineHeight: 18,
   },

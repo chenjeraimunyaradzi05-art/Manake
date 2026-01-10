@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,28 +7,28 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
-} from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import { theme } from '../../constants';
-import { ERROR_MESSAGES } from '../../constants/messages';
-import { Button, Input } from '../../components/ui';
-import { useToast } from '../../components/ui/Toast';
-import { authApi } from '../../services/api';
+} from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { FontAwesome } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
+import { theme } from "../../constants";
+import { ERROR_MESSAGES } from "../../constants/messages";
+import { Button, Input } from "../../components/ui";
+import { useToast } from "../../components/ui/Toast";
+import { authApi } from "../../services/api";
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-type ScreenState = 'input' | 'loading' | 'success';
+type ScreenState = "input" | "loading" | "success";
 
 export default function ForgotPasswordScreen() {
   const { showToast } = useToast();
 
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [error, setError] = useState<string | undefined>();
-  const [screenState, setScreenState] = useState<ScreenState>('input');
+  const [screenState, setScreenState] = useState<ScreenState>("input");
 
   const validateEmail = (): boolean => {
     if (!email.trim()) {
@@ -49,24 +49,26 @@ export default function ForgotPasswordScreen() {
       return;
     }
 
-    setScreenState('loading');
+    setScreenState("loading");
 
     try {
       await authApi.forgotPassword(email.trim().toLowerCase());
-      setScreenState('success');
+      setScreenState("success");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
-      setScreenState('input');
+      setScreenState("input");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showToast(
-        err instanceof Error ? err.message : ERROR_MESSAGES.SOMETHING_WENT_WRONG,
-        'error'
+        err instanceof Error
+          ? err.message
+          : ERROR_MESSAGES.SOMETHING_WENT_WRONG,
+        "error",
       );
     }
   };
 
   const handleBackToLogin = () => {
-    router.replace('/(auth)/login');
+    router.replace("/(auth)/login");
   };
 
   const renderInputState = () => (
@@ -77,7 +79,11 @@ export default function ForgotPasswordScreen() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <FontAwesome name="chevron-left" size={20} color={theme.colors.text} />
+          <FontAwesome
+            name="chevron-left"
+            size={20}
+            color={theme.colors.text}
+          />
         </TouchableOpacity>
 
         <View style={styles.iconContainer}>
@@ -85,7 +91,8 @@ export default function ForgotPasswordScreen() {
         </View>
         <Text style={styles.title}>Forgot Password?</Text>
         <Text style={styles.subtitle}>
-          No worries! Enter your email address and we'll send you instructions to reset your password.
+          No worries! Enter your email address and we'll send you instructions
+          to reset your password.
         </Text>
       </View>
 
@@ -113,18 +120,15 @@ export default function ForgotPasswordScreen() {
         <Button
           title="Send Reset Link"
           onPress={handleSubmit}
-          loading={screenState === 'loading'}
-          disabled={screenState === 'loading'}
+          loading={screenState === "loading"}
+          disabled={screenState === "loading"}
           fullWidth
           size="large"
         />
       </View>
 
       {/* Back to Login */}
-      <TouchableOpacity
-        style={styles.backToLogin}
-        onPress={handleBackToLogin}
-      >
+      <TouchableOpacity style={styles.backToLogin} onPress={handleBackToLogin}>
         <FontAwesome name="arrow-left" size={14} color={theme.colors.primary} />
         <Text style={styles.backToLoginText}>Back to Sign In</Text>
       </TouchableOpacity>
@@ -134,18 +138,22 @@ export default function ForgotPasswordScreen() {
   const renderSuccessState = () => (
     <View style={styles.successContainer}>
       <View style={styles.successIconContainer}>
-        <FontAwesome name="check-circle" size={64} color={theme.colors.success} />
+        <FontAwesome
+          name="check-circle"
+          size={64}
+          color={theme.colors.success}
+        />
       </View>
-      
+
       <Text style={styles.successTitle}>Check Your Email</Text>
       <Text style={styles.successSubtitle}>
-        We've sent a password reset link to{'\n'}
+        We've sent a password reset link to{"\n"}
         <Text style={styles.emailHighlight}>{email}</Text>
       </Text>
 
       <View style={styles.instructionsContainer}>
         <Text style={styles.instructionsTitle}>What's next?</Text>
-        
+
         <View style={styles.instructionItem}>
           <View style={styles.instructionNumber}>
             <Text style={styles.instructionNumberText}>1</Text>
@@ -154,7 +162,7 @@ export default function ForgotPasswordScreen() {
             Check your email inbox (and spam folder)
           </Text>
         </View>
-        
+
         <View style={styles.instructionItem}>
           <View style={styles.instructionNumber}>
             <Text style={styles.instructionNumberText}>2</Text>
@@ -163,7 +171,7 @@ export default function ForgotPasswordScreen() {
             Click the password reset link
           </Text>
         </View>
-        
+
         <View style={styles.instructionItem}>
           <View style={styles.instructionNumber}>
             <Text style={styles.instructionNumberText}>3</Text>
@@ -184,12 +192,13 @@ export default function ForgotPasswordScreen() {
       <TouchableOpacity
         style={styles.resendLink}
         onPress={() => {
-          setScreenState('input');
+          setScreenState("input");
           handleSubmit();
         }}
       >
         <Text style={styles.resendLinkText}>
-          Didn't receive the email? <Text style={styles.resendLinkBold}>Resend</Text>
+          Didn't receive the email?{" "}
+          <Text style={styles.resendLinkBold}>Resend</Text>
         </Text>
       </TouchableOpacity>
     </View>
@@ -199,14 +208,16 @@ export default function ForgotPasswordScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {screenState === 'success' ? renderSuccessState() : renderInputState()}
+          {screenState === "success"
+            ? renderSuccessState()
+            : renderInputState()}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -228,11 +239,11 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: theme.spacing.xl,
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
     padding: theme.spacing.s,
@@ -242,21 +253,21 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: `${theme.colors.primary}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: theme.spacing.m,
     marginTop: theme.spacing.l,
   },
   title: {
-    fontSize: theme.fontSize['2xl'],
-    fontWeight: '700',
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: theme.spacing.s,
   },
   subtitle: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
     paddingHorizontal: theme.spacing.m,
   },
@@ -264,45 +275,45 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.l,
   },
   backToLogin: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: theme.spacing.l,
   },
   backToLoginText: {
     marginLeft: theme.spacing.s,
     fontSize: theme.fontSize.md,
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   // Success state styles
   successContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: theme.spacing.xl,
   },
   successIconContainer: {
     marginBottom: theme.spacing.l,
   },
   successTitle: {
-    fontSize: theme.fontSize['2xl'],
-    fontWeight: '700',
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: theme.spacing.s,
   },
   successSubtitle: {
     fontSize: theme.fontSize.md,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 24,
     marginBottom: theme.spacing.xl,
   },
   emailHighlight: {
     color: theme.colors.text,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   instructionsContainer: {
-    width: '100%',
+    width: "100%",
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.l,
@@ -310,13 +321,13 @@ const styles = StyleSheet.create({
   },
   instructionsTitle: {
     fontSize: theme.fontSize.lg,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginBottom: theme.spacing.m,
   },
   instructionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.m,
   },
   instructionNumber: {
@@ -324,14 +335,14 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: theme.spacing.m,
   },
   instructionNumberText: {
     fontSize: theme.fontSize.sm,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   instructionText: {
     flex: 1,
@@ -347,6 +358,6 @@ const styles = StyleSheet.create({
   },
   resendLinkBold: {
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

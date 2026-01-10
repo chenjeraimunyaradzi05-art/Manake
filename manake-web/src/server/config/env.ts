@@ -52,7 +52,7 @@ const envSchema = z.object({
 
   // Email (optional for Phase 1)
   SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.coerce.number().optional(),
+  SMTP_PORT: z.string().transform(Number).optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   FROM_EMAIL: z.string().email().optional(),

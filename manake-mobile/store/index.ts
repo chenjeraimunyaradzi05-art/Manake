@@ -1,2 +1,2 @@
-export { useAuthStore } from './authStore';
-export { useStoriesStore } from './storiesStore';
+export { useAuthStore } from "./authStore";
+export { useStoriesStore } from "./storiesStore";

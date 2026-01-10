@@ -3,10 +3,10 @@
  * Provides offline-first data fetching with automatic sync
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { syncManager, SyncStatus } from '../services/syncManager';
-import offlineStorage from '../services/offlineStorage';
-import { useConnectivity } from './useConnectivity';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { syncManager, SyncStatus } from "../services/syncManager";
+import offlineStorage from "../services/offlineStorage";
+import { useConnectivity } from "./useConnectivity";
 
 export interface UseOfflineSyncOptions<T> {
   cacheKey: string;
@@ -45,7 +45,7 @@ export function useOfflineSync<T>({
   const fetchFromNetwork = useCallback(async (): Promise<T | null> => {
     try {
       const freshData = await fetcher();
-      
+
       if (mountedRef.current) {
         setData(freshData);
         setIsFromCache(false);
@@ -54,15 +54,15 @@ export function useOfflineSync<T>({
 
       // Update cache
       await offlineStorage.setCache(cacheKey, freshData, ttlMs);
-      
+
       return freshData;
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Fetch failed');
-      
+      const error = err instanceof Error ? err : new Error("Fetch failed");
+
       if (mountedRef.current) {
         setError(error);
       }
-      
+
       onError?.(error);
       return null;
     }
@@ -78,7 +78,7 @@ export function useOfflineSync<T>({
     try {
       // Try cache first
       const cached = await offlineStorage.getCache<T>(cacheKey);
-      
+
       if (cached && mountedRef.current) {
         setData(cached);
         setIsFromCache(true);
@@ -88,7 +88,7 @@ export function useOfflineSync<T>({
       // Fetch fresh data if online
       if (isConnected) {
         const freshData = await fetchFromNetwork();
-        
+
         // If no cached data and network failed, keep loading state until done
         if (!cached && !freshData && mountedRef.current) {
           setIsLoading(false);
@@ -102,7 +102,7 @@ export function useOfflineSync<T>({
     } catch (err) {
       if (mountedRef.current) {
         setIsLoading(false);
-        setError(err instanceof Error ? err : new Error('Unknown error'));
+        setError(err instanceof Error ? err : new Error("Unknown error"));
       }
     }
   }, [enabled, cacheKey, isConnected, fetchFromNetwork]);
@@ -115,7 +115,7 @@ export function useOfflineSync<T>({
 
     setIsRefreshing(true);
     await fetchFromNetwork();
-    
+
     if (mountedRef.current) {
       setIsRefreshing(false);
     }
@@ -169,7 +169,7 @@ export function useSyncStatus() {
 
   useEffect(() => {
     const unsubscribe = syncManager.subscribe(setStatus);
-    
+
     // Update pending count
     const updatePendingCount = async () => {
       const count = await syncManager.getPendingCount();

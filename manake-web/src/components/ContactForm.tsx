@@ -1,67 +1,74 @@
-import { useState } from 'react';
-import { Send, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
+import { useState } from "react";
+import { Send, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
 interface ContactFormProps {
-  variant?: 'default' | 'compact';
+  variant?: "default" | "compact";
   subject?: string;
 }
 
-export const ContactForm = ({ variant = 'default', subject }: ContactFormProps) => {
+export const ContactForm = ({
+  variant = "default",
+  subject,
+}: ContactFormProps) => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: subject || '',
-    message: '',
-    type: 'general' // general, volunteer, partnership, media
+    name: "",
+    email: "",
+    phone: "",
+    subject: subject || "",
+    message: "",
+    type: "general", // general, volunteer, partnership, media
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch('/api/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          channel: 'inapp',
-          direction: 'inbound',
+          channel: "inapp",
+          direction: "inbound",
           senderName: formData.name,
           senderEmail: formData.email,
           senderPhone: formData.phone,
           content: formData.message,
-          contentType: 'text',
+          contentType: "text",
           metadata: {
             subject: formData.subject,
             type: formData.type,
           },
-        })
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message. Please try again.');
+        throw new Error("Failed to send message. Please try again.");
       }
 
       setSuccess(true);
       setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        subject: '',
-        message: '',
-        type: 'general'
+        name: "",
+        email: "",
+        phone: "",
+        subject: "",
+        message: "",
+        type: "general",
       });
     } catch (err) {
       setError((err as Error).message);
@@ -80,10 +87,7 @@ export const ContactForm = ({ variant = 'default', subject }: ContactFormProps) 
         <p className="text-gray-600 mb-4">
           Thank you for reaching out. We'll get back to you within 24 hours.
         </p>
-        <button
-          onClick={() => setSuccess(false)}
-          className="btn-primary"
-        >
+        <button onClick={() => setSuccess(false)} className="btn-primary">
           Send Another Message
         </button>
       </div>
@@ -160,7 +164,7 @@ export const ContactForm = ({ variant = 'default', subject }: ContactFormProps) 
       </div>
 
       {/* Subject */}
-      {variant === 'default' && (
+      {variant === "default" && (
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Subject
@@ -221,9 +225,11 @@ export const ContactForm = ({ variant = 'default', subject }: ContactFormProps) 
 
       {/* Privacy note */}
       <p className="text-xs text-gray-500">
-        By submitting this form, you agree to our{' '}
-        <a href="/privacy" className="text-primary-600 hover:underline">Privacy Policy</a>.
-        We'll never share your information with third parties.
+        By submitting this form, you agree to our{" "}
+        <a href="/privacy" className="text-primary-600 hover:underline">
+          Privacy Policy
+        </a>
+        . We'll never share your information with third parties.
       </p>
     </form>
   );

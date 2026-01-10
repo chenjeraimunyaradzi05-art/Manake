@@ -1,5 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import NetInfo, { NetInfoState, NetInfoSubscription } from '@react-native-community/netinfo';
+import { useState, useEffect, useCallback } from "react";
+import NetInfo, {
+  NetInfoState,
+  NetInfoSubscription,
+} from "@react-native-community/netinfo";
 
 export interface ConnectivityState {
   isConnected: boolean | null;
@@ -60,7 +63,8 @@ export function useConnectivity() {
   /**
    * Check if we have a working internet connection
    */
-  const hasInternet = state.isConnected === true && state.isInternetReachable !== false;
+  const hasInternet =
+    state.isConnected === true && state.isInternetReachable !== false;
 
   return {
     ...state,

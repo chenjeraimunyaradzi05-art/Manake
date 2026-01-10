@@ -1,7 +1,7 @@
-import { Router } from 'express';
-import { asyncHandler } from '../../middleware/errorHandler';
-import { contactRateLimit } from '../../middleware/rateLimit';
-import { authenticate, authorize } from '../../utils/jwt';
+import { Router } from "express";
+import { asyncHandler } from "../../middleware/errorHandler";
+import { contactRateLimit } from "../../middleware/rateLimit";
+import { authenticate, authorize } from "../../utils/jwt";
 import {
   createMessageSchema,
   messageSearchQuerySchema,
@@ -9,8 +9,8 @@ import {
   messageStatusSchema,
   sendMessageSchema,
   idParamsSchema,
-} from '../../middleware/validation';
-import { validate, validateAll } from '../../middleware/validation';
+} from "../../middleware/validation";
+import { validate, validateAll } from "../../middleware/validation";
 import {
   createMessage,
   listMessages,
@@ -20,68 +20,68 @@ import {
   markMessageRead,
   searchMessages,
   sendMessage,
-} from '../../controllers/messageController';
+} from "../../controllers/messageController";
 
 const router = Router();
 
 router.post(
-  '/',
+  "/",
   contactRateLimit,
-  validate(createMessageSchema, 'body'),
-  asyncHandler(createMessage)
+  validate(createMessageSchema, "body"),
+  asyncHandler(createMessage),
 );
 
 router.post(
-  '/send',
+  "/send",
   authenticate,
   contactRateLimit,
-  validate(sendMessageSchema, 'body'),
-  asyncHandler(sendMessage)
+  validate(sendMessageSchema, "body"),
+  asyncHandler(sendMessage),
 );
 
 router.get(
-  '/search',
+  "/search",
   authenticate,
-  validate(messageSearchQuerySchema, 'query'),
-  asyncHandler(searchMessages)
+  validate(messageSearchQuerySchema, "query"),
+  asyncHandler(searchMessages),
 );
 
 router.patch(
-  '/:id/read',
+  "/:id/read",
   authenticate,
-  validate(idParamsSchema, 'params'),
-  asyncHandler(markMessageRead)
+  validate(idParamsSchema, "params"),
+  asyncHandler(markMessageRead),
 );
 
 router.get(
-  '/',
+  "/",
   authenticate,
-  validate(messageQuerySchema, 'query'),
-  asyncHandler(listMessages)
+  validate(messageQuerySchema, "query"),
+  asyncHandler(listMessages),
 );
 
 router.get(
-  '/:id',
+  "/:id",
   authenticate,
-  authorize('admin', 'moderator'),
-  validate(idParamsSchema, 'params'),
-  asyncHandler(getMessage)
+  authorize("admin", "moderator"),
+  validate(idParamsSchema, "params"),
+  asyncHandler(getMessage),
 );
 
 router.patch(
-  '/:id/status',
+  "/:id/status",
   authenticate,
-  authorize('admin', 'moderator'),
+  authorize("admin", "moderator"),
   validateAll({ params: idParamsSchema, body: messageStatusSchema }),
-  asyncHandler(updateMessageStatus)
+  asyncHandler(updateMessageStatus),
 );
 
 router.delete(
-  '/:id',
+  "/:id",
   authenticate,
-  authorize('admin'),
-  validate(idParamsSchema, 'params'),
-  asyncHandler(deleteMessage)
+  authorize("admin"),
+  validate(idParamsSchema, "params"),
+  asyncHandler(deleteMessage),
 );
 
 export default router;

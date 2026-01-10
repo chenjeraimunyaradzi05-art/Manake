@@ -1,9 +1,21 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
+type ToastType = "success" | "error" | "warning" | "info";
 
 interface Toast {
   id: string;
@@ -20,10 +32,10 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 const TOAST_ICONS: Record<ToastType, keyof typeof FontAwesome.glyphMap> = {
-  success: 'check-circle',
-  error: 'times-circle',
-  warning: 'exclamation-triangle',
-  info: 'info-circle',
+  success: "check-circle",
+  error: "times-circle",
+  warning: "exclamation-triangle",
+  info: "info-circle",
 };
 
 const TOAST_COLORS: Record<ToastType, string> = {
@@ -40,18 +52,21 @@ interface ToastProviderProps {
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = useCallback((message: string, type: ToastType = 'info', duration = 3000) => {
-    const id = Date.now().toString();
-    const toast: Toast = { id, message, type, duration };
+  const showToast = useCallback(
+    (message: string, type: ToastType = "info", duration = 3000) => {
+      const id = Date.now().toString();
+      const toast: Toast = { id, message, type, duration };
 
-    setToasts((prev) => [...prev, toast]);
+      setToasts((prev) => [...prev, toast]);
 
-    if (duration > 0) {
-      setTimeout(() => {
-        hideToast(id);
-      }, duration);
-    }
-  }, []);
+      if (duration > 0) {
+        setTimeout(() => {
+          hideToast(id);
+        }, duration);
+      }
+    },
+    [],
+  );
 
   const hideToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -62,7 +77,11 @@ export function ToastProvider({ children }: ToastProviderProps) {
       {children}
       <View style={styles.container} pointerEvents="box-none">
         {toasts.map((toast) => (
-          <ToastItem key={toast.id} toast={toast} onDismiss={() => hideToast(toast.id)} />
+          <ToastItem
+            key={toast.id}
+            toast={toast}
+            onDismiss={() => hideToast(toast.id)}
+          />
         ))}
       </View>
     </ToastContext.Provider>
@@ -112,14 +131,26 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
     <Animated.View
       style={[
         styles.toast,
-        { backgroundColor: TOAST_COLORS[toast.type], opacity, transform: [{ translateY }] },
+        {
+          backgroundColor: TOAST_COLORS[toast.type],
+          opacity,
+          transform: [{ translateY }],
+        },
       ]}
     >
-      <FontAwesome name={TOAST_ICONS[toast.type]} size={18} color="#fff" style={styles.icon} />
+      <FontAwesome
+        name={TOAST_ICONS[toast.type]}
+        size={18}
+        color="#fff"
+        style={styles.icon}
+      />
       <Text style={styles.message} numberOfLines={2}>
         {toast.message}
       </Text>
-      <TouchableOpacity onPress={handleDismiss} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+      <TouchableOpacity
+        onPress={handleDismiss}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      >
         <FontAwesome name="times" size={16} color="#fff" />
       </TouchableOpacity>
     </Animated.View>
@@ -129,27 +160,27 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
 export function useToast() {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error("useToast must be used within a ToastProvider");
   }
   return context;
 }
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
+    position: "absolute",
     top: 60,
     left: 16,
     right: 16,
     zIndex: 9999,
   },
   toast: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
     marginBottom: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
@@ -160,9 +191,9 @@ const styles = StyleSheet.create({
   },
   message: {
     flex: 1,
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 

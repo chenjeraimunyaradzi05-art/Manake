@@ -1,25 +1,25 @@
-import React from 'react';
-import { 
-  TouchableOpacity, 
-  Text, 
-  StyleSheet, 
+import React from "react";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
   ActivityIndicator,
   View,
   ViewStyle,
   TextStyle,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
 
 interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline" | "danger" | "ghost";
+  size?: "small" | "medium" | "large";
   disabled?: boolean;
   loading?: boolean;
   icon?: keyof typeof FontAwesome.glyphMap;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   fullWidth?: boolean;
   style?: ViewStyle;
 }
@@ -27,68 +27,71 @@ interface ButtonProps {
 export function Button({
   title,
   onPress,
-  variant = 'primary',
-  size = 'medium',
+  variant = "primary",
+  size = "medium",
   disabled = false,
   loading = false,
   icon,
-  iconPosition = 'left',
+  iconPosition = "left",
   fullWidth = false,
   style,
 }: ButtonProps) {
   const getButtonStyle = (): ViewStyle[] => {
     const baseStyle: ViewStyle[] = [styles.button, styles[size]];
-    
+
     if (fullWidth) baseStyle.push(styles.fullWidth);
-    
+
     switch (variant) {
-      case 'secondary':
+      case "secondary":
         baseStyle.push(styles.secondary);
         break;
-      case 'outline':
+      case "outline":
         baseStyle.push(styles.outline);
         break;
-      case 'danger':
+      case "danger":
         baseStyle.push(styles.danger);
         break;
-      case 'ghost':
+      case "ghost":
         baseStyle.push(styles.ghost);
         break;
       default:
         baseStyle.push(styles.primary);
     }
-    
+
     if (disabled || loading) baseStyle.push(styles.disabled);
-    
+
     return baseStyle;
   };
 
   const getTextStyle = (): TextStyle[] => {
-    const baseStyle: TextStyle[] = [styles.text, styles[`${size}Text` as keyof typeof styles] as TextStyle];
-    
+    const baseStyle: TextStyle[] = [
+      styles.text,
+      styles[`${size}Text` as keyof typeof styles] as TextStyle,
+    ];
+
     switch (variant) {
-      case 'outline':
-      case 'ghost':
+      case "outline":
+      case "ghost":
         baseStyle.push(styles.outlineText);
         break;
       default:
         baseStyle.push(styles.whiteText);
     }
-    
+
     return baseStyle;
   };
 
   const getIconColor = () => {
     switch (variant) {
-      case 'outline':
-      case 'ghost':
+      case "outline":
+      case "ghost":
         return theme.colors.primary;
       default:
-        return '#fff';
+        return "#fff";
     }
   };
 
-  const iconSize = size === 'small' ? 14 : size === 'large' ? 20 : 16;
+  const iconSize = size === "small" ? 14 : size === "large" ? 20 : 16;
 
   return (
     <TouchableOpacity
@@ -101,21 +104,21 @@ export function Button({
         <ActivityIndicator color={getIconColor()} size="small" />
       ) : (
         <View style={styles.content}>
-          {icon && iconPosition === 'left' && (
-            <FontAwesome 
-              name={icon} 
-              size={iconSize} 
-              color={getIconColor()} 
-              style={styles.iconLeft} 
+          {icon && iconPosition === "left" && (
+            <FontAwesome
+              name={icon}
+              size={iconSize}
+              color={getIconColor()}
+              style={styles.iconLeft}
             />
           )}
           <Text style={getTextStyle()}>{title}</Text>
-          {icon && iconPosition === 'right' && (
-            <FontAwesome 
-              name={icon} 
-              size={iconSize} 
-              color={getIconColor()} 
-              style={styles.iconRight} 
+          {icon && iconPosition === "right" && (
+            <FontAwesome
+              name={icon}
+              size={iconSize}
+              color={getIconColor()}
+              style={styles.iconRight}
             />
           )}
         </View>
@@ -127,16 +130,16 @@ export function Button({
 const styles = StyleSheet.create({
   button: {
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   fullWidth: {
-    width: '100%',
+    width: "100%",
   },
   // Sizes
   small: {
@@ -159,7 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.secondary,
   },
   outline: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 2,
     borderColor: theme.colors.primary,
   },
@@ -167,14 +170,14 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.danger,
   },
   ghost: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   disabled: {
     opacity: 0.5,
   },
   // Text
   text: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   smallText: {
     fontSize: 12,
@@ -186,7 +189,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   whiteText: {
-    color: '#fff',
+    color: "#fff",
   },
   outlineText: {
     color: theme.colors.primary,

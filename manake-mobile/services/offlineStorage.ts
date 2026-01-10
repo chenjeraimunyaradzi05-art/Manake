@@ -14,16 +14,16 @@ export interface CacheEntry<T> {
 
 export interface PendingSync {
   id: string;
-  type: 'create' | 'update' | 'delete';
+  type: "create" | "update" | "delete";
   endpoint: string;
-  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  method: "POST" | "PUT" | "PATCH" | "DELETE";
   payload: unknown;
   createdAt: number;
   retryCount: number;
 }
 
-const CACHE_PREFIX = '@manake_cache_';
-const SYNC_QUEUE_KEY = '@manake_sync_queue';
+const CACHE_PREFIX = "@manake_cache_";
+const SYNC_QUEUE_KEY = "@manake_sync_queue";
 const DEFAULT_TTL = 1000 * 60 * 60; // 1 hour
 
 // In-memory fallback when AsyncStorage is not available
@@ -34,10 +34,10 @@ let AsyncStorage: any = null;
 async function getStorage() {
   if (!AsyncStorage) {
     try {
-      const mod = await import('@react-native-async-storage/async-storage');
+      const mod = await import("@react-native-async-storage/async-storage");
       AsyncStorage = mod.default;
     } catch {
-      console.log('AsyncStorage not installed, using memory fallback');
+      console.log("AsyncStorage not installed, using memory fallback");
     }
   }
   return AsyncStorage;
@@ -92,7 +92,7 @@ async function multiRemove(keys: string[]): Promise<void> {
 export async function setCache<T>(
   key: string,
   data: T,
-  ttlMs: number = DEFAULT_TTL
+  ttlMs: number = DEFAULT_TTL,
 ): Promise<void> {
   const entry: CacheEntry<T> = {
     data,
@@ -111,7 +111,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
     if (!raw) return null;
 
     const entry: CacheEntry<T> = JSON.parse(raw);
-    
+
     // Check if expired
     if (Date.now() > entry.expiresAt) {
       await removeCache(key);
@@ -120,7 +120,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
 
     return entry.data;
   } catch (error) {
-    console.error('Cache read error:', error);
+    console.error("Cache read error:", error);
     return null;
   }
 }
@@ -129,7 +129,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
  * Get cached data with metadata
  */
 export async function getCacheWithMeta<T>(
-  key: string
+  key: string,
 ): Promise<CacheEntry<T> | null> {
   try {
     const raw = await getItem(`${CACHE_PREFIX}${key}`);
@@ -163,7 +163,7 @@ export async function getCacheKeys(): Promise<string[]> {
   const keys = await getAllKeys();
   return keys
     .filter((k: string) => k.startsWith(CACHE_PREFIX))
-    .map((k: string) => k.replace(CACHE_PREFIX, ''));
+    .map((k: string) => k.replace(CACHE_PREFIX, ""));
 }
 
 /**
@@ -190,11 +190,11 @@ export async function clearExpiredCache(): Promise<number> {
  * Add operation to sync queue
  */
 export async function addToSyncQueue(
-  operation: Omit<PendingSync, 'id' | 'createdAt' | 'retryCount'>
+  operation: Omit<PendingSync, "id" | "createdAt" | "retryCount">,
 ): Promise<string> {
   const queue = await getSyncQueue();
   const id = `sync_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-  
+
   const entry: PendingSync = {
     ...operation,
     id,
@@ -204,7 +204,7 @@ export async function addToSyncQueue(
 
   queue.push(entry);
   await setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
-  
+
   return id;
 }
 
@@ -235,7 +235,7 @@ export async function removeFromSyncQueue(id: string): Promise<void> {
 export async function incrementSyncRetry(id: string): Promise<void> {
   const queue = await getSyncQueue();
   const updated = queue.map((op) =>
-    op.id === id ? { ...op, retryCount: op.retryCount + 1 } : op
+    op.id === id ? { ...op, retryCount: op.retryCount + 1 } : op,
   );
   await setItem(SYNC_QUEUE_KEY, JSON.stringify(updated));
 }
@@ -257,7 +257,7 @@ export async function getSyncQueueCount(): Promise<number> {
 
 // ============ Stories Cache ============
 
-const STORIES_CACHE_KEY = 'stories';
+const STORIES_CACHE_KEY = "stories";
 const STORIES_TTL = 1000 * 60 * 30; // 30 minutes
 
 export async function cacheStories(stories: unknown[]): Promise<void> {
@@ -270,7 +270,7 @@ export async function getCachedStories<T>(): Promise<T[] | null> {
 
 // ============ User Data Cache ============
 
-const USER_CACHE_KEY = 'user_data';
+const USER_CACHE_KEY = "user_data";
 const USER_TTL = 1000 * 60 * 60 * 24; // 24 hours
 
 export async function cacheUserData(userData: unknown): Promise<void> {
@@ -283,18 +283,22 @@ export async function getCachedUserData<T>(): Promise<T | null> {
 
 // ============ Messages Cache ============
 
-const MESSAGES_CACHE_KEY = 'messages_';
+const MESSAGES_CACHE_KEY = "messages_";
 const MESSAGES_TTL = 1000 * 60 * 15; // 15 minutes
 
 export async function cacheMessages(
   conversationId: string,
-  messages: unknown[]
+  messages: unknown[],
 ): Promise<void> {
-  await setCache(`${MESSAGES_CACHE_KEY}${conversationId}`, messages, MESSAGES_TTL);
+  await setCache(
+    `${MESSAGES_CACHE_KEY}${conversationId}`,
+    messages,
+    MESSAGES_TTL,
+  );
 }
 
 export async function getCachedMessages<T>(
-  conversationId: string
+  conversationId: string,
 ): Promise<T[] | null> {
   return getCache<T[]>(`${MESSAGES_CACHE_KEY}${conversationId}`);
 }
@@ -308,7 +312,7 @@ export default {
   clearAllCache,
   getCacheKeys,
   clearExpiredCache,
-  
+
   // Sync queue operations
   addToSyncQueue,
   getSyncQueue,
@@ -316,7 +320,7 @@ export default {
   incrementSyncRetry,
   clearSyncQueue,
   getSyncQueueCount,
-  
+
   // Specialized caches
   cacheStories,
   getCachedStories,

@@ -2,24 +2,31 @@
  * Admin Service Tests
  */
 
-import { getDashboardStats, getPendingStories, approveStory, rejectStory, getUsers, deleteUser } from '../admin';
+import {
+  getDashboardStats,
+  getPendingStories,
+  approveStory,
+  rejectStory,
+  getUsers,
+  deleteUser,
+} from "../admin";
 
 // Mock fetch
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
 // Mock getAuthToken
-jest.mock('../api', () => ({
-  getAuthToken: () => 'mock-admin-token',
+jest.mock("../api", () => ({
+  getAuthToken: () => "mock-admin-token",
 }));
 
-describe('Admin Service', () => {
+describe("Admin Service", () => {
   beforeEach(() => {
     mockFetch.mockClear();
   });
 
-  describe('getDashboardStats', () => {
-    it('should fetch dashboard statistics', async () => {
+  describe("getDashboardStats", () => {
+    it("should fetch dashboard statistics", async () => {
       const mockStats = {
         users: { total: 100, newThisMonth: 10 },
         stories: { total: 50, pending: 5 },
@@ -35,21 +42,21 @@ describe('Admin Service', () => {
       const stats = await getDashboardStats();
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/admin/stats'),
+        expect.stringContaining("/v1/admin/stats"),
         expect.objectContaining({
           headers: expect.objectContaining({
-            Authorization: 'Bearer mock-admin-token',
+            Authorization: "Bearer mock-admin-token",
           }),
-        })
+        }),
       );
       expect(stats).toEqual(mockStats);
     });
   });
 
-  describe('getPendingStories', () => {
-    it('should fetch pending stories with pagination', async () => {
+  describe("getPendingStories", () => {
+    it("should fetch pending stories with pagination", async () => {
       const mockResponse = {
-        data: [{ _id: '1', title: 'Test Story', status: 'pending' }],
+        data: [{ _id: "1", title: "Test Story", status: "pending" }],
         pagination: { page: 1, limit: 20, total: 1, pages: 1 },
       };
 
@@ -61,18 +68,18 @@ describe('Admin Service', () => {
       const result = await getPendingStories(1, 20);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/admin/stories/pending'),
-        expect.any(Object)
+        expect.stringContaining("/v1/admin/stories/pending"),
+        expect.any(Object),
       );
       expect(result.data).toHaveLength(1);
     });
   });
 
-  describe('approveStory', () => {
-    it('should approve a story', async () => {
+  describe("approveStory", () => {
+    it("should approve a story", async () => {
       const mockResponse = {
-        message: 'Story approved',
-        data: { _id: '123', status: 'published' },
+        message: "Story approved",
+        data: { _id: "123", status: "published" },
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -80,21 +87,21 @@ describe('Admin Service', () => {
         json: async () => mockResponse,
       });
 
-      const result = await approveStory('123');
+      const result = await approveStory("123");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/admin/stories/123/approve'),
-        expect.objectContaining({ method: 'PATCH' })
+        expect.stringContaining("/v1/admin/stories/123/approve"),
+        expect.objectContaining({ method: "PATCH" }),
       );
-      expect(result.message).toBe('Story approved');
+      expect(result.message).toBe("Story approved");
     });
   });
 
-  describe('rejectStory', () => {
-    it('should reject a story with reason', async () => {
+  describe("rejectStory", () => {
+    it("should reject a story with reason", async () => {
       const mockResponse = {
-        message: 'Story rejected',
-        data: { _id: '123', status: 'rejected' },
+        message: "Story rejected",
+        data: { _id: "123", status: "rejected" },
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -102,23 +109,23 @@ describe('Admin Service', () => {
         json: async () => mockResponse,
       });
 
-      const result = await rejectStory('123', 'Content not appropriate');
+      const result = await rejectStory("123", "Content not appropriate");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/admin/stories/123/reject'),
+        expect.stringContaining("/v1/admin/stories/123/reject"),
         expect.objectContaining({
-          method: 'PATCH',
-          body: JSON.stringify({ reason: 'Content not appropriate' }),
-        })
+          method: "PATCH",
+          body: JSON.stringify({ reason: "Content not appropriate" }),
+        }),
       );
-      expect(result.message).toBe('Story rejected');
+      expect(result.message).toBe("Story rejected");
     });
   });
 
-  describe('getUsers', () => {
-    it('should fetch users with filters', async () => {
+  describe("getUsers", () => {
+    it("should fetch users with filters", async () => {
       const mockResponse = {
-        data: [{ _id: '1', name: 'Test User', role: 'user' }],
+        data: [{ _id: "1", name: "Test User", role: "user" }],
         pagination: { page: 1, limit: 20, total: 1, pages: 1 },
       };
 
@@ -127,44 +134,44 @@ describe('Admin Service', () => {
         json: async () => mockResponse,
       });
 
-      const result = await getUsers(1, 20, { role: 'admin', search: 'test' });
+      const result = await getUsers(1, 20, { role: "admin", search: "test" });
 
       expect(mockFetch).toHaveBeenCalledWith(
         expect.stringMatching(/\/v1\/admin\/users\?.*role=admin.*search=test/),
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(result.data).toHaveLength(1);
     });
   });
 
-  describe('deleteUser', () => {
-    it('should delete a user', async () => {
-      const mockResponse = { message: 'User deleted' };
+  describe("deleteUser", () => {
+    it("should delete a user", async () => {
+      const mockResponse = { message: "User deleted" };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => mockResponse,
       });
 
-      const result = await deleteUser('123');
+      const result = await deleteUser("123");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/v1/admin/users/123'),
-        expect.objectContaining({ method: 'DELETE' })
+        expect.stringContaining("/v1/admin/users/123"),
+        expect.objectContaining({ method: "DELETE" }),
       );
-      expect(result.message).toBe('User deleted');
+      expect(result.message).toBe("User deleted");
     });
   });
 
-  describe('error handling', () => {
-    it('should throw on API error', async () => {
+  describe("error handling", () => {
+    it("should throw on API error", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 403,
-        json: async () => ({ message: 'Forbidden' }),
+        json: async () => ({ message: "Forbidden" }),
       });
 
-      await expect(getDashboardStats()).rejects.toThrow('Forbidden');
+      await expect(getDashboardStats()).rejects.toThrow("Forbidden");
     });
   });
 });

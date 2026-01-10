@@ -7,14 +7,14 @@
 // npx expo install expo-notifications expo-device
 // For now, we'll create a mock version that can be enabled when packages are installed
 
-import Constants from 'expo-constants';
-import { Platform } from 'react-native';
-import api from './api';
+import Constants from "expo-constants";
+import { Platform } from "react-native";
+import api from "./api";
 
 // Type definitions for when expo-notifications is installed
 export interface PushNotificationToken {
   token: string;
-  platform: 'ios' | 'android' | 'web';
+  platform: "ios" | "android" | "web";
 }
 
 export interface NotificationPayload {
@@ -53,10 +53,10 @@ let deviceModule: any = null;
 
 async function loadModules() {
   try {
-    notificationsModule = await import('expo-notifications');
-    deviceModule = await import('expo-device');
+    notificationsModule = await import("expo-notifications");
+    deviceModule = await import("expo-device");
   } catch {
-    console.log('expo-notifications not installed, using mock');
+    console.log("expo-notifications not installed, using mock");
   }
 }
 
@@ -68,27 +68,28 @@ loadModules();
  */
 export async function registerForPushNotifications(): Promise<PushNotificationToken | null> {
   if (!notificationsModule || !deviceModule) {
-    console.log('Push notifications require expo-notifications package');
+    console.log("Push notifications require expo-notifications package");
     return null;
   }
 
   if (!deviceModule.isDevice) {
-    console.log('Push notifications require a physical device');
+    console.log("Push notifications require a physical device");
     return null;
   }
 
   // Check existing permissions
-  const { status: existingStatus } = await notificationsModule.getPermissionsAsync();
+  const { status: existingStatus } =
+    await notificationsModule.getPermissionsAsync();
   let finalStatus = existingStatus;
 
   // Request permissions if not granted
-  if (existingStatus !== 'granted') {
+  if (existingStatus !== "granted") {
     const { status } = await notificationsModule.requestPermissionsAsync();
     finalStatus = status;
   }
 
-  if (finalStatus !== 'granted') {
-    console.log('Push notification permission denied');
+  if (finalStatus !== "granted") {
+    console.log("Push notification permission denied");
     return null;
   }
 
@@ -99,18 +100,18 @@ export async function registerForPushNotifications(): Promise<PushNotificationTo
   });
 
   // Configure Android channel
-  if (Platform.OS === 'android') {
-    await notificationsModule.setNotificationChannelAsync('default', {
-      name: 'Default',
+  if (Platform.OS === "android") {
+    await notificationsModule.setNotificationChannelAsync("default", {
+      name: "Default",
       importance: 4, // MAX
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF6B35',
+      lightColor: "#FF6B35",
     });
   }
 
   return {
     token: tokenData.data,
-    platform: Platform.OS as 'ios' | 'android',
+    platform: Platform.OS as "ios" | "android",
   };
 }
 
@@ -119,30 +120,32 @@ export async function registerForPushNotifications(): Promise<PushNotificationTo
  */
 export async function savePushTokenToServer(token: string): Promise<void> {
   try {
-    const { getAuthToken } = await import('./api');
+    const { getAuthToken } = await import("./api");
     const authToken = getAuthToken();
 
     const API_BASE_URL = __DEV__
       ? Platform.select({
-          ios: 'http://localhost:3001/api',
-          android: 'http://10.0.2.2:3001/api',
-          default: 'http://localhost:3001/api',
+          ios: "http://localhost:3001/api",
+          android: "http://10.0.2.2:3001/api",
+          default: "http://localhost:3001/api",
         })
-      : 'https://manake.netlify.app/api';
+      : "https://manake.netlify.app/api";
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
 
     await fetch(`${API_BASE_URL}/v1/push-tokens/register`, {
-      method: 'POST',
+      method: "POST",
       headers,
       body: JSON.stringify({
         token,
-        platform: Platform.OS as 'ios' | 'android',
+        platform: Platform.OS as "ios" | "android",
       }),
     });
   } catch (error) {
-    console.error('Failed to save push token:', error);
+    console.error("Failed to save push token:", error);
     throw error;
   }
 }
@@ -154,19 +157,19 @@ export async function removePushTokenFromServer(token: string): Promise<void> {
   try {
     const API_BASE_URL = __DEV__
       ? Platform.select({
-          ios: 'http://localhost:3001/api',
-          android: 'http://10.0.2.2:3001/api',
-          default: 'http://localhost:3001/api',
+          ios: "http://localhost:3001/api",
+          android: "http://10.0.2.2:3001/api",
+          default: "http://localhost:3001/api",
         })
-      : 'https://manake.netlify.app/api';
+      : "https://manake.netlify.app/api";
 
     await fetch(`${API_BASE_URL}/v1/push-tokens/remove`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
     });
   } catch (error) {
-    console.error('Failed to remove push token:', error);
+    console.error("Failed to remove push token:", error);
   }
 }
 
@@ -175,13 +178,13 @@ export async function removePushTokenFromServer(token: string): Promise<void> {
  */
 export async function scheduleLocalNotification(
   notification: NotificationPayload,
-  trigger?: NotificationTriggerInput
+  trigger?: NotificationTriggerInput,
 ): Promise<string> {
   if (!notificationsModule) {
-    console.log('Notifications not available');
-    return 'mock-id';
+    console.log("Notifications not available");
+    return "mock-id";
   }
-  
+
   return notificationsModule.scheduleNotificationAsync({
     content: {
       title: notification.title,
@@ -196,7 +199,9 @@ export async function scheduleLocalNotification(
 /**
  * Cancel a scheduled notification
  */
-export async function cancelNotification(notificationId: string): Promise<void> {
+export async function cancelNotification(
+  notificationId: string,
+): Promise<void> {
   if (notificationsModule) {
     await notificationsModule.cancelScheduledNotificationAsync(notificationId);
   }
@@ -243,7 +248,7 @@ export async function clearAllNotifications(): Promise<void> {
  * Add notification received listener
  */
 export function addNotificationReceivedListener(
-  callback: (notification: Notification) => void
+  callback: (notification: Notification) => void,
 ): Subscription {
   if (notificationsModule) {
     return notificationsModule.addNotificationReceivedListener(callback);
@@ -255,10 +260,12 @@ export function addNotificationReceivedListener(
  * Add notification response listener (when user taps notification)
  */
 export function addNotificationResponseListener(
-  callback: (response: NotificationResponse) => void
+  callback: (response: NotificationResponse) => void,
 ): Subscription {
   if (notificationsModule) {
-    return notificationsModule.addNotificationResponseReceivedListener(callback);
+    return notificationsModule.addNotificationResponseReceivedListener(
+      callback,
+    );
   }
   return { remove: () => {} };
 }

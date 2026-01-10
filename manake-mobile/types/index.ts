@@ -7,7 +7,7 @@ export interface User {
   phone?: string;
   bio?: string;
   joinedAt: string;
-  role: 'user' | 'volunteer' | 'admin' | 'moderator';
+  role: "user" | "volunteer" | "admin" | "moderator";
   preferences: UserPreferences;
   stats: UserStats;
 }
@@ -62,17 +62,17 @@ export interface Story {
   tags: string[];
   category: StoryCategory;
   featured: boolean;
-  status: 'draft' | 'published' | 'archived';
+  status: "draft" | "published" | "archived";
   isLiked?: boolean;
 }
 
-export type StoryCategory = 
-  | 'recovery' 
-  | 'education' 
-  | 'employment' 
-  | 'family' 
-  | 'community' 
-  | 'life-skills';
+export type StoryCategory =
+  | "recovery"
+  | "education"
+  | "employment"
+  | "family"
+  | "community"
+  | "life-skills";
 
 export interface StoryComment {
   id?: string;
@@ -92,8 +92,8 @@ export interface Donation {
   donorName?: string;
   donorEmail: string;
   recurring: boolean;
-  paymentMethod: 'card' | 'ecocash' | 'bank';
-  status: 'pending' | 'completed' | 'failed' | 'refunded';
+  paymentMethod: "card" | "ecocash" | "bank";
+  status: "pending" | "completed" | "failed" | "refunded";
   purpose: string;
   createdAt: string;
 }
@@ -101,7 +101,7 @@ export interface Donation {
 export interface DonationRequest {
   amount: number;
   currency: string;
-  paymentMethod: 'card' | 'ecocash' | 'bank';
+  paymentMethod: "card" | "ecocash" | "bank";
   purpose: string;
   donorName?: string;
   donorEmail: string;
@@ -118,13 +118,13 @@ export interface ContactMessage {
   type: ContactType;
 }
 
-export type ContactType = 
-  | 'general' 
-  | 'help' 
-  | 'volunteer' 
-  | 'partnership' 
-  | 'donate' 
-  | 'media';
+export type ContactType =
+  | "general"
+  | "help"
+  | "volunteer"
+  | "partnership"
+  | "donate"
+  | "media";
 
 // Emergency Contact
 export interface EmergencyContact {
@@ -149,7 +149,7 @@ export interface Program {
   requirements: string[];
   image: string;
   color: string;
-  status: 'active' | 'coming-soon' | 'inactive';
+  status: "active" | "coming-soon" | "inactive";
 }
 
 // API Response types
@@ -173,12 +173,12 @@ export interface PaginatedResponse<T> {
 
 // Navigation types
 export type RootStackParamList = {
-  '(tabs)': undefined;
-  'story/[id]': { id: string };
-  'donate/checkout': { amount: number; purpose: string };
-  'auth/login': undefined;
-  'auth/register': undefined;
-  'settings': undefined;
+  "(tabs)": undefined;
+  "story/[id]": { id: string };
+  "donate/checkout": { amount: number; purpose: string };
+  "auth/login": undefined;
+  "auth/register": undefined;
+  settings: undefined;
 };
 
 // UI Component types
@@ -193,8 +193,8 @@ export interface CardProps {
 export interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "primary" | "secondary" | "outline" | "danger";
+  size?: "small" | "medium" | "large";
   disabled?: boolean;
   loading?: boolean;
   icon?: string;
@@ -217,7 +217,7 @@ export interface SettingItem {
   icon: string;
   label: string;
   value?: string | boolean;
-  type: 'toggle' | 'link' | 'info';
+  type: "toggle" | "link" | "info";
   onPress?: () => void;
   onChange?: (value: boolean) => void;
 }

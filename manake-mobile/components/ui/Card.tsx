@@ -1,6 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
-import { theme } from '../../constants';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ViewStyle,
+} from "react-native";
+import { theme } from "../../constants";
 
 interface CardProps {
   children: React.ReactNode;
@@ -8,8 +14,8 @@ interface CardProps {
   subtitle?: string;
   onPress?: () => void;
   style?: ViewStyle;
-  variant?: 'default' | 'elevated' | 'outlined';
-  padding?: 'none' | 'small' | 'medium' | 'large';
+  variant?: "default" | "elevated" | "outlined";
+  padding?: "none" | "small" | "medium" | "large";
 }
 
 export function Card({
@@ -18,23 +24,23 @@ export function Card({
   subtitle,
   onPress,
   style,
-  variant = 'default',
-  padding = 'medium',
+  variant = "default",
+  padding = "medium",
 }: CardProps) {
   const getCardStyle = (): ViewStyle[] => {
     const baseStyle: ViewStyle[] = [styles.card, styles[`padding_${padding}`]];
-    
+
     switch (variant) {
-      case 'elevated':
+      case "elevated":
         baseStyle.push(styles.elevated);
         break;
-      case 'outlined':
+      case "outlined":
         baseStyle.push(styles.outlined);
         break;
       default:
         baseStyle.push(styles.default);
     }
-    
+
     return baseStyle;
   };
 
@@ -64,14 +70,14 @@ export function Card({
 const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   header: {
     marginBottom: 12,
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginBottom: 4,
   },
@@ -81,20 +87,20 @@ const styles = StyleSheet.create({
   },
   // Variants
   default: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
   },
   elevated: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
+    backgroundColor: "#fff",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
   },
   outlined: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
   },
   // Padding
   padding_none: {

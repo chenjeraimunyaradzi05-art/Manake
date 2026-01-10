@@ -2,16 +2,16 @@
  * JWT Token Utilities
  * Handles token generation, verification, and refresh
  */
-import jwt, { SignOptions, JwtPayload } from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
-import { UnauthorizedError, ForbiddenError } from '../errors';
-import crypto from 'crypto';
+import jwt, { SignOptions, JwtPayload } from "jsonwebtoken";
+import { Request, Response, NextFunction } from "express";
+import { UnauthorizedError, ForbiddenError } from "../errors";
+import crypto from "crypto";
 
 // Token payload interface
 export interface TokenPayload {
   userId: string;
   email: string;
-  role?: 'user' | 'admin' | 'moderator';
+  role?: "user" | "admin" | "moderator";
   iat?: number;
   exp?: number;
 }
@@ -34,32 +34,34 @@ export interface TokenPair {
 // Get secret from environment with fallback for development
 const getAccessSecret = (): string => {
   const secret = process.env.JWT_SECRET;
-  if (!secret && process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_SECRET must be set in production');
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET must be set in production");
   }
-  return secret || 'dev-secret-change-in-production';
+  return secret || "dev-secret-change-in-production";
 };
 
 const getRefreshSecret = (): string => {
   const secret = process.env.JWT_REFRESH_SECRET;
-  if (!secret && process.env.NODE_ENV === 'production') {
-    throw new Error('JWT_REFRESH_SECRET must be set in production');
+  if (!secret && process.env.NODE_ENV === "production") {
+    throw new Error("JWT_REFRESH_SECRET must be set in production");
   }
-  return secret || 'dev-refresh-secret-change-in-production';
+  return secret || "dev-refresh-secret-change-in-production";
 };
 
 // Token expiration times
-const ACCESS_TOKEN_EXPIRY = '15m';  // 15 minutes
-const REFRESH_TOKEN_EXPIRY = '7d';  // 7 days
+const ACCESS_TOKEN_EXPIRY = "15m"; // 15 minutes
+const REFRESH_TOKEN_EXPIRY = "7d"; // 7 days
 const ACCESS_TOKEN_EXPIRY_SECONDS = 15 * 60;
 
 /**
  * Generate an access token
  */
-export function generateAccessToken(payload: Omit<TokenPayload, 'iat' | 'exp'>): string {
+export function generateAccessToken(
+  payload: Omit<TokenPayload, "iat" | "exp">,
+): string {
   const options: SignOptions = {
     expiresIn: ACCESS_TOKEN_EXPIRY,
-    algorithm: 'HS256',
+    algorithm: "HS256",
   };
 
   return jwt.sign(payload, getAccessSecret(), options);
@@ -70,14 +72,14 @@ export function generateAccessToken(payload: Omit<TokenPayload, 'iat' | 'exp'>):
  */
 export function generateRefreshToken(userId: string): string {
   const tokenId = crypto.randomUUID();
-  const payload: Omit<RefreshTokenPayload, 'iat' | 'exp'> = {
+  const payload: Omit<RefreshTokenPayload, "iat" | "exp"> = {
     userId,
     tokenId,
   };
 
   const options: SignOptions = {
     expiresIn: REFRESH_TOKEN_EXPIRY,
-    algorithm: 'HS256',
+    algorithm: "HS256",
   };
 
   return jwt.sign(payload, getRefreshSecret(), options);
@@ -86,11 +88,15 @@ export function generateRefreshToken(userId: string): string {
 /**
  * Generate both access and refresh tokens
  */
-export function generateTokenPair(user: { id: string; email: string; role?: string }): TokenPair {
+export function generateTokenPair(user: {
+  id: string;
+  email: string;
+  role?: string;
+}): TokenPair {
   const accessToken = generateAccessToken({
     userId: user.id,
     email: user.email,
-    role: (user.role as TokenPayload['role']) || 'user',
+    role: (user.role as TokenPayload["role"]) || "user",
   });
 
   const refreshToken = generateRefreshToken(user.id);
@@ -107,7 +113,8 @@ export function generateTokenPair(user: { id: string; email: string; role?: stri
  */
 export function verifyAccessToken(token: string): TokenPayload {
   try {
-    const decoded = jwt.verify(token, getAccessSecret()) as JwtPayload & TokenPayload;
+    const decoded = jwt.verify(token, getAccessSecret()) as JwtPayload &
+      TokenPayload;
     return {
       userId: decoded.userId,
       email: decoded.email,
@@ -117,10 +124,10 @@ export function verifyAccessToken(token: string): TokenPayload {
     };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new UnauthorizedError('Token expired');
+      throw new UnauthorizedError("Token expired");
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError('Invalid token');
+      throw new UnauthorizedError("Invalid token");
     }
     throw error;
   }
@@ -131,7 +138,8 @@ export function verifyAccessToken(token: string): TokenPayload {
  */
 export function verifyRefreshToken(token: string): RefreshTokenPayload {
   try {
-    const decoded = jwt.verify(token, getRefreshSecret()) as JwtPayload & RefreshTokenPayload;
+    const decoded = jwt.verify(token, getRefreshSecret()) as JwtPayload &
+      RefreshTokenPayload;
     return {
       userId: decoded.userId,
       tokenId: decoded.tokenId,
@@ -140,10 +148,10 @@ export function verifyRefreshToken(token: string): RefreshTokenPayload {
     };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
-      throw new UnauthorizedError('Refresh token expired');
+      throw new UnauthorizedError("Refresh token expired");
     }
     if (error instanceof jwt.JsonWebTokenError) {
-      throw new UnauthorizedError('Invalid refresh token');
+      throw new UnauthorizedError("Invalid refresh token");
     }
     throw error;
   }
@@ -152,19 +160,21 @@ export function verifyRefreshToken(token: string): RefreshTokenPayload {
 /**
  * Extract token from Authorization header
  */
-export function extractBearerToken(authHeader: string | undefined): string | null {
+export function extractBearerToken(
+  authHeader: string | undefined,
+): string | null {
   if (!authHeader) return null;
-  
-  const parts = authHeader.split(' ');
-  if (parts.length !== 2 || parts[0].toLowerCase() !== 'bearer') {
+
+  const parts = authHeader.split(" ");
+  if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
     return null;
   }
-  
+
   return parts[1];
 }
 
 // Extend Express Request type
-declare module 'express-serve-static-core' {
+declare module "express-serve-static-core" {
   interface Request {
     user?: TokenPayload;
   }
@@ -174,11 +184,15 @@ declare module 'express-serve-static-core' {
  * Authentication middleware
  * Validates JWT token and attaches user to request
  */
-export const authenticate = (req: Request, _res: Response, next: NextFunction): void => {
+export const authenticate = (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void => {
   const token = extractBearerToken(req.headers.authorization);
 
   if (!token) {
-    throw new UnauthorizedError('Authentication required');
+    throw new UnauthorizedError("Authentication required");
   }
 
   try {
@@ -194,7 +208,11 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction): 
  * Optional authentication middleware
  * Attaches user if token present, but doesn't require it
  */
-export const optionalAuth = (req: Request, _res: Response, next: NextFunction): void => {
+export const optionalAuth = (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void => {
   const token = extractBearerToken(req.headers.authorization);
 
   if (token) {
@@ -213,16 +231,18 @@ export const optionalAuth = (req: Request, _res: Response, next: NextFunction): 
  * Role-based authorization middleware
  * Use after authenticate middleware
  */
-export const authorize = (...allowedRoles: Array<'user' | 'admin' | 'moderator'>) => {
+export const authorize = (
+  ...allowedRoles: Array<"user" | "admin" | "moderator">
+) => {
   return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
-      throw new UnauthorizedError('Authentication required');
+      throw new UnauthorizedError("Authentication required");
     }
 
-    const userRole = req.user.role || 'user';
-    
+    const userRole = req.user.role || "user";
+
     if (!allowedRoles.includes(userRole)) {
-      throw new ForbiddenError('Insufficient permissions');
+      throw new ForbiddenError("Insufficient permissions");
     }
 
     next();
@@ -233,7 +253,7 @@ export const authorize = (...allowedRoles: Array<'user' | 'admin' | 'moderator'>
  * Hash a refresh token for storage (don't store raw tokens)
  */
 export function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
+  return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 /**

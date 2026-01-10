@@ -1,8 +1,8 @@
-import { useAuthStore } from '../authStore';
-import { act } from '@testing-library/react-native';
+import { useAuthStore } from "../authStore";
+import { act } from "@testing-library/react-native";
 
 // Mock the api module
-jest.mock('../../services/api', () => ({
+jest.mock("../../services/api", () => ({
   authApi: {
     login: jest.fn(),
     register: jest.fn(),
@@ -13,16 +13,16 @@ jest.mock('../../services/api', () => ({
   setAuthToken: jest.fn(),
   mockData: {
     user: {
-      id: '1',
-      email: 'demo@manake.org',
-      name: 'Demo User',
-      role: 'user',
-      joinedAt: '2024-01-01',
+      id: "1",
+      email: "demo@manake.org",
+      name: "Demo User",
+      role: "user",
+      joinedAt: "2024-01-01",
       preferences: {
         notifications: true,
         emailUpdates: true,
         darkMode: false,
-        language: 'en',
+        language: "en",
       },
       stats: {
         storiesLiked: 0,
@@ -45,18 +45,18 @@ beforeEach(() => {
   });
 });
 
-describe('AuthStore', () => {
+describe("AuthStore", () => {
   const mockUser = {
-    id: '1',
-    email: 'test@example.com',
-    name: 'Test User',
-    role: 'user' as const,
-    joinedAt: '2024-01-01',
+    id: "1",
+    email: "test@example.com",
+    name: "Test User",
+    role: "user" as const,
+    joinedAt: "2024-01-01",
     preferences: {
       notifications: true,
       emailUpdates: true,
       darkMode: false,
-      language: 'en',
+      language: "en",
     },
     stats: {
       storiesLiked: 0,
@@ -66,10 +66,10 @@ describe('AuthStore', () => {
     },
   };
 
-  describe('initial state', () => {
-    it('should have correct initial state', () => {
+  describe("initial state", () => {
+    it("should have correct initial state", () => {
       const state = useAuthStore.getState();
-      
+
       expect(state.user).toBeNull();
       expect(state.token).toBeNull();
       expect(state.isAuthenticated).toBe(false);
@@ -78,10 +78,10 @@ describe('AuthStore', () => {
     });
   });
 
-  describe('login', () => {
-    it('should set loading state during login', async () => {
-      const { authApi } = require('../../services/api');
-      
+  describe("login", () => {
+    it("should set loading state during login", async () => {
+      const { authApi } = require("../../services/api");
+
       // Setup a delayed response
       let resolveLogin: (value: any) => void;
       const loginPromise = new Promise((resolve) => {
@@ -91,8 +91,8 @@ describe('AuthStore', () => {
 
       // Start login
       const loginAction = useAuthStore.getState().login({
-        email: 'test@example.com',
-        password: 'password123',
+        email: "test@example.com",
+        password: "password123",
       });
 
       // Should be loading
@@ -101,7 +101,7 @@ describe('AuthStore', () => {
       // Resolve the login
       resolveLogin!({
         success: true,
-        data: { user: mockUser, token: 'test-token' },
+        data: { user: mockUser, token: "test-token" },
       });
 
       await loginAction;
@@ -110,97 +110,97 @@ describe('AuthStore', () => {
       expect(useAuthStore.getState().isLoading).toBe(false);
     });
 
-    it('should set user and token on successful login', async () => {
-      const { authApi, setAuthToken } = require('../../services/api');
-      
+    it("should set user and token on successful login", async () => {
+      const { authApi, setAuthToken } = require("../../services/api");
+
       authApi.login.mockResolvedValue({
         success: true,
-        data: { user: mockUser, token: 'test-token' },
+        data: { user: mockUser, token: "test-token" },
       });
 
       await useAuthStore.getState().login({
-        email: 'test@example.com',
-        password: 'password123',
+        email: "test@example.com",
+        password: "password123",
       });
 
       const state = useAuthStore.getState();
       expect(state.user).toEqual(mockUser);
-      expect(state.token).toBe('test-token');
+      expect(state.token).toBe("test-token");
       expect(state.isAuthenticated).toBe(true);
-      expect(setAuthToken).toHaveBeenCalledWith('test-token');
+      expect(setAuthToken).toHaveBeenCalledWith("test-token");
     });
 
-    it('should set error on failed login', async () => {
-      const { authApi } = require('../../services/api');
-      
+    it("should set error on failed login", async () => {
+      const { authApi } = require("../../services/api");
+
       authApi.login.mockResolvedValue({
         success: false,
-        message: 'Invalid credentials',
+        message: "Invalid credentials",
       });
 
       await expect(
         useAuthStore.getState().login({
-          email: 'test@example.com',
-          password: 'wrongpassword',
-        })
-      ).rejects.toThrow('Invalid credentials');
+          email: "test@example.com",
+          password: "wrongpassword",
+        }),
+      ).rejects.toThrow("Invalid credentials");
 
       const state = useAuthStore.getState();
-      expect(state.error).toBe('Invalid credentials');
+      expect(state.error).toBe("Invalid credentials");
       expect(state.isAuthenticated).toBe(false);
     });
   });
 
-  describe('register', () => {
-    it('should register user and set authenticated state', async () => {
-      const { authApi, setAuthToken } = require('../../services/api');
-      
+  describe("register", () => {
+    it("should register user and set authenticated state", async () => {
+      const { authApi, setAuthToken } = require("../../services/api");
+
       authApi.register.mockResolvedValue({
         success: true,
-        data: { user: mockUser, token: 'new-token' },
+        data: { user: mockUser, token: "new-token" },
       });
 
       await useAuthStore.getState().register({
-        name: 'Test User',
-        email: 'test@example.com',
-        password: 'password123',
+        name: "Test User",
+        email: "test@example.com",
+        password: "password123",
       });
 
       const state = useAuthStore.getState();
       expect(state.user).toEqual(mockUser);
-      expect(state.token).toBe('new-token');
+      expect(state.token).toBe("new-token");
       expect(state.isAuthenticated).toBe(true);
-      expect(setAuthToken).toHaveBeenCalledWith('new-token');
+      expect(setAuthToken).toHaveBeenCalledWith("new-token");
     });
 
-    it('should handle registration failure', async () => {
-      const { authApi } = require('../../services/api');
-      
+    it("should handle registration failure", async () => {
+      const { authApi } = require("../../services/api");
+
       authApi.register.mockResolvedValue({
         success: false,
-        message: 'Email already exists',
+        message: "Email already exists",
       });
 
       await expect(
         useAuthStore.getState().register({
-          name: 'Test User',
-          email: 'existing@example.com',
-          password: 'password123',
-        })
-      ).rejects.toThrow('Email already exists');
+          name: "Test User",
+          email: "existing@example.com",
+          password: "password123",
+        }),
+      ).rejects.toThrow("Email already exists");
 
-      expect(useAuthStore.getState().error).toBe('Email already exists');
+      expect(useAuthStore.getState().error).toBe("Email already exists");
     });
   });
 
-  describe('logout', () => {
-    it('should clear user state on logout', async () => {
-      const { authApi, setAuthToken } = require('../../services/api');
-      
+  describe("logout", () => {
+    it("should clear user state on logout", async () => {
+      const { authApi, setAuthToken } = require("../../services/api");
+
       // First set a logged in state
       useAuthStore.setState({
         user: mockUser,
-        token: 'test-token',
+        token: "test-token",
         isAuthenticated: true,
       });
 
@@ -215,16 +215,16 @@ describe('AuthStore', () => {
       expect(setAuthToken).toHaveBeenCalledWith(null);
     });
 
-    it('should clear state even if logout API fails', async () => {
-      const { authApi } = require('../../services/api');
-      
+    it("should clear state even if logout API fails", async () => {
+      const { authApi } = require("../../services/api");
+
       useAuthStore.setState({
         user: mockUser,
-        token: 'test-token',
+        token: "test-token",
         isAuthenticated: true,
       });
 
-      authApi.logout.mockRejectedValue(new Error('Network error'));
+      authApi.logout.mockRejectedValue(new Error("Network error"));
 
       await useAuthStore.getState().logout();
 
@@ -233,24 +233,24 @@ describe('AuthStore', () => {
     });
   });
 
-  describe('clearError', () => {
-    it('should clear error state', () => {
-      useAuthStore.setState({ error: 'Some error' });
-      
+  describe("clearError", () => {
+    it("should clear error state", () => {
+      useAuthStore.setState({ error: "Some error" });
+
       useAuthStore.getState().clearError();
-      
+
       expect(useAuthStore.getState().error).toBeNull();
     });
   });
 
-  describe('setDemoMode', () => {
-    it('should set demo user without API call', () => {
+  describe("setDemoMode", () => {
+    it("should set demo user without API call", () => {
       useAuthStore.getState().setDemoMode();
-      
+
       const state = useAuthStore.getState();
       expect(state.isAuthenticated).toBe(true);
       expect(state.user).toBeDefined();
-      expect(state.user?.email).toBe('demo@manake.org');
+      expect(state.user?.email).toBe("demo@manake.org");
     });
   });
 });

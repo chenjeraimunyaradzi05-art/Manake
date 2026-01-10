@@ -1,7 +1,15 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
+import React from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+  Alert,
+  Platform,
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
 
 interface EmergencyWidgetProps {
   compact?: boolean;
@@ -9,18 +17,18 @@ interface EmergencyWidgetProps {
 
 const emergencyContacts = [
   {
-    id: '1',
-    name: '24/7 Helpline',
-    phone: '+263242123456',
-    icon: 'phone' as const,
+    id: "1",
+    name: "24/7 Helpline",
+    phone: "+263242123456",
+    icon: "phone" as const,
     color: theme.colors.danger,
   },
   {
-    id: '2',
-    name: 'WhatsApp',
-    phone: '+263779876543',
-    icon: 'whatsapp' as const,
-    color: '#25D366',
+    id: "2",
+    name: "WhatsApp",
+    phone: "+263779876543",
+    icon: "whatsapp" as const,
+    color: "#25D366",
     isWhatsApp: true,
   },
 ];
@@ -29,12 +37,15 @@ export function EmergencyWidget({ compact = false }: EmergencyWidgetProps) {
   const handleCall = async (phone: string, isWhatsApp?: boolean) => {
     try {
       if (isWhatsApp) {
-        const whatsappUrl = `whatsapp://send?phone=${phone.replace(/\D/g, '')}`;
+        const whatsappUrl = `whatsapp://send?phone=${phone.replace(/\D/g, "")}`;
         const canOpen = await Linking.canOpenURL(whatsappUrl);
         if (canOpen) {
           await Linking.openURL(whatsappUrl);
         } else {
-          Alert.alert('WhatsApp not installed', 'Please install WhatsApp to use this feature.');
+          Alert.alert(
+            "WhatsApp not installed",
+            "Please install WhatsApp to use this feature.",
+          );
         }
       } else {
         const phoneUrl = Platform.select({
@@ -45,13 +56,13 @@ export function EmergencyWidget({ compact = false }: EmergencyWidgetProps) {
         await Linking.openURL(phoneUrl);
       }
     } catch (error) {
-      Alert.alert('Error', 'Could not make the call. Please try again.');
+      Alert.alert("Error", "Could not make the call. Please try again.");
     }
   };
 
   if (compact) {
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.compactWidget}
         onPress={() => handleCall(emergencyContacts[0].phone)}
         activeOpacity={0.7}
@@ -95,7 +106,7 @@ export function EmergencyWidget({ compact = false }: EmergencyWidgetProps) {
 
 const styles = StyleSheet.create({
   widget: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 20,
     borderWidth: 2,
@@ -107,15 +118,15 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
   },
   pulseContainer: {
     marginRight: 10,
   },
   pulse: {
-    position: 'absolute',
+    position: "absolute",
     width: 24,
     height: 24,
     borderRadius: 12,
@@ -126,7 +137,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
   },
   description: {
@@ -136,40 +147,40 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   buttons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   button: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   // Compact styles
   compactWidget: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: theme.colors.danger,
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 25,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   compactIcon: {
     marginRight: 8,
   },
   compactText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

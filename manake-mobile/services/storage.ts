@@ -1,12 +1,12 @@
-import * as SecureStore from 'expo-secure-store';
-import { Platform } from 'react-native';
+import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 
 // Keys for secure storage
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'manake_auth_token',
-  USER_DATA: 'manake_user_data',
-  PREFERENCES: 'manake_preferences',
-  ONBOARDING_COMPLETE: 'manake_onboarding_complete',
+  AUTH_TOKEN: "manake_auth_token",
+  USER_DATA: "manake_user_data",
+  PREFERENCES: "manake_preferences",
+  ONBOARDING_COMPLETE: "manake_onboarding_complete",
 } as const;
 
 type StorageKey = (typeof STORAGE_KEYS)[keyof typeof STORAGE_KEYS];
@@ -23,10 +23,10 @@ class SecureStorageService {
    */
   async setItem(key: StorageKey, value: string): Promise<void> {
     try {
-      if (Platform.OS === 'web') {
+      if (Platform.OS === "web") {
         // Web fallback - use localStorage (less secure but functional)
         this.webStorage.set(key, value);
-        if (typeof localStorage !== 'undefined') {
+        if (typeof localStorage !== "undefined") {
           localStorage.setItem(key, value);
         }
       } else {
@@ -43,9 +43,9 @@ class SecureStorageService {
    */
   async getItem(key: StorageKey): Promise<string | null> {
     try {
-      if (Platform.OS === 'web') {
+      if (Platform.OS === "web") {
         // Web fallback
-        if (typeof localStorage !== 'undefined') {
+        if (typeof localStorage !== "undefined") {
           return localStorage.getItem(key);
         }
         return this.webStorage.get(key) || null;
@@ -62,9 +62,9 @@ class SecureStorageService {
    */
   async deleteItem(key: StorageKey): Promise<void> {
     try {
-      if (Platform.OS === 'web') {
+      if (Platform.OS === "web") {
         this.webStorage.delete(key);
-        if (typeof localStorage !== 'undefined') {
+        if (typeof localStorage !== "undefined") {
           localStorage.removeItem(key);
         }
       } else {
@@ -93,7 +93,7 @@ class SecureStorageService {
     try {
       return JSON.parse(jsonValue) as T;
     } catch {
-      if (process.env.NODE_ENV !== 'test') {
+      if (process.env.NODE_ENV !== "test") {
         console.error(`Failed to parse ${key} as JSON`);
       }
       return null;

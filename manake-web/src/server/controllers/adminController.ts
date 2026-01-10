@@ -3,16 +3,19 @@
  * Provides admin dashboard functionality: analytics, moderation, user management
  */
 
-import { Request, Response } from 'express';
-import { Story } from '../models/Story';
-import { User } from '../models/User';
-import { Donation } from '../models/Donation';
-import { Message } from '../models/Message';
-import { NotFoundError, ForbiddenError } from '../errors';
+import { Request, Response } from "express";
+import { Story } from "../models/Story";
+import { User } from "../models/User";
+import { Donation } from "../models/Donation";
+import { Message } from "../models/Message";
+import { NotFoundError, ForbiddenError } from "../errors";
 
 // ============ Analytics ============
 
-export const getDashboardStats = async (_req: Request, res: Response): Promise<void> => {
+export const getDashboardStats = async (
+  _req: Request,
+  res: Response,
+): Promise<void> => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -31,26 +34,26 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
     User.countDocuments({ isActive: true }),
     User.countDocuments({ createdAt: { $gte: startOfMonth } }),
     Story.countDocuments({}),
-    Story.countDocuments({ status: 'pending' }),
+    Story.countDocuments({ status: "pending" }),
     Donation.aggregate([
-      { $match: { status: 'succeeded' } },
-      { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
+      { $match: { status: "succeeded" } },
+      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
     ]),
     Donation.aggregate([
-      { $match: { status: 'succeeded', createdAt: { $gte: startOfMonth } } },
-      { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
+      { $match: { status: "succeeded", createdAt: { $gte: startOfMonth } } },
+      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
     ]),
     Donation.aggregate([
       {
         $match: {
-          status: 'succeeded',
+          status: "succeeded",
           createdAt: { $gte: startOfLastMonth, $lt: startOfMonth },
         },
       },
-      { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
+      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
     ]),
     Message.countDocuments({}),
-    Message.countDocuments({ status: { $ne: 'read' }, direction: 'inbound' }),
+    Message.countDocuments({ status: { $ne: "read" }, direction: "inbound" }),
   ]);
 
   const donationStats = totalDonations[0] || { total: 0, count: 0 };
@@ -85,22 +88,25 @@ export const getDashboardStats = async (_req: Request, res: Response): Promise<v
   });
 };
 
-export const getRecentActivity = async (req: Request, res: Response): Promise<void> => {
+export const getRecentActivity = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const limit = Number(req.query.limit) || 20;
 
   const [recentStories, recentDonations, recentUsers] = await Promise.all([
     Story.find({})
       .sort({ createdAt: -1 })
       .limit(limit)
-      .select('title author.name category createdAt'),
-    Donation.find({ status: 'succeeded' })
+      .select("title author.name category createdAt"),
+    Donation.find({ status: "succeeded" })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .select('donorName amount isAnonymous createdAt'),
+      .select("donorName amount isAnonymous createdAt"),
     User.find({})
       .sort({ createdAt: -1 })
       .limit(limit)
-      .select('name email createdAt'),
+      .select("name email createdAt"),
   ]);
 
   res.json({
@@ -108,7 +114,7 @@ export const getRecentActivity = async (req: Request, res: Response): Promise<vo
     donations: recentDonations.map((d) => ({
       ...d.toObject(),
       amount: (d.amount || 0) / 100,
-      donorName: d.isAnonymous ? 'Anonymous' : d.donorName,
+      donorName: d.isAnonymous ? "Anonymous" : d.donorName,
     })),
     users: recentUsers,
   });
@@ -116,14 +122,20 @@ export const getRecentActivity = async (req: Request, res: Response): Promise<vo
 
 // ============ Story Moderation ============
 
-export const getPendingStories = async (req: Request, res: Response): Promise<void> => {
+export const getPendingStories = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 20;
   const skip = (page - 1) * limit;
 
   const [stories, total] = await Promise.all([
-    Story.find({ status: 'pending' }).sort({ createdAt: -1 }).skip(skip).limit(limit),
-    Story.countDocuments({ status: 'pending' }),
+    Story.find({ status: "pending" })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Story.countDocuments({ status: "pending" }),
   ]);
 
   res.json({
@@ -132,52 +144,67 @@ export const getPendingStories = async (req: Request, res: Response): Promise<vo
   });
 };
 
-export const approveStory = async (req: Request, res: Response): Promise<void> => {
+export const approveStory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const story = await Story.findByIdAndUpdate(
     id,
-    { status: 'published', publishedAt: new Date() },
-    { new: true }
+    { status: "published", publishedAt: new Date() },
+    { new: true },
   );
 
-  if (!story) throw new NotFoundError('Story');
+  if (!story) throw new NotFoundError("Story");
 
-  res.json({ message: 'Story approved', data: story });
+  res.json({ message: "Story approved", data: story });
 };
 
-export const rejectStory = async (req: Request, res: Response): Promise<void> => {
+export const rejectStory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const { reason } = req.body as { reason?: string };
 
   const story = await Story.findByIdAndUpdate(
     id,
-    { status: 'rejected', rejectionReason: reason },
-    { new: true }
+    { status: "rejected", rejectionReason: reason },
+    { new: true },
   );
 
-  if (!story) throw new NotFoundError('Story');
+  if (!story) throw new NotFoundError("Story");
 
-  res.json({ message: 'Story rejected', data: story });
+  res.json({ message: "Story rejected", data: story });
 };
 
-export const featureStory = async (req: Request, res: Response): Promise<void> => {
+export const featureStory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const { featured } = req.body as { featured: boolean };
 
   const story = await Story.findByIdAndUpdate(id, { featured }, { new: true });
 
-  if (!story) throw new NotFoundError('Story');
+  if (!story) throw new NotFoundError("Story");
 
-  res.json({ message: featured ? 'Story featured' : 'Story unfeatured', data: story });
+  res.json({
+    message: featured ? "Story featured" : "Story unfeatured",
+    data: story,
+  });
 };
 
-export const deleteStory = async (req: Request, res: Response): Promise<void> => {
+export const deleteStory = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const story = await Story.findByIdAndDelete(id);
 
-  if (!story) throw new NotFoundError('Story');
+  if (!story) throw new NotFoundError("Story");
 
-  res.json({ message: 'Story deleted' });
+  res.json({ message: "Story deleted" });
 };
 
 // ============ User Management ============
@@ -193,8 +220,8 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
   if (role) filter.role = role;
   if (search) {
     filter.$or = [
-      { name: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } },
+      { name: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
     ];
   }
 
@@ -203,7 +230,7 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .select('name email role isActive isEmailVerified createdAt lastLogin'),
+      .select("name email role isActive isEmailVerified createdAt lastLogin"),
     User.countDocuments(filter),
   ]);
 
@@ -213,57 +240,71 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
   });
 };
 
-export const getUserById = async (req: Request, res: Response): Promise<void> => {
-  const user = await User.findById(req.params.id).select('-passwordHash');
+export const getUserById = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const user = await User.findById(req.params.id).select("-passwordHash");
 
-  if (!user) throw new NotFoundError('User');
+  if (!user) throw new NotFoundError("User");
 
   res.json({ data: user });
 };
 
-export const updateUserRole = async (req: Request, res: Response): Promise<void> => {
+export const updateUserRole = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
-  const { role } = req.body as { role: 'user' | 'admin' | 'moderator' };
+  const { role } = req.body as { role: "user" | "admin" | "moderator" };
   const actorRole = req.user?.role;
 
   // Only admins can promote to admin
-  if (role === 'admin' && actorRole !== 'admin') {
-    throw new ForbiddenError('Only admins can assign admin role');
+  if (role === "admin" && actorRole !== "admin") {
+    throw new ForbiddenError("Only admins can assign admin role");
   }
 
-  const user = await User.findByIdAndUpdate(id, { role }, { new: true }).select('-passwordHash');
+  const user = await User.findByIdAndUpdate(id, { role }, { new: true }).select(
+    "-passwordHash",
+  );
 
-  if (!user) throw new NotFoundError('User');
+  if (!user) throw new NotFoundError("User");
 
-  res.json({ message: 'User role updated', data: user });
+  res.json({ message: "User role updated", data: user });
 };
 
-export const toggleUserActive = async (req: Request, res: Response): Promise<void> => {
+export const toggleUserActive = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
   const user = await User.findById(id);
 
-  if (!user) throw new NotFoundError('User');
+  if (!user) throw new NotFoundError("User");
 
   user.isActive = !user.isActive;
   await user.save();
 
   res.json({
-    message: user.isActive ? 'User activated' : 'User deactivated',
+    message: user.isActive ? "User activated" : "User deactivated",
     data: { id: user._id, isActive: user.isActive },
   });
 };
 
-export const deleteUser = async (req: Request, res: Response): Promise<void> => {
+export const deleteUser = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { id } = req.params;
 
   // Prevent self-deletion
   if (req.user?.userId === id) {
-    throw new ForbiddenError('Cannot delete your own account via admin panel');
+    throw new ForbiddenError("Cannot delete your own account via admin panel");
   }
 
   const user = await User.findByIdAndDelete(id);
 
-  if (!user) throw new NotFoundError('User');
+  if (!user) throw new NotFoundError("User");
 
-  res.json({ message: 'User deleted' });
+  res.json({ message: "User deleted" });
 };

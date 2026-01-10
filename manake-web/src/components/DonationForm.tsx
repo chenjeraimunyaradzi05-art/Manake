@@ -1,28 +1,40 @@
-import { useState } from 'react';
-import { Heart, AlertCircle, CheckCircle, Loader2, Smartphone } from 'lucide-react';
+import { useState } from "react";
+import {
+  Heart,
+  AlertCircle,
+  CheckCircle,
+  Loader2,
+  Smartphone,
+} from "lucide-react";
 
 interface DonationFormProps {
-  variant?: 'default' | 'compact' | 'hero';
+  variant?: "default" | "compact" | "hero";
 }
 
-export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
-  const [amount, setAmount] = useState('25');
-  const [customAmount, setCustomAmount] = useState('');
+export const DonationForm = ({ variant = "default" }: DonationFormProps) => {
+  const [amount, setAmount] = useState("25");
+  const [customAmount, setCustomAmount] = useState("");
   const [recurring, setRecurring] = useState(false);
-  const [donorName, setDonorName] = useState('');
-  const [donorEmail, setDonorEmail] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'ecocash' | 'bank'>('card');
+  const [donorName, setDonorName] = useState("");
+  const [donorEmail, setDonorEmail] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<
+    "card" | "ecocash" | "bank"
+  >("card");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const presetAmounts = [10, 25, 50, 100, 250];
-  const finalAmount = customAmount ? parseFloat(customAmount) : parseFloat(amount);
+  const finalAmount = customAmount
+    ? parseFloat(customAmount)
+    : parseFloat(amount);
 
   // Impact calculations
   const getImpactText = (amt: number) => {
-    if (amt >= 250) return `Sponsor a youth's complete 3-month recovery program`;
-    if (amt >= 100) return `Provide 1 month of life skills training for a youth`;
+    if (amt >= 250)
+      return `Sponsor a youth's complete 3-month recovery program`;
+    if (amt >= 100)
+      return `Provide 1 month of life skills training for a youth`;
     if (amt >= 50) return `Cover counseling sessions for 2 weeks`;
     if (amt >= 25) return `Provide meals and accommodation for 1 week`;
     if (amt >= 10) return `Supply educational materials for 1 youth`;
@@ -32,50 +44,52 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
   const handleDonate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       if (!finalAmount || finalAmount <= 0) {
-        throw new Error('Please enter a valid donation amount');
+        throw new Error("Please enter a valid donation amount");
       }
 
       if (!donorEmail) {
-        throw new Error('Please enter your email address');
+        throw new Error("Please enter your email address");
       }
 
       // Validate email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(donorEmail)) {
-        throw new Error('Please enter a valid email address');
+        throw new Error("Please enter a valid email address");
       }
 
       // Call backend to create payment intent
-      const response = await fetch('/api/donations/create-payment-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/donations/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: Math.round(finalAmount * 100), // Convert to cents
-          currency: 'usd',
+          currency: "usd",
           donorEmail,
           donorName,
           recurring,
           paymentMethod,
-          purpose: 'general_donation'
-        })
+          purpose: "general_donation",
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Failed to process donation. Please try again.');
+        throw new Error(
+          errorData.message || "Failed to process donation. Please try again.",
+        );
       }
 
       const data = await response.json();
 
       // Handle different payment methods
-      if (paymentMethod === 'card') {
+      if (paymentMethod === "card") {
         // Redirect to Stripe checkout or show card input
         window.location.href = data.checkoutUrl;
-      } else if (paymentMethod === 'ecocash') {
+      } else if (paymentMethod === "ecocash") {
         // Show Ecocash instructions
         window.location.href = `/donate/ecocash?ref=${data.reference}`;
       } else {
@@ -99,13 +113,10 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
         </div>
         <h2 className="text-2xl font-bold mb-2 text-gray-900">Thank You!</h2>
         <p className="text-gray-600 mb-6">
-          Your generous donation of ${finalAmount} will help transform lives. 
-          A confirmation has been sent to your email.
+          Your generous donation of ${finalAmount} will help transform lives. A
+          confirmation has been sent to your email.
         </p>
-        <button 
-          onClick={() => setSuccess(false)}
-          className="btn-primary"
-        >
+        <button onClick={() => setSuccess(false)} className="btn-primary">
           Make Another Donation
         </button>
       </div>
@@ -113,9 +124,11 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
   }
 
   return (
-    <div className={`bg-white rounded-2xl shadow-xl overflow-hidden ${
-      variant === 'compact' ? 'p-6' : 'p-8'
-    }`}>
+    <div
+      className={`bg-white rounded-2xl shadow-xl overflow-hidden ${
+        variant === "compact" ? "p-6" : "p-8"
+      }`}
+    >
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
@@ -136,18 +149,18 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
             Select Amount (USD)
           </label>
           <div className="grid grid-cols-5 gap-2 mb-3">
-            {presetAmounts.map(preset => (
+            {presetAmounts.map((preset) => (
               <button
                 key={preset}
                 type="button"
                 onClick={() => {
                   setAmount(preset.toString());
-                  setCustomAmount('');
+                  setCustomAmount("");
                 }}
                 className={`py-3 rounded-xl border-2 font-semibold transition-all ${
                   amount === preset.toString() && !customAmount
-                    ? 'border-primary-600 bg-primary-50 text-primary-600'
-                    : 'border-gray-200 hover:border-primary-300 text-gray-700'
+                    ? "border-primary-600 bg-primary-50 text-primary-600"
+                    : "border-gray-200 hover:border-primary-300 text-gray-700"
                 }`}
               >
                 ${preset}
@@ -155,13 +168,15 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
             ))}
           </div>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">
+              $
+            </span>
             <input
               type="number"
               value={customAmount}
               onChange={(e) => {
                 setCustomAmount(e.target.value);
-                setAmount('');
+                setAmount("");
               }}
               placeholder="Enter custom amount"
               min="1"
@@ -185,11 +200,11 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
           <div className="grid grid-cols-3 gap-3">
             <button
               type="button"
-              onClick={() => setPaymentMethod('card')}
+              onClick={() => setPaymentMethod("card")}
               className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                paymentMethod === 'card'
-                  ? 'border-primary-600 bg-primary-50'
-                  : 'border-gray-200 hover:border-primary-300'
+                paymentMethod === "card"
+                  ? "border-primary-600 bg-primary-50"
+                  : "border-gray-200 hover:border-primary-300"
               }`}
             >
               <span className="text-2xl">💳</span>
@@ -197,11 +212,11 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
             </button>
             <button
               type="button"
-              onClick={() => setPaymentMethod('ecocash')}
+              onClick={() => setPaymentMethod("ecocash")}
               className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                paymentMethod === 'ecocash'
-                  ? 'border-primary-600 bg-primary-50'
-                  : 'border-gray-200 hover:border-primary-300'
+                paymentMethod === "ecocash"
+                  ? "border-primary-600 bg-primary-50"
+                  : "border-gray-200 hover:border-primary-300"
               }`}
             >
               <Smartphone className="w-6 h-6 text-green-600" />
@@ -209,11 +224,11 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
             </button>
             <button
               type="button"
-              onClick={() => setPaymentMethod('bank')}
+              onClick={() => setPaymentMethod("bank")}
               className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
-                paymentMethod === 'bank'
-                  ? 'border-primary-600 bg-primary-50'
-                  : 'border-gray-200 hover:border-primary-300'
+                paymentMethod === "bank"
+                  ? "border-primary-600 bg-primary-50"
+                  : "border-gray-200 hover:border-primary-300"
               }`}
             >
               <span className="text-2xl">🏦</span>
@@ -231,8 +246,12 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
             className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
           />
           <div>
-            <span className="font-medium text-gray-900">Make this a monthly donation</span>
-            <p className="text-sm text-gray-500">Help us plan ahead with consistent support</p>
+            <span className="font-medium text-gray-900">
+              Make this a monthly donation
+            </span>
+            <p className="text-sm text-gray-500">
+              Help us plan ahead with consistent support
+            </p>
           </div>
         </label>
 
@@ -277,7 +296,7 @@ export const DonationForm = ({ variant = 'default' }: DonationFormProps) => {
           ) : (
             <>
               <Heart size={20} />
-              Donate ${finalAmount || 0} {recurring && '/month'}
+              Donate ${finalAmount || 0} {recurring && "/month"}
             </>
           )}
         </button>

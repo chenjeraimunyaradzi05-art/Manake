@@ -1,6 +1,11 @@
-import { AxiosError, AxiosInstance, InternalAxiosRequestConfig, AxiosHeaders } from 'axios';
-import api from './api';
-import { refreshTokens } from './auth';
+import {
+  AxiosError,
+  AxiosInstance,
+  InternalAxiosRequestConfig,
+  AxiosHeaders,
+} from "axios";
+import api from "./api";
+import { refreshTokens } from "./auth";
 
 export type InterceptorOptions = {
   getRefreshToken: () => string | null;
@@ -14,7 +19,7 @@ interface RetriableConfig extends InternalAxiosRequestConfig {
 
 export const setupAuthInterceptors = (
   client: AxiosInstance = api,
-  options: InterceptorOptions
+  options: InterceptorOptions,
 ): void => {
   let refreshPromise: Promise<string> | null = null;
 
@@ -54,23 +59,28 @@ export const setupAuthInterceptors = (
         if (!originalRequest.headers) {
           originalRequest.headers = new AxiosHeaders();
         }
-        originalRequest.headers.set('Authorization', `Bearer ${newAccessToken}`);
+        originalRequest.headers.set(
+          "Authorization",
+          `Bearer ${newAccessToken}`,
+        );
         return client(originalRequest);
       } catch (refreshError) {
         return Promise.reject(refreshError);
       }
-    }
+    },
   );
 };
 
-export const setupAuthRequestInterceptor = (client: AxiosInstance = api): void => {
+export const setupAuthRequestInterceptor = (
+  client: AxiosInstance = api,
+): void => {
   client.interceptors.request.use((config) => {
-    const token = localStorage.getItem('auth_token');
+    const token = localStorage.getItem("auth_token");
     if (token) {
       if (!config.headers) {
         config.headers = new AxiosHeaders();
       }
-      config.headers.set('Authorization', `Bearer ${token}`);
+      config.headers.set("Authorization", `Bearer ${token}`);
     }
     return config;
   });

@@ -2,38 +2,44 @@
  * SocialAccount Model
  * Stores social media account connections for users
  */
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from "mongoose";
 
-export type SocialPlatform = 'instagram' | 'facebook' | 'twitter' | 'whatsapp' | 'google' | 'apple';
+export type SocialPlatform =
+  | "instagram"
+  | "facebook"
+  | "twitter"
+  | "whatsapp"
+  | "google"
+  | "apple";
 
 export interface ISocialAccount extends Document {
   userId: mongoose.Types.ObjectId;
   platform: SocialPlatform;
-  
+
   // Account info
   platformUserId: string;
   platformUsername?: string;
   displayName?: string;
   profilePictureUrl?: string;
-  
+
   // Tokens
   accessToken: string;
   refreshToken?: string;
   tokenExpiresAt?: Date;
-  
+
   // Permissions/Scopes
   scopes: string[];
-  
+
   // Page info (for Facebook pages)
   pageId?: string;
   pageName?: string;
   pageAccessToken?: string;
-  
+
   // Status
   isActive: boolean;
   lastSyncAt?: Date;
   syncError?: string;
-  
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,12 +48,12 @@ const socialAccountSchema = new Schema<ISocialAccount>(
   {
     userId: {
       type: Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: true,
     },
     platform: {
       type: String,
-      enum: ['instagram', 'facebook', 'twitter', 'whatsapp', 'google', 'apple'],
+      enum: ["instagram", "facebook", "twitter", "whatsapp", "google", "apple"],
       required: true,
     },
     platformUserId: {
@@ -102,13 +108,13 @@ const socialAccountSchema = new Schema<ISocialAccount>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Compound unique index
 socialAccountSchema.index(
   { userId: 1, platform: 1, platformUserId: 1 },
-  { unique: true }
+  { unique: true },
 );
 
 // Indexes for queries
@@ -125,7 +131,7 @@ socialAccountSchema.methods.isTokenExpired = function (): boolean {
 socialAccountSchema.methods.updateTokens = async function (
   accessToken: string,
   refreshToken?: string,
-  expiresAt?: Date
+  expiresAt?: Date,
 ): Promise<void> {
   this.accessToken = accessToken;
   if (refreshToken) this.refreshToken = refreshToken;
@@ -134,6 +140,6 @@ socialAccountSchema.methods.updateTokens = async function (
 };
 
 export const SocialAccount = mongoose.model<ISocialAccount>(
-  'SocialAccount',
-  socialAccountSchema
+  "SocialAccount",
+  socialAccountSchema,
 );

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { ImpactStats } from '../types';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { ImpactStats } from "../types";
 
 interface AppState {
   // User
@@ -11,7 +11,12 @@ interface AppState {
     avatar: string | null;
     role: string | null;
   };
-  setUser: (user: { name: string; email: string | null; avatar?: string | null; role?: string | null }) => void;
+  setUser: (user: {
+    name: string;
+    email: string | null;
+    avatar?: string | null;
+    role?: string | null;
+  }) => void;
   logout: () => void;
 
   // Saved stories
@@ -55,37 +60,49 @@ export const useAppStore = create<AppState>()(
         avatar: null,
         role: null,
       },
-      setUser: (userData) => set({
-        user: {
-          isLoggedIn: true,
-          name: userData.name,
-          email: userData.email,
-          avatar: userData.avatar ?? null,
-          role: userData.role ?? null,
-        },
-      }),
-      logout: () => set({ 
-        user: { isLoggedIn: false, name: null, email: null, avatar: null, role: null }
-      }),
+      setUser: (userData) =>
+        set({
+          user: {
+            isLoggedIn: true,
+            name: userData.name,
+            email: userData.email,
+            avatar: userData.avatar ?? null,
+            role: userData.role ?? null,
+          },
+        }),
+      logout: () =>
+        set({
+          user: {
+            isLoggedIn: false,
+            name: null,
+            email: null,
+            avatar: null,
+            role: null,
+          },
+        }),
 
       // Saved stories
       savedStories: [],
-      saveStory: (storyId) => set((state) => ({
-        savedStories: [...state.savedStories, storyId]
-      })),
-      unsaveStory: (storyId) => set((state) => ({
-        savedStories: state.savedStories.filter(id => id !== storyId)
-      })),
+      saveStory: (storyId) =>
+        set((state) => ({
+          savedStories: [...state.savedStories, storyId],
+        })),
+      unsaveStory: (storyId) =>
+        set((state) => ({
+          savedStories: state.savedStories.filter((id) => id !== storyId),
+        })),
       isStorySaved: (storyId) => get().savedStories.includes(storyId),
 
       // Liked stories
       likedStories: [],
-      likeStory: (storyId) => set((state) => ({
-        likedStories: [...state.likedStories, storyId]
-      })),
-      unlikeStory: (storyId) => set((state) => ({
-        likedStories: state.likedStories.filter(id => id !== storyId)
-      })),
+      likeStory: (storyId) =>
+        set((state) => ({
+          likedStories: [...state.likedStories, storyId],
+        })),
+      unlikeStory: (storyId) =>
+        set((state) => ({
+          likedStories: state.likedStories.filter((id) => id !== storyId),
+        })),
       isStoryLiked: (storyId) => get().likedStories.includes(storyId),
 
       // Impact stats (defaults)
@@ -113,13 +130,13 @@ export const useAppStore = create<AppState>()(
       setLastDonation: (amount) => set({ lastDonationAmount: amount }),
     }),
     {
-      name: 'manake-storage', // localStorage key
+      name: "manake-storage", // localStorage key
       partialize: (state) => ({
         savedStories: state.savedStories,
         likedStories: state.likedStories,
         hasSubscribedNewsletter: state.hasSubscribedNewsletter,
         user: state.user,
       }),
-    }
-  )
+    },
+  ),
 );

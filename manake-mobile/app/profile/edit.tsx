@@ -1,12 +1,12 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../../constants';
-import { Button, Input, Card } from '../../components/ui';
-import { useToast } from '../../components/ui/Toast';
-import { useAuthStore } from '../../store/authStore';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../constants/messages';
+import React, { useMemo, useState } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { theme } from "../../constants";
+import { Button, Input, Card } from "../../components/ui";
+import { useToast } from "../../components/ui/Toast";
+import { useAuthStore } from "../../store/authStore";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages";
 
 export default function EditProfileScreen() {
   const { user, isAuthenticated, isLoading, updateProfile } = useAuthStore();
@@ -14,11 +14,11 @@ export default function EditProfileScreen() {
 
   const initial = useMemo(
     () => ({
-      name: user?.name ?? '',
-      phone: user?.phone ?? '',
-      bio: user?.bio ?? '',
+      name: user?.name ?? "",
+      phone: user?.phone ?? "",
+      bio: user?.bio ?? "",
     }),
-    [user]
+    [user],
   );
 
   const [name, setName] = useState(initial.name);
@@ -37,8 +37,8 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!canEdit) {
-      showToast('Please sign in to edit your profile.', 'warning');
-      router.replace('/(auth)/login');
+      showToast("Please sign in to edit your profile.", "warning");
+      router.replace("/(auth)/login");
       return;
     }
 
@@ -50,26 +50,38 @@ export default function EditProfileScreen() {
         phone: phone.trim() || undefined,
         bio: bio.trim() || undefined,
       });
-      showToast(SUCCESS_MESSAGES.PROFILE_UPDATED ?? 'Profile updated', 'success');
+      showToast(
+        SUCCESS_MESSAGES.PROFILE_UPDATED ?? "Profile updated",
+        "success",
+      );
       router.back();
     } catch (e) {
       showToast(
         e instanceof Error ? e.message : ERROR_MESSAGES.PROFILE_UPDATE_FAILED,
-        'error'
+        "error",
       );
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Edit Profile</Text>
         <Text style={styles.subtitle}>Update your personal information.</Text>
 
         {!canEdit ? (
           <Card variant="outlined" style={styles.card}>
-            <Text style={styles.infoText}>You need to be signed in to edit your profile.</Text>
-            <Button title="Go to Login" onPress={() => router.replace('/(auth)/login')} fullWidth />
+            <Text style={styles.infoText}>
+              You need to be signed in to edit your profile.
+            </Text>
+            <Button
+              title="Go to Login"
+              onPress={() => router.replace("/(auth)/login")}
+              fullWidth
+            />
           </Card>
         ) : (
           <Card variant="elevated" style={styles.card}>
@@ -140,8 +152,8 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   title: {
-    fontSize: theme.fontSize['2xl'],
-    fontWeight: '700',
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
@@ -158,7 +170,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.m,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: theme.spacing.m,
     marginTop: theme.spacing.m,
   },

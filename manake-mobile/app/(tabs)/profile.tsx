@@ -1,22 +1,29 @@
-import React, { useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
+import React, { useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
   TouchableOpacity,
   Alert,
   RefreshControl,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { theme } from '../../constants';
-import { Avatar, Button, StatCard, SettingItem, Card } from '../../components';
-import { useAuthStore } from '../../store';
-import { mockData } from '../../services/api';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { theme } from "../../constants";
+import { Avatar, Button, StatCard, SettingItem, Card } from "../../components";
+import { useAuthStore } from "../../store";
+import { mockData } from "../../services/api";
 
 export default function ProfileScreen() {
-  const { user, isAuthenticated, isLoading, setDemoMode, logout, updateProfile } = useAuthStore();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    setDemoMode,
+    logout,
+    updateProfile,
+  } = useAuthStore();
   const [refreshing, setRefreshing] = React.useState(false);
 
   // For demo purposes, automatically load demo user
@@ -29,57 +36,57 @@ export default function ProfileScreen() {
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
     // Simulate refresh
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setRefreshing(false);
   }, []);
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
-          style: 'destructive',
-          onPress: () => logout(),
-        },
-      ]
-    );
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: () => logout(),
+      },
+    ]);
   };
 
   const handleEditProfile = () => {
-    router.push('/profile/edit');
+    router.push("/profile/edit");
   };
 
   const handleOpenSettings = () => {
-    router.push('/settings');
+    router.push("/settings");
   };
 
   const handleShareApp = () => {
-    Alert.alert('Share', 'Share functionality coming soon!');
+    Alert.alert("Share", "Share functionality coming soon!");
   };
 
   // Guest view
   if (!isAuthenticated || !user) {
     return (
-      <ScrollView style={styles.container} contentContainerStyle={styles.guestContent}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.guestContent}
+      >
         <View style={styles.guestCard}>
           <Avatar size="xlarge" name="?" />
           <Text style={styles.guestTitle}>Welcome to Manake</Text>
           <Text style={styles.guestSubtitle}>
-            Sign in to access your profile, track your impact, and connect with the community.
+            Sign in to access your profile, track your impact, and connect with
+            the community.
           </Text>
           <View style={styles.guestButtons}>
-            <Button 
-              title="Sign In" 
+            <Button
+              title="Sign In"
               onPress={() => setDemoMode()}
               variant="primary"
               fullWidth
               icon="sign-in"
             />
-            <Button 
-              title="Create Account" 
+            <Button
+              title="Create Account"
               onPress={() => setDemoMode()}
               variant="outline"
               fullWidth
@@ -87,14 +94,15 @@ export default function ProfileScreen() {
             />
           </View>
         </View>
-        
+
         <Card variant="outlined" style={styles.infoCard}>
           <View style={styles.infoRow}>
             <FontAwesome name="heart" size={20} color={theme.colors.primary} />
             <View style={styles.infoText}>
               <Text style={styles.infoTitle}>Why Join?</Text>
               <Text style={styles.infoDescription}>
-                Track your donations, save inspiring stories, and be part of the recovery community.
+                Track your donations, save inspiring stories, and be part of the
+                recovery community.
               </Text>
             </View>
           </View>
@@ -106,7 +114,7 @@ export default function ProfileScreen() {
   const stats = user.stats || mockData.user.stats;
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -116,30 +124,36 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.headerBackground} />
         <View style={styles.profileSection}>
-          <Avatar 
-            uri={user.avatar} 
-            name={user.name} 
-            size="xlarge" 
-            showBadge 
+          <Avatar
+            uri={user.avatar}
+            name={user.name}
+            size="xlarge"
+            showBadge
             badgeColor="#10b981"
           />
           <Text style={styles.userName}>{user.name}</Text>
           <Text style={styles.userEmail}>{user.email}</Text>
           {user.bio && <Text style={styles.userBio}>{user.bio}</Text>}
-          
+
           <View style={styles.roleBadge}>
-            <FontAwesome 
-              name={user.role === 'volunteer' ? 'heart' : user.role === 'admin' ? 'shield' : 'user'} 
-              size={12} 
-              color={theme.colors.primary} 
+            <FontAwesome
+              name={
+                user.role === "volunteer"
+                  ? "heart"
+                  : user.role === "admin"
+                    ? "shield"
+                    : "user"
+              }
+              size={12}
+              color={theme.colors.primary}
             />
             <Text style={styles.roleText}>
               {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
             </Text>
           </View>
 
-          <Button 
-            title="Edit Profile" 
+          <Button
+            title="Edit Profile"
             onPress={handleEditProfile}
             variant="outline"
             size="small"
@@ -153,28 +167,28 @@ export default function ProfileScreen() {
       <View style={styles.statsSection}>
         <Text style={styles.sectionTitle}>Your Impact</Text>
         <View style={styles.statsGrid}>
-          <StatCard 
-            icon="heart" 
-            value={stats.storiesLiked} 
-            label="Stories Liked" 
+          <StatCard
+            icon="heart"
+            value={stats.storiesLiked}
+            label="Stories Liked"
             color={theme.colors.danger}
           />
-          <StatCard 
-            icon="comment" 
-            value={stats.commentsMade} 
-            label="Comments" 
+          <StatCard
+            icon="comment"
+            value={stats.commentsMade}
+            label="Comments"
             color={theme.colors.primary}
           />
-          <StatCard 
-            icon="dollar" 
-            value={`$${stats.totalDonated}`} 
-            label="Donated" 
+          <StatCard
+            icon="dollar"
+            value={`$${stats.totalDonated}`}
+            label="Donated"
             color="#10b981"
           />
-          <StatCard 
-            icon="share" 
-            value={stats.storiesShared} 
-            label="Shared" 
+          <StatCard
+            icon="share"
+            value={stats.storiesShared}
+            label="Shared"
             color="#8b5cf6"
           />
         </View>
@@ -184,41 +198,41 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <View style={styles.quickActions}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => router.push('/(tabs)/donate')}
+            onPress={() => router.push("/(tabs)/donate")}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#10b98115' }]}>
+            <View style={[styles.actionIcon, { backgroundColor: "#10b98115" }]}>
               <FontAwesome name="gift" size={22} color="#10b981" />
             </View>
             <Text style={styles.actionLabel}>Donate</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => router.push('/(tabs)/stories')}
+            onPress={() => router.push("/(tabs)/stories")}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#3b82f615' }]}>
+            <View style={[styles.actionIcon, { backgroundColor: "#3b82f615" }]}>
               <FontAwesome name="book" size={22} color="#3b82f6" />
             </View>
             <Text style={styles.actionLabel}>Stories</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.actionButton}
             onPress={handleShareApp}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#8b5cf615' }]}>
+            <View style={[styles.actionIcon, { backgroundColor: "#8b5cf615" }]}>
               <FontAwesome name="share-alt" size={22} color="#8b5cf6" />
             </View>
             <Text style={styles.actionLabel}>Share App</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={styles.actionButton}
-            onPress={() => Alert.alert('Help', 'Help section coming soon!')}
+            onPress={() => Alert.alert("Help", "Help section coming soon!")}
           >
-            <View style={[styles.actionIcon, { backgroundColor: '#f59e0b15' }]}>
+            <View style={[styles.actionIcon, { backgroundColor: "#f59e0b15" }]}>
               <FontAwesome name="question-circle" size={22} color="#f59e0b" />
             </View>
             <Text style={styles.actionLabel}>Get Help</Text>
@@ -230,7 +244,7 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Settings</Text>
         <Card variant="elevated" padding="none" style={styles.settingsCard}>
-          <SettingItem 
+          <SettingItem
             icon="bell"
             label="Notifications"
             type="toggle"
@@ -245,7 +259,7 @@ export default function ProfileScreen() {
             }
           />
           <View style={styles.divider} />
-          <SettingItem 
+          <SettingItem
             icon="envelope"
             label="Email Updates"
             type="toggle"
@@ -260,7 +274,7 @@ export default function ProfileScreen() {
             }
           />
           <View style={styles.divider} />
-          <SettingItem 
+          <SettingItem
             icon="moon-o"
             label="Dark Mode"
             type="toggle"
@@ -275,7 +289,7 @@ export default function ProfileScreen() {
             }
           />
           <View style={styles.divider} />
-          <SettingItem 
+          <SettingItem
             icon="globe"
             label="Language"
             type="link"
@@ -289,32 +303,41 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <Card variant="elevated" padding="none" style={styles.settingsCard}>
-          <SettingItem 
+          <SettingItem
             icon="history"
             label="Donation History"
             type="link"
-            onPress={() => Alert.alert('History', 'Donation history coming soon!')}
+            onPress={() =>
+              Alert.alert("History", "Donation history coming soon!")
+            }
           />
           <View style={styles.divider} />
-          <SettingItem 
+          <SettingItem
             icon="lock"
             label="Privacy & Security"
             type="link"
-            onPress={() => Alert.alert('Privacy', 'Privacy settings coming soon!')}
+            onPress={() =>
+              Alert.alert("Privacy", "Privacy settings coming soon!")
+            }
           />
           <View style={styles.divider} />
-          <SettingItem 
+          <SettingItem
             icon="life-ring"
             label="Help & Support"
             type="link"
-            onPress={() => Alert.alert('Support', 'Help section coming soon!')}
+            onPress={() => Alert.alert("Support", "Help section coming soon!")}
           />
           <View style={styles.divider} />
-          <SettingItem 
+          <SettingItem
             icon="info-circle"
             label="About Manake"
             type="link"
-            onPress={() => Alert.alert('About', 'Manake Rehabilitation Center\nVersion 1.0.0')}
+            onPress={() =>
+              Alert.alert(
+                "About",
+                "Manake Rehabilitation Center\nVersion 1.0.0",
+              )
+            }
           />
         </Card>
       </View>
@@ -322,7 +345,7 @@ export default function ProfileScreen() {
       {/* Logout */}
       <View style={styles.section}>
         <Card variant="elevated" padding="none" style={styles.settingsCard}>
-          <SettingItem 
+          <SettingItem
             icon="sign-out"
             label="Logout"
             type="link"
@@ -337,9 +360,10 @@ export default function ProfileScreen() {
         <Text style={styles.footerText}>Manake Rehabilitation Center</Text>
         <Text style={styles.versionText}>Version 1.0.0</Text>
         <Text style={styles.memberSince}>
-          Member since {new Date(user.joinedAt).toLocaleDateString('en-US', { 
-            month: 'long', 
-            year: 'numeric' 
+          Member since{" "}
+          {new Date(user.joinedAt).toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
           })}
         </Text>
       </View>
@@ -350,20 +374,20 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
   },
   // Guest Styles
   guestContent: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   guestCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 32,
-    alignItems: 'center',
-    width: '100%',
-    shadowColor: '#000',
+    alignItems: "center",
+    width: "100%",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -371,7 +395,7 @@ const styles = StyleSheet.create({
   },
   guestTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
     marginTop: 20,
     marginBottom: 8,
@@ -379,21 +403,21 @@ const styles = StyleSheet.create({
   guestSubtitle: {
     fontSize: 15,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 22,
     marginBottom: 24,
   },
   guestButtons: {
-    width: '100%',
+    width: "100%",
     gap: 12,
   },
   infoCard: {
     marginTop: 20,
-    width: '100%',
+    width: "100%",
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     gap: 12,
   },
   infoText: {
@@ -401,7 +425,7 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginBottom: 4,
   },
@@ -412,11 +436,11 @@ const styles = StyleSheet.create({
   },
   // Header Styles
   header: {
-    position: 'relative',
+    position: "relative",
     paddingBottom: 20,
   },
   headerBackground: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
@@ -426,13 +450,13 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingTop: 60,
     paddingHorizontal: 20,
   },
   userName: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
     marginTop: 16,
   },
@@ -444,14 +468,14 @@ const styles = StyleSheet.create({
   userBio: {
     fontSize: 14,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 8,
     paddingHorizontal: 20,
     lineHeight: 20,
   },
   roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: `${theme.colors.primary}15`,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -461,7 +485,7 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.primary,
   },
   editButton: {
@@ -474,15 +498,15 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: 16,
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   // Quick Actions
   section: {
@@ -490,45 +514,45 @@ const styles = StyleSheet.create({
     marginTop: 28,
   },
   quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   actionButton: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
   },
   actionIcon: {
     width: 56,
     height: 56,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
   },
   actionLabel: {
     fontSize: 12,
     color: theme.colors.text,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   // Settings
   settingsCard: {
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   divider: {
     height: 1,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     marginLeft: 64,
   },
   // Footer
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 32,
     paddingHorizontal: 20,
   },
   footerText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
   },
   versionText: {

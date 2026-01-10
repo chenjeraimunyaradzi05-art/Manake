@@ -2,27 +2,37 @@
  * Admin Controller Tests
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getDashboardStats, getPendingStories, getUsers, approveStory, deleteUser } from '../adminController';
-import { Request, Response } from 'express';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  getDashboardStats,
+  getPendingStories,
+  getUsers,
+  approveStory,
+  deleteUser,
+} from "../adminController";
+import { Request, Response } from "express";
 
 // Mock models
-vi.mock('../../models/Story', () => ({
+vi.mock("../../models/Story", () => ({
   Story: {
     countDocuments: vi.fn().mockResolvedValue(50),
     find: vi.fn().mockReturnValue({
       sort: vi.fn().mockReturnThis(),
       skip: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockResolvedValue([
-        { _id: '1', title: 'Test Story', status: 'pending' },
-      ]),
+      limit: vi
+        .fn()
+        .mockResolvedValue([
+          { _id: "1", title: "Test Story", status: "pending" },
+        ]),
     }),
-    findByIdAndUpdate: vi.fn().mockResolvedValue({ _id: '1', title: 'Test', status: 'published' }),
+    findByIdAndUpdate: vi
+      .fn()
+      .mockResolvedValue({ _id: "1", title: "Test", status: "published" }),
     aggregate: vi.fn().mockResolvedValue([]),
   },
 }));
 
-vi.mock('../../models/User', () => ({
+vi.mock("../../models/User", () => ({
   User: {
     countDocuments: vi.fn().mockResolvedValue(100),
     find: vi.fn().mockReturnValue({
@@ -32,13 +42,21 @@ vi.mock('../../models/User', () => ({
       select: vi.fn().mockResolvedValue([]),
     }),
     findById: vi.fn().mockReturnValue({
-      select: vi.fn().mockResolvedValue({ _id: '1', name: 'Test User', email: 'test@test.com' }),
+      select: vi
+        .fn()
+        .mockResolvedValue({
+          _id: "1",
+          name: "Test User",
+          email: "test@test.com",
+        }),
     }),
-    findByIdAndDelete: vi.fn().mockResolvedValue({ _id: '1', name: 'Deleted User' }),
+    findByIdAndDelete: vi
+      .fn()
+      .mockResolvedValue({ _id: "1", name: "Deleted User" }),
   },
 }));
 
-vi.mock('../../models/Donation', () => ({
+vi.mock("../../models/Donation", () => ({
   Donation: {
     aggregate: vi.fn().mockResolvedValue([{ total: 10000, count: 5 }]),
     find: vi.fn().mockReturnValue({
@@ -49,13 +67,13 @@ vi.mock('../../models/Donation', () => ({
   },
 }));
 
-vi.mock('../../models/Message', () => ({
+vi.mock("../../models/Message", () => ({
   Message: {
     countDocuments: vi.fn().mockResolvedValue(25),
   },
 }));
 
-describe('Admin Controller', () => {
+describe("Admin Controller", () => {
   const mockRes = () => {
     const res: Partial<Response> = {};
     res.json = vi.fn().mockReturnValue(res);
@@ -67,8 +85,8 @@ describe('Admin Controller', () => {
     vi.clearAllMocks();
   });
 
-  describe('getDashboardStats', () => {
-    it('should return aggregated dashboard statistics', async () => {
+  describe("getDashboardStats", () => {
+    it("should return aggregated dashboard statistics", async () => {
       const req = {} as Request;
       const res = mockRes();
 
@@ -88,14 +106,14 @@ describe('Admin Controller', () => {
           messages: expect.objectContaining({
             total: expect.any(Number),
           }),
-        })
+        }),
       );
     });
   });
 
-  describe('getPendingStories', () => {
-    it('should return paginated pending stories', async () => {
-      const req = { query: { page: '1', limit: '10' } } as unknown as Request;
+  describe("getPendingStories", () => {
+    it("should return paginated pending stories", async () => {
+      const req = { query: { page: "1", limit: "10" } } as unknown as Request;
       const res = mockRes();
 
       await getPendingStories(req, res);
@@ -107,14 +125,14 @@ describe('Admin Controller', () => {
             page: 1,
             limit: 10,
           }),
-        })
+        }),
       );
     });
   });
 
-  describe('getUsers', () => {
-    it('should return paginated users list', async () => {
-      const req = { query: { page: '1', limit: '20' } } as unknown as Request;
+  describe("getUsers", () => {
+    it("should return paginated users list", async () => {
+      const req = { query: { page: "1", limit: "20" } } as unknown as Request;
       const res = mockRes();
 
       await getUsers(req, res);
@@ -126,13 +144,13 @@ describe('Admin Controller', () => {
             page: 1,
             limit: 20,
           }),
-        })
+        }),
       );
     });
 
-    it('should support search filter', async () => {
+    it("should support search filter", async () => {
       const req = {
-        query: { search: 'john', page: '1' },
+        query: { search: "john", page: "1" },
       } as unknown as Request;
       const res = mockRes();
 
@@ -142,27 +160,27 @@ describe('Admin Controller', () => {
     });
   });
 
-  describe('approveStory', () => {
-    it('should approve a pending story', async () => {
-      const req = { params: { id: '123' } } as unknown as Request;
+  describe("approveStory", () => {
+    it("should approve a pending story", async () => {
+      const req = { params: { id: "123" } } as unknown as Request;
       const res = mockRes();
 
       await approveStory(req, res);
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Story approved',
+          message: "Story approved",
           data: expect.any(Object),
-        })
+        }),
       );
     });
   });
 
-  describe('deleteUser', () => {
-    it('should delete a user', async () => {
+  describe("deleteUser", () => {
+    it("should delete a user", async () => {
       const req = {
-        params: { id: '123' },
-        user: { userId: 'different-id', role: 'admin' },
+        params: { id: "123" },
+        user: { userId: "different-id", role: "admin" },
       } as unknown as Request;
       const res = mockRes();
 
@@ -170,19 +188,21 @@ describe('Admin Controller', () => {
 
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'User deleted',
-        })
+          message: "User deleted",
+        }),
       );
     });
 
-    it('should prevent self-deletion', async () => {
+    it("should prevent self-deletion", async () => {
       const req = {
-        params: { id: '123' },
-        user: { userId: '123', role: 'admin' },
+        params: { id: "123" },
+        user: { userId: "123", role: "admin" },
       } as unknown as Request;
       const res = mockRes();
 
-      await expect(deleteUser(req, res)).rejects.toThrow('Cannot delete your own account');
+      await expect(deleteUser(req, res)).rejects.toThrow(
+        "Cannot delete your own account",
+      );
     });
   });
 });

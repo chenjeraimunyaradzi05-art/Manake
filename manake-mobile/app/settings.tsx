@@ -1,1 +1,1 @@
-export { default } from './settings/index';
+export { default } from "./settings/index";

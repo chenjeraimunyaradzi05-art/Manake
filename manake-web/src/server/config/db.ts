@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 let isConnected = false;
 
@@ -8,11 +8,11 @@ export const connectDB = async () => {
   }
 
   try {
-    const db = await mongoose.connect(process.env.MONGODB_URI || '');
+    const db = await mongoose.connect(process.env.MONGODB_URI || "");
     isConnected = !!db.connections[0].readyState;
-    console.log('MongoDB Connected');
+    console.log("MongoDB Connected");
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error("MongoDB connection error:", error);
     // Don't exit process in serverless, just throw or log
     throw error;
   }

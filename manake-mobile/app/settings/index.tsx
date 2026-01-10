@@ -1,11 +1,11 @@
-import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { theme } from '../../constants';
-import { Card, SettingItem, Button } from '../../components/ui';
-import { useToast } from '../../components/ui/Toast';
-import { useAuthStore } from '../../store/authStore';
+import React, { useMemo } from "react";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { theme } from "../../constants";
+import { Card, SettingItem, Button } from "../../components/ui";
+import { useToast } from "../../components/ui/Toast";
+import { useAuthStore } from "../../store/authStore";
 
 export default function SettingsScreen() {
   const { user, isAuthenticated, isLoading, updateProfile } = useAuthStore();
@@ -17,17 +17,20 @@ export default function SettingsScreen() {
         notifications: true,
         emailUpdates: true,
         darkMode: false,
-        language: 'en',
+        language: "en",
       }
     );
   }, [user]);
 
   const canEdit = isAuthenticated && !!user;
 
-  const setPreference = async (key: keyof typeof preferences, value: boolean) => {
+  const setPreference = async (
+    key: keyof typeof preferences,
+    value: boolean,
+  ) => {
     if (!canEdit) {
-      showToast('Please sign in to change settings.', 'warning');
-      router.replace('/(auth)/login');
+      showToast("Please sign in to change settings.", "warning");
+      router.replace("/(auth)/login");
       return;
     }
 
@@ -39,7 +42,10 @@ export default function SettingsScreen() {
         },
       } as any);
     } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Failed to update settings', 'error');
+      showToast(
+        e instanceof Error ? e.message : "Failed to update settings",
+        "error",
+      );
     }
   };
 
@@ -47,12 +53,20 @@ export default function SettingsScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Manage notifications and preferences.</Text>
+        <Text style={styles.subtitle}>
+          Manage notifications and preferences.
+        </Text>
 
         {!canEdit ? (
           <Card variant="outlined" style={styles.card}>
-            <Text style={styles.infoText}>You need to be signed in to change settings.</Text>
-            <Button title="Go to Login" onPress={() => router.replace('/(auth)/login')} fullWidth />
+            <Text style={styles.infoText}>
+              You need to be signed in to change settings.
+            </Text>
+            <Button
+              title="Go to Login"
+              onPress={() => router.replace("/(auth)/login")}
+              fullWidth
+            />
           </Card>
         ) : (
           <Card variant="elevated" padding="none" style={styles.card}>
@@ -61,7 +75,7 @@ export default function SettingsScreen() {
               label="Notifications"
               type="toggle"
               value={preferences.notifications}
-              onChange={(val) => setPreference('notifications', val)}
+              onChange={(val) => setPreference("notifications", val)}
             />
             <View style={styles.divider} />
             <SettingItem
@@ -69,7 +83,7 @@ export default function SettingsScreen() {
               label="Email Updates"
               type="toggle"
               value={preferences.emailUpdates}
-              onChange={(val) => setPreference('emailUpdates', val)}
+              onChange={(val) => setPreference("emailUpdates", val)}
             />
             <View style={styles.divider} />
             <SettingItem
@@ -77,14 +91,16 @@ export default function SettingsScreen() {
               label="Dark Mode"
               type="toggle"
               value={preferences.darkMode}
-              onChange={(val) => setPreference('darkMode', val)}
+              onChange={(val) => setPreference("darkMode", val)}
             />
             <View style={styles.divider} />
             <SettingItem
               icon="globe"
               label="Language"
               type="info"
-              value={preferences.language === 'en' ? 'English' : preferences.language}
+              value={
+                preferences.language === "en" ? "English" : preferences.language
+              }
             />
           </Card>
         )}
@@ -113,8 +129,8 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   title: {
-    fontSize: theme.fontSize['2xl'],
-    fontWeight: '700',
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },

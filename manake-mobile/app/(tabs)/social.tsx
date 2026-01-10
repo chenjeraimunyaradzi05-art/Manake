@@ -3,7 +3,7 @@
  * Displays aggregated social media posts from Instagram, Facebook, and Twitter
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -16,30 +16,33 @@ import {
   RefreshControl,
   Linking,
   Dimensions,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../constants';
-import { useAuth, useConnectivity } from '../../hooks';
-import { useToast } from '../../components';
-import api from '../../services/api';
-import socialFeedService, { SocialPost, SocialFeedFilters } from '../../services/socialFeed';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { theme } from "../../constants";
+import { useAuth, useConnectivity } from "../../hooks";
+import { useToast } from "../../components";
+import api from "../../services/api";
+import socialFeedService, {
+  SocialPost,
+  SocialFeedFilters,
+} from "../../services/socialFeed";
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-type Platform = 'all' | 'instagram' | 'facebook' | 'twitter';
+type Platform = "all" | "instagram" | "facebook" | "twitter";
 
 const PLATFORM_ICONS: Record<Platform, keyof typeof Ionicons.glyphMap> = {
-  all: 'apps-outline',
-  instagram: 'logo-instagram',
-  facebook: 'logo-facebook',
-  twitter: 'logo-twitter',
+  all: "apps-outline",
+  instagram: "logo-instagram",
+  facebook: "logo-facebook",
+  twitter: "logo-twitter",
 };
 
 const PLATFORM_COLORS: Record<Platform, string> = {
   all: theme.colors.primary,
-  instagram: '#E4405F',
-  facebook: '#1877F2',
-  twitter: '#1DA1F2',
+  instagram: "#E4405F",
+  facebook: "#1877F2",
+  twitter: "#1DA1F2",
 };
 
 interface PostCardProps {
@@ -67,7 +70,7 @@ function PostCard({ post, onLike, onShare, onOpen }: PostCardProps) {
   };
 
   const formatNumber = (num?: number) => {
-    if (!num) return '0';
+    if (!num) return "0";
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num.toString();
@@ -79,9 +82,17 @@ function PostCard({ post, onLike, onShare, onOpen }: PostCardProps) {
       <View style={styles.postHeader}>
         <View style={styles.authorContainer}>
           {post.author.avatarUrl ? (
-            <Image source={{ uri: post.author.avatarUrl }} style={styles.avatar} />
+            <Image
+              source={{ uri: post.author.avatarUrl }}
+              style={styles.avatar}
+            />
           ) : (
-            <View style={[styles.avatarPlaceholder, { backgroundColor: platformColor }]}>
+            <View
+              style={[
+                styles.avatarPlaceholder,
+                { backgroundColor: platformColor },
+              ]}
+            >
               <Text style={styles.avatarInitial}>
                 {post.author.name.charAt(0).toUpperCase()}
               </Text>
@@ -92,7 +103,9 @@ function PostCard({ post, onLike, onShare, onOpen }: PostCardProps) {
             <Text style={styles.authorUsername}>@{post.author.username}</Text>
           </View>
         </View>
-        <View style={[styles.platformBadge, { backgroundColor: platformColor }]}>
+        <View
+          style={[styles.platformBadge, { backgroundColor: platformColor }]}
+        >
           <Ionicons
             name={PLATFORM_ICONS[post.platform]}
             size={14}
@@ -115,12 +128,12 @@ function PostCard({ post, onLike, onShare, onOpen }: PostCardProps) {
               style={styles.mediaImage}
               resizeMode="cover"
             />
-            {post.mediaType === 'video' && (
+            {post.mediaType === "video" && (
               <View style={styles.playButton}>
                 <Ionicons name="play" size={32} color="#fff" />
               </View>
             )}
-            {post.mediaType === 'carousel' && (
+            {post.mediaType === "carousel" && (
               <View style={styles.carouselIndicator}>
                 <Ionicons name="copy-outline" size={16} color="#fff" />
               </View>
@@ -135,19 +148,35 @@ function PostCard({ post, onLike, onShare, onOpen }: PostCardProps) {
       {/* Actions */}
       <View style={styles.postActions}>
         <TouchableOpacity style={styles.actionButton} onPress={onLike}>
-          <Ionicons name="heart-outline" size={20} color={theme.colors.textSecondary} />
+          <Ionicons
+            name="heart-outline"
+            size={20}
+            color={theme.colors.textSecondary}
+          />
           <Text style={styles.actionText}>{formatNumber(post.likes)}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton}>
-          <Ionicons name="chatbubble-outline" size={20} color={theme.colors.textSecondary} />
+          <Ionicons
+            name="chatbubble-outline"
+            size={20}
+            color={theme.colors.textSecondary}
+          />
           <Text style={styles.actionText}>{formatNumber(post.comments)}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={onShare}>
-          <Ionicons name="share-outline" size={20} color={theme.colors.textSecondary} />
+          <Ionicons
+            name="share-outline"
+            size={20}
+            color={theme.colors.textSecondary}
+          />
           <Text style={styles.actionText}>{formatNumber(post.shares)}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButton} onPress={onOpen}>
-          <Ionicons name="open-outline" size={20} color={theme.colors.textSecondary} />
+          <Ionicons
+            name="open-outline"
+            size={20}
+            color={theme.colors.textSecondary}
+          />
         </TouchableOpacity>
       </View>
     </View>
@@ -165,50 +194,52 @@ export default function SocialFeedScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(true);
-  const [selectedPlatform, setSelectedPlatform] = useState<Platform>('all');
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform>("all");
 
-  const fetchPosts = useCallback(async (refresh = false) => {
-    if (!isConnected) {
-      showToast('No internet connection', 'error');
-      return;
-    }
-
-    try {
-      if (refresh) {
-        setRefreshing(true);
-      } else if (!posts.length) {
-        setLoading(true);
+  const fetchPosts = useCallback(
+    async (refresh = false) => {
+      if (!isConnected) {
+        showToast("No internet connection", "error");
+        return;
       }
 
-      const filters: SocialFeedFilters = {
-        limit: 20,
-        platforms: selectedPlatform === 'all' 
-          ? undefined 
-          : [selectedPlatform],
-      };
+      try {
+        if (refresh) {
+          setRefreshing(true);
+        } else if (!posts.length) {
+          setLoading(true);
+        }
 
-      if (!refresh && nextCursor) {
-        filters.cursor = nextCursor;
+        const filters: SocialFeedFilters = {
+          limit: 20,
+          platforms:
+            selectedPlatform === "all" ? undefined : [selectedPlatform],
+        };
+
+        if (!refresh && nextCursor) {
+          filters.cursor = nextCursor;
+        }
+
+        const response = await socialFeedService.getSocialFeed(filters);
+
+        if (refresh) {
+          setPosts(response.posts);
+        } else {
+          setPosts((prev) => [...prev, ...response.posts]);
+        }
+
+        setNextCursor(response.nextCursor);
+        setHasMore(response.hasMore);
+      } catch (error) {
+        console.error("Failed to fetch social feed:", error);
+        showToast("Failed to load social feed", "error");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      const response = await socialFeedService.getSocialFeed(filters);
-
-      if (refresh) {
-        setPosts(response.posts);
-      } else {
-        setPosts((prev) => [...prev, ...response.posts]);
-      }
-      
-      setNextCursor(response.nextCursor);
-      setHasMore(response.hasMore);
-    } catch (error) {
-      console.error('Failed to fetch social feed:', error);
-      showToast('Failed to load social feed', 'error');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [isConnected, selectedPlatform, nextCursor, posts.length, showToast]);
+    },
+    [isConnected, selectedPlatform, nextCursor, posts.length, showToast],
+  );
 
   const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore || !nextCursor) return;
@@ -230,23 +261,29 @@ export default function SocialFeedScreen() {
     setHasMore(true);
   }, []);
 
-  const handleLike = useCallback(async (post: SocialPost) => {
-    try {
-      await socialFeedService.likeSocialPost(post.id, post.platform);
-      showToast('Post liked!', 'success');
-    } catch (error) {
-      showToast('Failed to like post', 'error');
-    }
-  }, [showToast]);
+  const handleLike = useCallback(
+    async (post: SocialPost) => {
+      try {
+        await socialFeedService.likeSocialPost(post.id, post.platform);
+        showToast("Post liked!", "success");
+      } catch (error) {
+        showToast("Failed to like post", "error");
+      }
+    },
+    [showToast],
+  );
 
-  const handleShare = useCallback(async (post: SocialPost) => {
-    try {
-      await socialFeedService.shareSocialPost(post.id, post.platform);
-      showToast('Post shared!', 'success');
-    } catch (error) {
-      showToast('Failed to share post', 'error');
-    }
-  }, [showToast]);
+  const handleShare = useCallback(
+    async (post: SocialPost) => {
+      try {
+        await socialFeedService.shareSocialPost(post.id, post.platform);
+        showToast("Post shared!", "success");
+      } catch (error) {
+        showToast("Failed to share post", "error");
+      }
+    },
+    [showToast],
+  );
 
   const handleOpenPost = useCallback((post: SocialPost) => {
     Linking.openURL(post.permalink);
@@ -258,32 +295,38 @@ export default function SocialFeedScreen() {
 
   const renderPlatformFilter = () => (
     <View style={styles.platformFilter}>
-      {(['all', 'instagram', 'facebook', 'twitter'] as Platform[]).map((platform) => (
-        <TouchableOpacity
-          key={platform}
-          style={[
-            styles.platformButton,
-            selectedPlatform === platform && {
-              backgroundColor: PLATFORM_COLORS[platform],
-            },
-          ]}
-          onPress={() => handlePlatformChange(platform)}
-        >
-          <Ionicons
-            name={PLATFORM_ICONS[platform]}
-            size={20}
-            color={selectedPlatform === platform ? '#fff' : theme.colors.textSecondary}
-          />
-          <Text
+      {(["all", "instagram", "facebook", "twitter"] as Platform[]).map(
+        (platform) => (
+          <TouchableOpacity
+            key={platform}
             style={[
-              styles.platformButtonText,
-              selectedPlatform === platform && { color: '#fff' },
+              styles.platformButton,
+              selectedPlatform === platform && {
+                backgroundColor: PLATFORM_COLORS[platform],
+              },
             ]}
+            onPress={() => handlePlatformChange(platform)}
           >
-            {platform.charAt(0).toUpperCase() + platform.slice(1)}
-          </Text>
-        </TouchableOpacity>
-      ))}
+            <Ionicons
+              name={PLATFORM_ICONS[platform]}
+              size={20}
+              color={
+                selectedPlatform === platform
+                  ? "#fff"
+                  : theme.colors.textSecondary
+              }
+            />
+            <Text
+              style={[
+                styles.platformButtonText,
+                selectedPlatform === platform && { color: "#fff" },
+              ]}
+            >
+              {platform.charAt(0).toUpperCase() + platform.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ),
+      )}
     </View>
   );
 
@@ -309,7 +352,11 @@ export default function SocialFeedScreen() {
     if (loading) return null;
     return (
       <View style={styles.emptyState}>
-        <Ionicons name="newspaper-outline" size={64} color={theme.colors.textSecondary} />
+        <Ionicons
+          name="newspaper-outline"
+          size={64}
+          color={theme.colors.textSecondary}
+        />
         <Text style={styles.emptyTitle}>No posts yet</Text>
         <Text style={styles.emptySubtitle}>
           Connect your social accounts to see posts here
@@ -345,7 +392,9 @@ export default function SocialFeedScreen() {
         onEndReachedThreshold={0.3}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={renderEmpty}
-        contentContainerStyle={posts.length === 0 ? styles.emptyList : undefined}
+        contentContainerStyle={
+          posts.length === 0 ? styles.emptyList : undefined
+        }
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -359,8 +408,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: theme.colors.background,
   },
   loadingText: {
@@ -369,7 +418,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   platformFilter: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 8,
@@ -377,8 +426,8 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   platformButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
@@ -387,7 +436,7 @@ const styles = StyleSheet.create({
   },
   platformButtonText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.textSecondary,
   },
   postCard: {
@@ -396,21 +445,21 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   authorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   avatar: {
@@ -422,13 +471,13 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   avatarInitial: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: "600",
+    color: "#fff",
   },
   authorInfo: {
     marginLeft: 12,
@@ -436,7 +485,7 @@ const styles = StyleSheet.create({
   },
   authorName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
   },
   authorUsername: {
@@ -447,8 +496,8 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   postContent: {
     fontSize: 14,
@@ -458,35 +507,35 @@ const styles = StyleSheet.create({
   },
   mediaContainer: {
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 12,
-    position: 'relative',
+    position: "relative",
   },
   mediaImage: {
-    width: '100%',
+    width: "100%",
     height: SCREEN_WIDTH - 64,
     backgroundColor: theme.colors.background,
   },
   playButton: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
+    position: "absolute",
+    top: "50%",
+    left: "50%",
     marginTop: -24,
     marginLeft: -24,
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   carouselIndicator: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
     padding: 4,
     borderRadius: 4,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
   },
   timestamp: {
     fontSize: 12,
@@ -494,15 +543,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   postActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
     paddingTop: 12,
     gap: 24,
   },
   actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   actionText: {
@@ -514,20 +563,20 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 32,
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginTop: 16,
   },
   emptySubtitle: {
     fontSize: 14,
     color: theme.colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 8,
   },
   emptyList: {

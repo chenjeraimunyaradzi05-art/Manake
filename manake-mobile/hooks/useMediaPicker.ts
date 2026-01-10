@@ -3,13 +3,13 @@
  * Provides camera and gallery access for media selection
  */
 
-import { useState, useCallback } from 'react';
-import { Alert, Platform } from 'react-native';
+import { useState, useCallback } from "react";
+import { Alert, Platform } from "react-native";
 
 // Type definitions - actual implementation requires: npx expo install expo-image-picker
 export interface MediaAsset {
   uri: string;
-  type: 'image' | 'video';
+  type: "image" | "video";
   name: string;
   mimeType: string;
   width?: number;
@@ -20,7 +20,7 @@ export interface MediaAsset {
 export interface UseMediaPickerOptions {
   allowsMultipleSelection?: boolean;
   maxSelection?: number;
-  mediaTypes?: 'images' | 'videos' | 'all';
+  mediaTypes?: "images" | "videos" | "all";
   quality?: number;
   allowsEditing?: boolean;
   aspect?: [number, number];
@@ -45,7 +45,7 @@ interface ImagePickerResult {
 const defaultOptions: UseMediaPickerOptions = {
   allowsMultipleSelection: false,
   maxSelection: 5,
-  mediaTypes: 'all',
+  mediaTypes: "all",
   quality: 0.8,
   allowsEditing: true,
   aspect: [4, 3],
@@ -57,9 +57,9 @@ let ImagePicker: any = null;
 // Try to load expo-image-picker
 async function loadImagePicker() {
   try {
-    ImagePicker = await import('expo-image-picker');
+    ImagePicker = await import("expo-image-picker");
   } catch {
-    console.log('expo-image-picker not installed');
+    console.log("expo-image-picker not installed");
   }
 }
 
@@ -71,47 +71,47 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
   const mergedOptions = { ...defaultOptions, ...options };
 
-  const getMimeType = (uri: string, type: 'image' | 'video'): string => {
-    const extension = uri.split('.').pop()?.toLowerCase();
-    
-    if (type === 'video') {
+  const getMimeType = (uri: string, type: "image" | "video"): string => {
+    const extension = uri.split(".").pop()?.toLowerCase();
+
+    if (type === "video") {
       switch (extension) {
-        case 'mp4':
-          return 'video/mp4';
-        case 'mov':
-          return 'video/quicktime';
-        case 'avi':
-          return 'video/x-msvideo';
+        case "mp4":
+          return "video/mp4";
+        case "mov":
+          return "video/quicktime";
+        case "avi":
+          return "video/x-msvideo";
         default:
-          return 'video/mp4';
+          return "video/mp4";
       }
     }
 
     switch (extension) {
-      case 'png':
-        return 'image/png';
-      case 'gif':
-        return 'image/gif';
-      case 'webp':
-        return 'image/webp';
-      case 'heic':
-        return 'image/heic';
+      case "png":
+        return "image/png";
+      case "gif":
+        return "image/gif";
+      case "webp":
+        return "image/webp";
+      case "heic":
+        return "image/heic";
       default:
-        return 'image/jpeg';
+        return "image/jpeg";
     }
   };
 
   const requestCameraPermission = async (): Promise<boolean> => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Camera is not available');
+      Alert.alert("Not Available", "Camera is not available");
       return false;
     }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
+    if (status !== "granted") {
       Alert.alert(
-        'Camera Permission Required',
-        'Please grant camera access to take photos and videos.',
-        [{ text: 'OK' }]
+        "Camera Permission Required",
+        "Please grant camera access to take photos and videos.",
+        [{ text: "OK" }],
       );
       return false;
     }
@@ -120,34 +120,33 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
   const requestMediaLibraryPermission = async (): Promise<boolean> => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Media library is not available');
+      Alert.alert("Not Available", "Media library is not available");
       return false;
     }
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
+    if (status !== "granted") {
       Alert.alert(
-        'Media Library Permission Required',
-        'Please grant media library access to select photos and videos.',
-        [{ text: 'OK' }]
+        "Media Library Permission Required",
+        "Please grant media library access to select photos and videos.",
+        [{ text: "OK" }],
       );
       return false;
     }
     return true;
   };
 
-  const processPickerResult = (
-    result: ImagePickerResult
-  ): MediaAsset[] => {
+  const processPickerResult = (result: ImagePickerResult): MediaAsset[] => {
     if (result.canceled || !result.assets) {
       return [];
     }
 
     return result.assets.map((asset: ImagePickerAsset) => {
-      const type = asset.type === 'video' ? 'video' : 'image';
+      const type = asset.type === "video" ? "video" : "image";
       return {
         uri: asset.uri,
         type,
-        name: asset.fileName || asset.uri.split('/').pop() || `media_${Date.now()}`,
+        name:
+          asset.fileName || asset.uri.split("/").pop() || `media_${Date.now()}`,
         mimeType: asset.mimeType || getMimeType(asset.uri, type),
         width: asset.width,
         height: asset.height,
@@ -158,10 +157,10 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
   const openCamera = useCallback(async (): Promise<MediaAsset | null> => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Please install expo-image-picker');
+      Alert.alert("Not Available", "Please install expo-image-picker");
       return null;
     }
-    
+
     setIsLoading(true);
     try {
       const hasPermission = await requestCameraPermission();
@@ -177,7 +176,9 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
       const assets = processPickerResult(result);
       if (assets.length > 0) {
-        setSelectedMedia((prev) => [...prev, ...assets].slice(0, mergedOptions.maxSelection));
+        setSelectedMedia((prev) =>
+          [...prev, ...assets].slice(0, mergedOptions.maxSelection),
+        );
         return assets[0];
       }
       return null;
@@ -188,10 +189,10 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
   const openGallery = useCallback(async (): Promise<MediaAsset[]> => {
     if (!ImagePicker) {
-      Alert.alert('Not Available', 'Please install expo-image-picker');
+      Alert.alert("Not Available", "Please install expo-image-picker");
       return [];
     }
-    
+
     setIsLoading(true);
     try {
       const hasPermission = await requestMediaLibraryPermission();
@@ -199,7 +200,8 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: !mergedOptions.allowsMultipleSelection && mergedOptions.allowsEditing,
+        allowsEditing:
+          !mergedOptions.allowsMultipleSelection && mergedOptions.allowsEditing,
         allowsMultipleSelection: mergedOptions.allowsMultipleSelection,
         selectionLimit: mergedOptions.maxSelection,
         aspect: mergedOptions.aspect,
@@ -209,7 +211,9 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
       const assets = processPickerResult(result);
       if (assets.length > 0) {
-        setSelectedMedia((prev) => [...prev, ...assets].slice(0, mergedOptions.maxSelection));
+        setSelectedMedia((prev) =>
+          [...prev, ...assets].slice(0, mergedOptions.maxSelection),
+        );
       }
       return assets;
     } finally {
@@ -219,23 +223,23 @@ export function useMediaPicker(options: UseMediaPickerOptions = {}) {
 
   const showPicker = useCallback(async (): Promise<void> => {
     Alert.alert(
-      'Add Media',
-      'Choose a source',
+      "Add Media",
+      "Choose a source",
       [
         {
-          text: 'Camera',
+          text: "Camera",
           onPress: () => openCamera(),
         },
         {
-          text: 'Gallery',
+          text: "Gallery",
           onPress: () => openGallery(),
         },
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
   }, [openCamera, openGallery]);
 

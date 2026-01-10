@@ -3,7 +3,7 @@
  * Provides structured logging with different levels and formats
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface LogEntry {
   timestamp: string;
@@ -34,10 +34,11 @@ class Logger {
   private pretty: boolean;
 
   constructor(options: LoggerOptions = {}) {
-    this.minLevel = options.minLevel || 
-      (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
+    this.minLevel =
+      options.minLevel ||
+      (process.env.NODE_ENV === "production" ? "info" : "debug");
     this.includeTimestamp = options.includeTimestamp ?? true;
-    this.pretty = options.pretty ?? (process.env.NODE_ENV !== 'production');
+    this.pretty = options.pretty ?? process.env.NODE_ENV !== "production";
   }
 
   private shouldLog(level: LogLevel): boolean {
@@ -47,24 +48,24 @@ class Logger {
   private formatEntry(entry: LogEntry): string {
     if (this.pretty) {
       const levelColors: Record<LogLevel, string> = {
-        debug: '\x1b[36m', // Cyan
-        info: '\x1b[32m',  // Green
-        warn: '\x1b[33m',  // Yellow
-        error: '\x1b[31m', // Red
+        debug: "\x1b[36m", // Cyan
+        info: "\x1b[32m", // Green
+        warn: "\x1b[33m", // Yellow
+        error: "\x1b[31m", // Red
       };
-      const reset = '\x1b[0m';
+      const reset = "\x1b[0m";
       const color = levelColors[entry.level];
-      
-      let output = '';
+
+      let output = "";
       if (this.includeTimestamp) {
         output += `\x1b[90m${entry.timestamp}${reset} `;
       }
       output += `${color}[${entry.level.toUpperCase()}]${reset} ${entry.message}`;
-      
+
       if (entry.data && Object.keys(entry.data).length > 0) {
         output += `\n${JSON.stringify(entry.data, null, 2)}`;
       }
-      
+
       return output;
     }
 
@@ -72,7 +73,11 @@ class Logger {
     return JSON.stringify(entry);
   }
 
-  private log(level: LogLevel, message: string, data?: Record<string, unknown>): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    data?: Record<string, unknown>,
+  ): void {
     if (!this.shouldLog(level)) return;
 
     const entry: LogEntry = {
@@ -85,33 +90,33 @@ class Logger {
     const formatted = this.formatEntry(entry);
 
     switch (level) {
-      case 'debug':
-      case 'info':
+      case "debug":
+      case "info":
         console.log(formatted);
         break;
-      case 'warn':
+      case "warn":
         console.warn(formatted);
         break;
-      case 'error':
+      case "error":
         console.error(formatted);
         break;
     }
   }
 
   debug(message: string, data?: Record<string, unknown>): void {
-    this.log('debug', message, data);
+    this.log("debug", message, data);
   }
 
   info(message: string, data?: Record<string, unknown>): void {
-    this.log('info', message, data);
+    this.log("info", message, data);
   }
 
   warn(message: string, data?: Record<string, unknown>): void {
-    this.log('warn', message, data);
+    this.log("warn", message, data);
   }
 
   error(message: string, data?: Record<string, unknown>): void {
-    this.log('error', message, data);
+    this.log("error", message, data);
   }
 
   /**
@@ -128,7 +133,7 @@ class Logger {
 class ChildLogger {
   constructor(
     private parent: Logger,
-    private context: Record<string, unknown>
+    private context: Record<string, unknown>,
   ) {}
 
   debug(message: string, data?: Record<string, unknown>): void {

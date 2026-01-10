@@ -1,20 +1,24 @@
-import { Request, Response } from 'express';
-import crypto from 'crypto';
-import { User } from '../models/User';
-import { SocialAccount, SocialPlatform, ISocialAccount } from '../models/SocialAccount';
-import { generateTokenPair } from '../utils/jwt';
-import { BadRequestError, UnauthorizedError } from '../errors';
+import { Request, Response } from "express";
+import crypto from "crypto";
+import { User } from "../models/User";
+import {
+  SocialAccount,
+  SocialPlatform,
+  ISocialAccount,
+} from "../models/SocialAccount";
+import { generateTokenPair } from "../utils/jwt";
+import { BadRequestError, UnauthorizedError } from "../errors";
 import {
   verifySocialToken,
   SocialProvider,
   generateRandomPassword,
   buildAuthUrl,
   exchangeCodeForProfile,
-} from '../services/socialAuth';
+} from "../services/socialAuth";
 
 interface SocialAuthBody {
   token: string;
-  mode?: 'login' | 'link';
+  mode?: "login" | "link";
   scopes?: string[];
   pageId?: string;
   pageName?: string;
@@ -30,7 +34,12 @@ const sanitizeAccount = (account: ISocialAccount) => {
 
 const upsertUserFromSocial = async (
   provider: SocialProvider,
-  profile: { email?: string; name?: string; platformUserId: string; picture?: string }
+  profile: {
+    email?: string;
+    name?: string;
+    platformUserId: string;
+    picture?: string;
+  },
 ) => {
   // Try find by social account first
   const existingAccount = await SocialAccount.findOne({
@@ -50,20 +59,20 @@ const upsertUserFromSocial = async (
   }
 
   if (!profile.email) {
-    throw new BadRequestError('Email is required to create a new account');
+    throw new BadRequestError("Email is required to create a new account");
   }
 
   // Create new user with random password (since social auth)
   const passwordHash = await crypto
-    .createHash('sha256')
+    .createHash("sha256")
     .update(generateRandomPassword())
-    .digest('hex');
+    .digest("hex");
 
   const user = await User.create({
     email: profile.email,
-    name: profile.name || profile.email.split('@')[0],
+    name: profile.name || profile.email.split("@")[0],
     passwordHash,
-    role: 'user',
+    role: "user",
     avatar: profile.picture,
     socialProfiles: {
       [provider]: profile.platformUserId,
@@ -79,7 +88,7 @@ const upsertSocialAccount = async (
   profile: Awaited<ReturnType<typeof verifySocialToken>>, // includes tokens
   scopes?: string[],
   pageId?: string,
-  pageName?: string
+  pageName?: string,
 ) => {
   const expiresAt = profile.expiresAt;
 
@@ -93,7 +102,7 @@ const upsertSocialAccount = async (
       platformUsername: profile.email,
       displayName: profile.name,
       profilePictureUrl: profile.picture,
-      accessToken: profile.accessToken || '',
+      accessToken: profile.accessToken || "",
       refreshToken: profile.refreshToken,
       tokenExpiresAt: expiresAt,
       scopes: scopes || [],
@@ -103,25 +112,34 @@ const upsertSocialAccount = async (
       lastSyncAt: new Date(),
       syncError: undefined,
     },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
+    { new: true, upsert: true, setDefaultsOnInsert: true },
   );
 
   return account;
 };
 
-export const socialAuth = async (req: Request, res: Response): Promise<void> => {
+export const socialAuth = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const provider = req.params.provider as SocialProvider;
-  const { token, mode = 'login', scopes, pageId, pageName } = req.body as SocialAuthBody;
+  const {
+    token,
+    mode = "login",
+    scopes,
+    pageId,
+    pageName,
+  } = req.body as SocialAuthBody;
 
   const profile = await verifySocialToken(provider, token);
 
   let user = await upsertUserFromSocial(provider, profile);
 
-  if (mode === 'link') {
+  if (mode === "link") {
     if (!req.user?.userId) {
-      throw new UnauthorizedError('Authentication required to link accounts');
+      throw new UnauthorizedError("Authentication required to link accounts");
     }
-    user = await User.findById(req.user.userId) || user;
+    user = (await User.findById(req.user.userId)) || user;
   }
 
   const socialAccount = await upsertSocialAccount(
@@ -130,7 +148,7 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
     profile,
     scopes,
     pageId,
-    pageName
+    pageName,
   );
 
   const tokens = generateTokenPair({
@@ -139,39 +157,49 @@ export const socialAuth = async (req: Request, res: Response): Promise<void> => 
     role: user.role,
   });
 
-  res.status(mode === 'link' ? 200 : 201).json({
-    message: mode === 'link' ? 'Account linked' : 'Login successful',
+  res.status(mode === "link" ? 200 : 201).json({
+    message: mode === "link" ? "Account linked" : "Login successful",
     user: user.toPublicJSON(),
     socialAccount: sanitizeAccount(socialAccount),
     ...tokens,
   });
 };
 
-export const socialAuthRedirect = async (req: Request, res: Response): Promise<void> => {
+export const socialAuthRedirect = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const provider = req.params.provider as SocialProvider;
   const { redirectUri } = req.query as { redirectUri?: string };
 
-  const state = crypto.randomBytes(16).toString('hex');
+  const state = crypto.randomBytes(16).toString("hex");
   const authUrl = buildAuthUrl(provider, state, redirectUri);
 
   res.json({ authUrl, state });
 };
 
-export const socialAuthCallback = async (req: Request, res: Response): Promise<void> => {
+export const socialAuthCallback = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const provider = req.params.provider as SocialProvider;
-  const { code, redirectUri, mode = 'login' } = req.query as {
+  const {
+    code,
+    redirectUri,
+    mode = "login",
+  } = req.query as {
     code: string;
     redirectUri?: string;
-    mode?: 'login' | 'link';
+    mode?: "login" | "link";
   };
 
   const profile = await exchangeCodeForProfile(provider, code, redirectUri);
 
   let user = await upsertUserFromSocial(provider, profile);
 
-  if (mode === 'link') {
+  if (mode === "link") {
     if (!req.user?.userId) {
-      throw new UnauthorizedError('Authentication required to link accounts');
+      throw new UnauthorizedError("Authentication required to link accounts");
     }
     user = (await User.findById(req.user.userId)) || user;
   }
@@ -182,7 +210,7 @@ export const socialAuthCallback = async (req: Request, res: Response): Promise<v
     profile,
     undefined,
     undefined,
-    undefined
+    undefined,
   );
 
   const tokens = generateTokenPair({
@@ -191,8 +219,8 @@ export const socialAuthCallback = async (req: Request, res: Response): Promise<v
     role: user.role,
   });
 
-  res.status(mode === 'link' ? 200 : 201).json({
-    message: mode === 'link' ? 'Account linked' : 'Login successful',
+  res.status(mode === "link" ? 200 : 201).json({
+    message: mode === "link" ? "Account linked" : "Login successful",
     user: user.toPublicJSON(),
     socialAccount: sanitizeAccount(socialAccount),
     ...tokens,

@@ -1,46 +1,52 @@
-import React, { useEffect, useCallback, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import React, { useEffect, useCallback, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
   FlatList,
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
   ScrollView,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { theme } from '../../constants';
-import { StoryCard } from '../../components';
-import { useStoriesStore } from '../../store';
-import type { Story, StoryCategory } from '../../types';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { theme } from "../../constants";
+import { StoryCard } from "../../components";
+import { useStoriesStore } from "../../store";
+import type { Story, StoryCategory } from "../../types";
 
-const categories: { key: StoryCategory | 'all'; label: string; icon: keyof typeof FontAwesome.glyphMap }[] = [
-  { key: 'all', label: 'All', icon: 'th-large' },
-  { key: 'recovery', label: 'Recovery', icon: 'heart' },
-  { key: 'education', label: 'Education', icon: 'graduation-cap' },
-  { key: 'employment', label: 'Employment', icon: 'briefcase' },
-  { key: 'family', label: 'Family', icon: 'users' },
-  { key: 'community', label: 'Community', icon: 'globe' },
-  { key: 'life-skills', label: 'Life Skills', icon: 'lightbulb-o' },
+const categories: {
+  key: StoryCategory | "all";
+  label: string;
+  icon: keyof typeof FontAwesome.glyphMap;
+}[] = [
+  { key: "all", label: "All", icon: "th-large" },
+  { key: "recovery", label: "Recovery", icon: "heart" },
+  { key: "education", label: "Education", icon: "graduation-cap" },
+  { key: "employment", label: "Employment", icon: "briefcase" },
+  { key: "family", label: "Family", icon: "users" },
+  { key: "community", label: "Community", icon: "globe" },
+  { key: "life-skills", label: "Life Skills", icon: "lightbulb-o" },
 ];
 
 export default function StoriesScreen() {
-  const { 
-    stories, 
+  const {
+    stories,
     featuredStories,
-    isLoading, 
-    error, 
+    isLoading,
+    error,
     hasMore,
-    fetchStories, 
+    fetchStories,
     fetchFeaturedStories,
     loadMockData,
     likeStory,
     unlikeStory,
   } = useStoriesStore();
 
-  const [selectedCategory, setSelectedCategory] = useState<StoryCategory | 'all'>('all');
+  const [selectedCategory, setSelectedCategory] = useState<
+    StoryCategory | "all"
+  >("all");
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -74,9 +80,10 @@ export default function StoriesScreen() {
     }
   };
 
-  const filteredStories = selectedCategory === 'all' 
-    ? stories 
-    : stories.filter(s => s.category === selectedCategory);
+  const filteredStories =
+    selectedCategory === "all"
+      ? stories
+      : stories.filter((s) => s.category === selectedCategory);
 
   const renderHeader = () => (
     <View>
@@ -92,13 +99,13 @@ export default function StoriesScreen() {
       {featuredStories.length > 0 && (
         <View style={styles.featuredSection}>
           <Text style={styles.sectionTitle}>Featured</Text>
-          <ScrollView 
-            horizontal 
+          <ScrollView
+            horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.featuredScroll}
           >
             {featuredStories.map((story) => (
-              <StoryCard 
+              <StoryCard
                 key={story.id}
                 story={story}
                 variant="featured"
@@ -111,8 +118,8 @@ export default function StoriesScreen() {
 
       {/* Category Filter */}
       <View style={styles.filterSection}>
-        <ScrollView 
-          horizontal 
+        <ScrollView
+          horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterScroll}
         >
@@ -125,15 +132,19 @@ export default function StoriesScreen() {
               ]}
               onPress={() => setSelectedCategory(cat.key)}
             >
-              <FontAwesome 
-                name={cat.icon} 
-                size={14} 
-                color={selectedCategory === cat.key ? '#fff' : theme.colors.textLight}
+              <FontAwesome
+                name={cat.icon}
+                size={14}
+                color={
+                  selectedCategory === cat.key ? "#fff" : theme.colors.textLight
+                }
               />
-              <Text style={[
-                styles.filterChipText,
-                selectedCategory === cat.key && styles.filterChipTextActive,
-              ]}>
+              <Text
+                style={[
+                  styles.filterChipText,
+                  selectedCategory === cat.key && styles.filterChipTextActive,
+                ]}
+              >
                 {cat.label}
               </Text>
             </TouchableOpacity>
@@ -144,10 +155,15 @@ export default function StoriesScreen() {
       {/* Stories Count */}
       <View style={styles.resultsHeader}>
         <Text style={styles.resultsText}>
-          {filteredStories.length} {filteredStories.length === 1 ? 'story' : 'stories'}
+          {filteredStories.length}{" "}
+          {filteredStories.length === 1 ? "story" : "stories"}
         </Text>
         <TouchableOpacity style={styles.sortButton}>
-          <FontAwesome name="sliders" size={16} color={theme.colors.textLight} />
+          <FontAwesome
+            name="sliders"
+            size={16}
+            color={theme.colors.textLight}
+          />
           <Text style={styles.sortText}>Sort</Text>
         </TouchableOpacity>
       </View>
@@ -156,10 +172,7 @@ export default function StoriesScreen() {
 
   const renderStoryCard = ({ item }: { item: Story }) => (
     <View style={styles.cardWrapper}>
-      <StoryCard 
-        story={item}
-        onPress={() => handleStoryPress(item)}
-      />
+      <StoryCard story={item} onPress={() => handleStoryPress(item)} />
     </View>
   );
 
@@ -187,14 +200,14 @@ export default function StoriesScreen() {
         <FontAwesome name="book" size={48} color={theme.colors.textLight} />
         <Text style={styles.emptyTitle}>No Stories Found</Text>
         <Text style={styles.emptyText}>
-          {selectedCategory !== 'all' 
+          {selectedCategory !== "all"
             ? `No stories in the ${selectedCategory} category yet.`
-            : 'Check back soon for inspiring recovery stories.'}
+            : "Check back soon for inspiring recovery stories."}
         </Text>
-        {selectedCategory !== 'all' && (
-          <TouchableOpacity 
+        {selectedCategory !== "all" && (
+          <TouchableOpacity
             style={styles.resetButton}
-            onPress={() => setSelectedCategory('all')}
+            onPress={() => setSelectedCategory("all")}
           >
             <Text style={styles.resetButtonText}>View All Stories</Text>
           </TouchableOpacity>
@@ -206,10 +219,17 @@ export default function StoriesScreen() {
   if (error) {
     return (
       <View style={styles.errorState}>
-        <FontAwesome name="exclamation-circle" size={48} color={theme.colors.danger} />
+        <FontAwesome
+          name="exclamation-circle"
+          size={48}
+          color={theme.colors.danger}
+        />
         <Text style={styles.errorTitle}>Oops! Something went wrong</Text>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => fetchStories(true)}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => fetchStories(true)}
+        >
           <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
@@ -248,13 +268,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 15,
-    color: 'rgba(255,255,255,0.85)',
+    color: "rgba(255,255,255,0.85)",
   },
   // Featured Section
   featuredSection: {
@@ -263,7 +283,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: 16,
     paddingHorizontal: 20,
@@ -281,16 +301,16 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   filterChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 20,
     marginRight: 8,
     gap: 6,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
   },
   filterChipActive: {
     backgroundColor: theme.colors.primary,
@@ -298,17 +318,17 @@ const styles = StyleSheet.create({
   },
   filterChipText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
     color: theme.colors.textLight,
   },
   filterChipTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
   // Results Header
   resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     marginTop: 20,
     marginBottom: 12,
@@ -316,11 +336,11 @@ const styles = StyleSheet.create({
   resultsText: {
     fontSize: 14,
     color: theme.colors.textLight,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
   },
   sortText: {
@@ -334,19 +354,19 @@ const styles = StyleSheet.create({
   // Loading Footer
   loaderFooter: {
     paddingVertical: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   // Empty State
   emptyState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 60,
     paddingHorizontal: 40,
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginTop: 16,
     marginBottom: 8,
@@ -354,7 +374,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
   resetButton: {
@@ -365,20 +385,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   resetButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   // Error State
   errorState: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 40,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
   },
   errorTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginTop: 16,
     marginBottom: 8,
@@ -386,7 +406,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
   },
   retryButton: {
     marginTop: 20,
@@ -396,7 +416,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   retryButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
 });

@@ -39,7 +39,7 @@ interface CacheConfig {
 const config: CacheConfig = {
   redisUrl: process.env.REDIS_URL,
   defaultTtl: 300, // 5 minutes default
-  keyPrefix: 'manake:',
+  keyPrefix: "manake:",
 };
 
 /**
@@ -52,8 +52,10 @@ class CacheService {
     // In a production app, you'd initialize Redis here
     // For now, we use in-memory cache
     if (config.redisUrl) {
-      console.log('📦 Redis URL configured, but using in-memory cache for now');
-      console.log('   To enable Redis, install ioredis and uncomment the Redis code');
+      console.log("📦 Redis URL configured, but using in-memory cache for now");
+      console.log(
+        "   To enable Redis, install ioredis and uncomment the Redis code",
+      );
     }
   }
 
@@ -69,7 +71,7 @@ class CacheService {
    */
   async get<T>(key: string): Promise<T | null> {
     const fullKey = this.buildKey(key);
-    
+
     if (this.isRedisAvailable) {
       // Redis implementation would go here
       // const data = await redis.get(fullKey);
@@ -79,7 +81,7 @@ class CacheService {
     // In-memory fallback
     const entry = memoryCache.get(fullKey) as CacheEntry<T> | undefined;
     if (!entry) return null;
-    
+
     if (entry.expiresAt < Date.now()) {
       memoryCache.delete(fullKey);
       return null;
@@ -91,9 +93,13 @@ class CacheService {
   /**
    * Set an item in cache
    */
-  async set<T>(key: string, data: T, ttlSeconds: number = config.defaultTtl): Promise<void> {
+  async set<T>(
+    key: string,
+    data: T,
+    ttlSeconds: number = config.defaultTtl,
+  ): Promise<void> {
     const fullKey = this.buildKey(key);
-    
+
     if (this.isRedisAvailable) {
       // Redis implementation would go here
       // await redis.setex(fullKey, ttlSeconds, JSON.stringify(data));
@@ -102,7 +108,7 @@ class CacheService {
     // In-memory fallback
     memoryCache.set(fullKey, {
       data,
-      expiresAt: Date.now() + (ttlSeconds * 1000),
+      expiresAt: Date.now() + ttlSeconds * 1000,
     });
   }
 
@@ -111,7 +117,7 @@ class CacheService {
    */
   async delete(key: string): Promise<void> {
     const fullKey = this.buildKey(key);
-    
+
     if (this.isRedisAvailable) {
       // await redis.del(fullKey);
     }
@@ -135,9 +141,9 @@ class CacheService {
 
     // In-memory fallback - convert pattern to regex
     const regex = new RegExp(
-      fullPattern.replace(/\*/g, '.*').replace(/\?/g, '.')
+      fullPattern.replace(/\*/g, ".*").replace(/\?/g, "."),
     );
-    
+
     for (const key of memoryCache.keys()) {
       if (regex.test(key)) {
         memoryCache.delete(key);
@@ -165,7 +171,7 @@ class CacheService {
   async getOrSet<T>(
     key: string,
     fetchFn: () => Promise<T>,
-    ttlSeconds: number = config.defaultTtl
+    ttlSeconds: number = config.defaultTtl,
   ): Promise<T> {
     const cached = await this.get<T>(key);
     if (cached !== null) {
@@ -209,13 +215,13 @@ export function storiesCacheKey(params: {
   featured?: boolean;
   search?: string;
 }): string {
-  const parts = ['stories'];
+  const parts = ["stories"];
   if (params.category) parts.push(`cat:${params.category}`);
-  if (params.featured) parts.push('featured');
+  if (params.featured) parts.push("featured");
   if (params.search) parts.push(`q:${params.search}`);
   parts.push(`p:${params.page || 1}`);
   parts.push(`l:${params.limit || 20}`);
-  return parts.join(':');
+  return parts.join(":");
 }
 
 /**
@@ -237,10 +243,10 @@ export function storySlugCacheKey(slug: string): string {
 // ============================================
 
 export const CACHE_TTL = {
-  STORIES_LIST: 60,       // 1 minute - list changes frequently
-  STORY_DETAIL: 300,      // 5 minutes - individual story
-  STORY_FEATURED: 120,    // 2 minutes - featured stories
-  DONATION_STATS: 600,    // 10 minutes - donation statistics
-  USER_SESSION: 900,      // 15 minutes - user session data
-  STATIC_CONTENT: 3600,   // 1 hour - rarely changing content
+  STORIES_LIST: 60, // 1 minute - list changes frequently
+  STORY_DETAIL: 300, // 5 minutes - individual story
+  STORY_FEATURED: 120, // 2 minutes - featured stories
+  DONATION_STATS: 600, // 10 minutes - donation statistics
+  USER_SESSION: 900, // 15 minutes - user session data
+  STATIC_CONTENT: 3600, // 1 hour - rarely changing content
 } as const;

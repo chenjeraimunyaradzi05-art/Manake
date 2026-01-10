@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
-import { theme } from '../../constants';
+import { Stack } from "expo-router";
+import { theme } from "../../constants";
 
 export default function AuthLayout() {
   return (
@@ -7,7 +7,7 @@ export default function AuthLayout() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: theme.colors.background },
-        animation: 'slide_from_right',
+        animation: "slide_from_right",
       }}
     >
       <Stack.Screen name="login" />

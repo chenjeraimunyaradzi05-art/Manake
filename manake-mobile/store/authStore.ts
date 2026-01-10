@@ -1,12 +1,15 @@
-import { create } from 'zustand';
-import type { User, AuthState, LoginCredentials, RegisterData } from '../types';
-import { authApi, setAuthToken, mockData } from '../services/api';
+import { create } from "zustand";
+import type { User, AuthState, LoginCredentials, RegisterData } from "../types";
+import { authApi, setAuthToken, mockData } from "../services/api";
 
 interface AuthStore extends AuthState {
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
-  socialLogin: (provider: 'google' | 'apple', payload: Record<string, unknown>) => Promise<void>;
+  socialLogin: (
+    provider: "google" | "apple",
+    payload: Record<string, unknown>,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   loadUser: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<void>;
@@ -36,11 +39,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error(response.message || 'Login failed');
+        throw new Error(response.message || "Login failed");
       }
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : 'Login failed',
+        error: error instanceof Error ? error.message : "Login failed",
         isLoading: false,
       });
       throw error;
@@ -60,22 +63,25 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error(response.message || 'Registration failed');
+        throw new Error(response.message || "Registration failed");
       }
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : 'Registration failed',
+        error: error instanceof Error ? error.message : "Registration failed",
         isLoading: false,
       });
       throw error;
     }
   },
 
-  socialLogin: async (provider: 'google' | 'apple', payload: Record<string, unknown>) => {
+  socialLogin: async (
+    provider: "google" | "apple",
+    payload: Record<string, unknown>,
+  ) => {
     set({ isLoading: true, error: null });
     try {
       const response =
-        provider === 'google'
+        provider === "google"
           ? await authApi.socialLoginGoogle(payload as any)
           : await authApi.socialLoginApple(payload as any);
 
@@ -88,11 +94,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error(response.message || 'Social login failed');
+        throw new Error(response.message || "Social login failed");
       }
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : 'Social login failed',
+        error: error instanceof Error ? error.message : "Social login failed",
         isLoading: false,
       });
       throw error;
@@ -134,7 +140,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error('Failed to load user');
+        throw new Error("Failed to load user");
       }
     } catch {
       // Token might be invalid, clear auth state
@@ -154,7 +160,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const { token, user } = get();
 
       // Demo mode (or offline/dev without backend) should still allow local profile edits.
-      if (token === 'demo-token' && user) {
+      if (token === "demo-token" && user) {
         set({
           user: {
             ...user,
@@ -174,7 +180,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error(response.message || 'Failed to update profile');
+        throw new Error(response.message || "Failed to update profile");
       }
     } catch (error) {
       const { user } = get();
@@ -190,7 +196,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         });
       }
       set({
-        error: error instanceof Error ? error.message : 'Failed to update profile',
+        error:
+          error instanceof Error ? error.message : "Failed to update profile",
         isLoading: false,
       });
       throw error;
@@ -203,7 +210,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   setDemoMode: () => {
     set({
       user: mockData.user,
-      token: 'demo-token',
+      token: "demo-token",
       isAuthenticated: true,
       isLoading: false,
       error: null,

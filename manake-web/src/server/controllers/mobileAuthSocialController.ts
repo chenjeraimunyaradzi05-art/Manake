@@ -1,22 +1,26 @@
-import type { Request, Response } from 'express';
+import type { Request, Response } from "express";
 
-import crypto from 'crypto';
-import { User } from '../models/User';
-import { SocialAccount, type SocialPlatform } from '../models/SocialAccount';
-import { generateTokenPair } from '../utils/jwt';
-import { BadRequestError } from '../errors';
-import { exchangeAppleCode, verifyGoogleIdToken } from '../services/socialAuth';
+import crypto from "crypto";
+import { User } from "../models/User";
+import { SocialAccount, type SocialPlatform } from "../models/SocialAccount";
+import { generateTokenPair } from "../utils/jwt";
+import { BadRequestError } from "../errors";
+import { exchangeAppleCode, verifyGoogleIdToken } from "../services/socialAuth";
 
 type LegacySuccess<T> = { success: true; data: T; message?: string };
 type LegacyFailure = { success: false; data: null; message: string };
 
 type LegacyAuthData = {
-  user: ReturnType<(typeof User)['prototype']['toPublicJSON']>;
+  user: ReturnType<(typeof User)["prototype"]["toPublicJSON"]>;
   token: string;
 };
 
-function ok(res: Response, data: LegacyAuthData, message = 'Login successful') {
-  const payload: LegacySuccess<LegacyAuthData> = { success: true, data, message };
+function ok(res: Response, data: LegacyAuthData, message = "Login successful") {
+  const payload: LegacySuccess<LegacyAuthData> = {
+    success: true,
+    data,
+    message,
+  };
   res.json(payload);
 }
 
@@ -48,16 +52,19 @@ async function upsertUserFromSocial(profile: {
   }
 
   if (!profile.email) {
-    throw new BadRequestError('Email is required to create a new account');
+    throw new BadRequestError("Email is required to create a new account");
   }
 
-  const passwordHash = crypto.createHash('sha256').update(crypto.randomBytes(16)).digest('hex');
+  const passwordHash = crypto
+    .createHash("sha256")
+    .update(crypto.randomBytes(16))
+    .digest("hex");
 
   return User.create({
     email: profile.email,
-    name: profile.name || profile.email.split('@')[0],
+    name: profile.name || profile.email.split("@")[0],
     passwordHash,
-    role: 'user',
+    role: "user",
     avatar: profile.picture,
     socialProfiles: {
       [profile.provider]: profile.platformUserId,
@@ -94,21 +101,24 @@ async function upsertSocialAccount(args: {
       lastSyncAt: new Date(),
       syncError: undefined,
     },
-    { new: true, upsert: true, setDefaultsOnInsert: true }
+    { new: true, upsert: true, setDefaultsOnInsert: true },
   );
 }
 
-export async function legacySocialLoginGoogle(req: Request, res: Response): Promise<void> {
+export async function legacySocialLoginGoogle(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
     const { idToken } = (req.body || {}) as { idToken?: string };
-    if (!idToken || typeof idToken !== 'string') {
-      return fail(res, 'idToken is required');
+    if (!idToken || typeof idToken !== "string") {
+      return fail(res, "idToken is required");
     }
 
     const profile = await verifyGoogleIdToken(idToken);
 
     const user = await upsertUserFromSocial({
-      provider: 'google',
+      provider: "google",
       platformUserId: profile.platformUserId,
       email: profile.email,
       name: profile.name,
@@ -117,7 +127,7 @@ export async function legacySocialLoginGoogle(req: Request, res: Response): Prom
 
     await upsertSocialAccount({
       userId: user.id,
-      provider: 'google',
+      provider: "google",
       platformUserId: profile.platformUserId,
       email: profile.email,
       name: profile.name,
@@ -127,31 +137,40 @@ export async function legacySocialLoginGoogle(req: Request, res: Response): Prom
       expiresAt: profile.expiresAt,
     });
 
-    const tokens = generateTokenPair({ id: user.id, email: user.email, role: user.role });
+    const tokens = generateTokenPair({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
 
     return ok(res, { user: user.toPublicJSON(), token: tokens.accessToken });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Social login failed';
+    const message =
+      error instanceof Error ? error.message : "Social login failed";
     return fail(res, message);
   }
 }
 
-export async function legacySocialLoginApple(req: Request, res: Response): Promise<void> {
+export async function legacySocialLoginApple(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
-    const {
-      code,
-      codeVerifier,
-      redirectUri,
-    } = (req.body || {}) as { code?: string; codeVerifier?: string; redirectUri?: string; clientId?: string };
+    const { code, codeVerifier, redirectUri } = (req.body || {}) as {
+      code?: string;
+      codeVerifier?: string;
+      redirectUri?: string;
+      clientId?: string;
+    };
 
-    if (!code || typeof code !== 'string') {
-      return fail(res, 'code is required');
+    if (!code || typeof code !== "string") {
+      return fail(res, "code is required");
     }
 
     const profile = await exchangeAppleCode(code, redirectUri, codeVerifier);
 
     const user = await upsertUserFromSocial({
-      provider: 'apple',
+      provider: "apple",
       platformUserId: profile.platformUserId,
       email: profile.email,
       name: profile.name,
@@ -160,21 +179,26 @@ export async function legacySocialLoginApple(req: Request, res: Response): Promi
 
     await upsertSocialAccount({
       userId: user.id,
-      provider: 'apple',
+      provider: "apple",
       platformUserId: profile.platformUserId,
       email: profile.email,
       name: profile.name,
       picture: profile.picture,
-      accessToken: profile.accessToken || '',
+      accessToken: profile.accessToken || "",
       refreshToken: profile.refreshToken,
       expiresAt: profile.expiresAt,
     });
 
-    const tokens = generateTokenPair({ id: user.id, email: user.email, role: user.role });
+    const tokens = generateTokenPair({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    });
 
     return ok(res, { user: user.toPublicJSON(), token: tokens.accessToken });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Social login failed';
+    const message =
+      error instanceof Error ? error.message : "Social login failed";
     return fail(res, message);
   }
 }

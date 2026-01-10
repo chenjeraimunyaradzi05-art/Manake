@@ -2,19 +2,19 @@
  * Authentication Controller
  * Handles user registration, login, and token management
  */
-import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
+import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
 import {
   generateTokenPair,
   verifyRefreshToken,
   TokenPayload,
-} from '../utils/jwt';
+} from "../utils/jwt";
 import {
   BadRequestError,
   UnauthorizedError,
   ConflictError,
   NotFoundError,
-} from '../errors';
+} from "../errors";
 
 // Note: In production, you'd use a User model from MongoDB
 // For now, we'll create placeholder functions
@@ -31,12 +31,12 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   const user = await findUserByEmail(email);
 
   if (!user) {
-    throw new UnauthorizedError('Invalid email or password');
+    throw new UnauthorizedError("Invalid email or password");
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
   if (!isPasswordValid) {
-    throw new UnauthorizedError('Invalid email or password');
+    throw new UnauthorizedError("Invalid email or password");
   }
 
   const tokens = generateTokenPair({
@@ -49,7 +49,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   // await storeRefreshToken(user.id, hashToken(tokens.refreshToken));
 
   res.json({
-    message: 'Login successful',
+    message: "Login successful",
     user: {
       id: user.id,
       email: user.email,
@@ -70,7 +70,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   // Check if user already exists
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
-    throw new ConflictError('Email already registered');
+    throw new ConflictError("Email already registered");
   }
 
   // Hash password
@@ -79,11 +79,11 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   // TODO: Create user in database
   // const user = await User.create({ email, passwordHash, name, phone });
   const user = {
-    id: 'new-user-id',
+    id: "new-user-id",
     email,
     name,
     phone,
-    role: 'user' as const,
+    role: "user" as const,
     passwordHash,
   };
 
@@ -94,7 +94,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   });
 
   res.status(201).json({
-    message: 'Registration successful',
+    message: "Registration successful",
     user: {
       id: user.id,
       email: user.email,
@@ -109,11 +109,14 @@ export const register = async (req: Request, res: Response): Promise<void> => {
  * Refresh access token
  * POST /api/v1/auth/refresh
  */
-export const refreshToken = async (req: Request, res: Response): Promise<void> => {
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { refreshToken: token } = req.body;
 
   if (!token) {
-    throw new BadRequestError('Refresh token is required');
+    throw new BadRequestError("Refresh token is required");
   }
 
   // Verify the refresh token
@@ -133,7 +136,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
   // const user = await User.findById(payload.userId);
   const user = await findUserById(payload.userId);
   if (!user) {
-    throw new UnauthorizedError('User not found');
+    throw new UnauthorizedError("User not found");
   }
 
   // Generate new token pair
@@ -148,7 +151,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
   // await storeRefreshToken(user.id, hashToken(tokens.refreshToken));
 
   res.json({
-    message: 'Token refreshed',
+    message: "Token refreshed",
     ...tokens,
   });
 };
@@ -168,14 +171,17 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
   //   { revoked: true }
   // );
 
-  res.json({ message: 'Logged out successfully' });
+  res.json({ message: "Logged out successfully" });
 };
 
 /**
  * Get current user profile
  * GET /api/v1/auth/profile
  */
-export const getProfile = async (req: Request, res: Response): Promise<void> => {
+export const getProfile = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const tokenUser = req.user as TokenPayload;
 
   // TODO: Get user from database
@@ -183,7 +189,7 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
   const user = await findUserById(tokenUser.userId);
 
   if (!user) {
-    throw new NotFoundError('User');
+    throw new NotFoundError("User");
   }
 
   res.json({
@@ -200,7 +206,10 @@ export const getProfile = async (req: Request, res: Response): Promise<void> => 
  * Update user profile
  * PATCH /api/v1/auth/profile
  */
-export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+export const updateProfile = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const tokenUser = req.user as TokenPayload;
   const { name, phone } = req.body;
 
@@ -214,13 +223,13 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   const user = {
     id: tokenUser.userId,
     email: tokenUser.email,
-    name: name || 'Updated Name',
+    name: name || "Updated Name",
     phone,
     role: tokenUser.role,
   };
 
   res.json({
-    message: 'Profile updated',
+    message: "Profile updated",
     user,
   });
 };
@@ -229,7 +238,10 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
  * Request password reset
  * POST /api/v1/auth/password-reset/request
  */
-export const requestPasswordReset = async (req: Request, res: Response): Promise<void> => {
+export const requestPasswordReset = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { email } = req.body;
 
   // Always return success to prevent email enumeration
@@ -250,7 +262,8 @@ export const requestPasswordReset = async (req: Request, res: Response): Promise
   }
 
   res.json({
-    message: 'If an account with that email exists, a password reset link has been sent',
+    message:
+      "If an account with that email exists, a password reset link has been sent",
   });
 };
 
@@ -258,7 +271,10 @@ export const requestPasswordReset = async (req: Request, res: Response): Promise
  * Reset password
  * POST /api/v1/auth/password-reset
  */
-export const resetPassword = async (req: Request, res: Response): Promise<void> => {
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   const { token, password } = req.body;
 
   // Token will be validated once reset flow is fully implemented
@@ -276,7 +292,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   // }
 
   // Hash new password for future use
-  void await bcrypt.hash(password, 12);
+  void (await bcrypt.hash(password, 12));
 
   // TODO: Update password and clear reset token
   // const passwordHash = await bcrypt.hash(password, 12);
@@ -286,7 +302,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   //   passwordResetExpires: undefined,
   // });
 
-  res.json({ message: 'Password reset successful' });
+  res.json({ message: "Password reset successful" });
 };
 
 // ============================================
@@ -298,20 +314,20 @@ interface UserRecord {
   email: string;
   name: string;
   phone?: string;
-  role: 'user' | 'admin' | 'moderator';
+  role: "user" | "admin" | "moderator";
   passwordHash: string;
   createdAt: Date;
 }
 
 async function findUserByEmail(email: string): Promise<UserRecord | null> {
   // Placeholder - replace with User.findOne({ email })
-  if (email === 'admin@manake.org.zw') {
+  if (email === "admin@manake.org.zw") {
     return {
-      id: 'admin-user-id',
-      email: 'admin@manake.org.zw',
-      name: 'Admin User',
-      role: 'admin',
-      passwordHash: await bcrypt.hash('password123', 12),
+      id: "admin-user-id",
+      email: "admin@manake.org.zw",
+      name: "Admin User",
+      role: "admin",
+      passwordHash: await bcrypt.hash("password123", 12),
       createdAt: new Date(),
     };
   }
@@ -320,13 +336,13 @@ async function findUserByEmail(email: string): Promise<UserRecord | null> {
 
 async function findUserById(id: string): Promise<UserRecord | null> {
   // Placeholder - replace with User.findById(id)
-  if (id === 'admin-user-id') {
+  if (id === "admin-user-id") {
     return {
-      id: 'admin-user-id',
-      email: 'admin@manake.org.zw',
-      name: 'Admin User',
-      role: 'admin',
-      passwordHash: '',
+      id: "admin-user-id",
+      email: "admin@manake.org.zw",
+      name: "Admin User",
+      role: "admin",
+      passwordHash: "",
       createdAt: new Date(),
     };
   }

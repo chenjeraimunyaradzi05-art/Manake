@@ -1,7 +1,7 @@
-import { useEffect, useCallback, useState } from 'react';
-import { useAuthStore } from '../store/authStore';
-import { secureStorage, STORAGE_KEYS } from '../services/storage';
-import { setAuthToken } from '../services/api';
+import { useEffect, useCallback, useState } from "react";
+import { useAuthStore } from "../store/authStore";
+import { secureStorage, STORAGE_KEYS } from "../services/storage";
+import { setAuthToken } from "../services/api";
 
 /**
  * Hook to manage authentication state and session restoration
@@ -26,7 +26,7 @@ export function useAuth() {
         await store.loadUser();
       }
     } catch (error) {
-      console.error('Failed to restore session:', error);
+      console.error("Failed to restore session:", error);
       // Clear any invalid stored data
       await secureStorage.deleteItem(STORAGE_KEYS.AUTH_TOKEN);
     } finally {
@@ -47,14 +47,19 @@ export function useAuth() {
         await secureStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       }
     },
-    [store]
+    [store],
   );
 
   /**
    * Register and persist token
    */
   const register = useCallback(
-    async (data: { email: string; password: string; name: string; phone?: string }) => {
+    async (data: {
+      email: string;
+      password: string;
+      name: string;
+      phone?: string;
+    }) => {
       await store.register(data);
 
       // Persist the token after successful registration
@@ -63,7 +68,7 @@ export function useAuth() {
         await secureStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       }
     },
-    [store]
+    [store],
   );
 
   /**
@@ -79,7 +84,7 @@ export function useAuth() {
    * Social login and persist token
    */
   const socialLogin = useCallback(
-    async (provider: 'google' | 'apple', payload: Record<string, unknown>) => {
+    async (provider: "google" | "apple", payload: Record<string, unknown>) => {
       await store.socialLogin(provider, payload);
 
       const { token } = useAuthStore.getState();
@@ -87,7 +92,7 @@ export function useAuth() {
         await secureStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, token);
       }
     },
-    [store]
+    [store],
   );
 
   // Restore session on mount

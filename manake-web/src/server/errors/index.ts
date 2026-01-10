@@ -15,18 +15,18 @@ export class ApiError extends Error {
   constructor(
     message: string,
     statusCode: number = 500,
-    code: string = 'INTERNAL_ERROR',
-    details?: Record<string, unknown>
+    code: string = "INTERNAL_ERROR",
+    details?: Record<string, unknown>,
   ) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
     this.isOperational = true;
     this.details = details;
-    
+
     // Capture stack trace
     Error.captureStackTrace(this, this.constructor);
-    
+
     // Set the prototype explicitly
     Object.setPrototypeOf(this, ApiError.prototype);
   }
@@ -47,8 +47,11 @@ export class ApiError extends Error {
  * Use for invalid request data, malformed JSON, etc.
  */
 export class BadRequestError extends ApiError {
-  constructor(message: string = 'Bad request', details?: Record<string, unknown>) {
-    super(message, 400, 'BAD_REQUEST', details);
+  constructor(
+    message: string = "Bad request",
+    details?: Record<string, unknown>,
+  ) {
+    super(message, 400, "BAD_REQUEST", details);
     Object.setPrototypeOf(this, BadRequestError.prototype);
   }
 }
@@ -58,8 +61,8 @@ export class BadRequestError extends ApiError {
  * Use when authentication is required but not provided or invalid
  */
 export class UnauthorizedError extends ApiError {
-  constructor(message: string = 'Unauthorized') {
-    super(message, 401, 'UNAUTHORIZED');
+  constructor(message: string = "Unauthorized") {
+    super(message, 401, "UNAUTHORIZED");
     Object.setPrototypeOf(this, UnauthorizedError.prototype);
   }
 }
@@ -69,8 +72,8 @@ export class UnauthorizedError extends ApiError {
  * Use when user is authenticated but not allowed to access resource
  */
 export class ForbiddenError extends ApiError {
-  constructor(message: string = 'Forbidden') {
-    super(message, 403, 'FORBIDDEN');
+  constructor(message: string = "Forbidden") {
+    super(message, 403, "FORBIDDEN");
     Object.setPrototypeOf(this, ForbiddenError.prototype);
   }
 }
@@ -80,8 +83,8 @@ export class ForbiddenError extends ApiError {
  * Use when a requested resource doesn't exist
  */
 export class NotFoundError extends ApiError {
-  constructor(resource: string = 'Resource') {
-    super(`${resource} not found`, 404, 'NOT_FOUND', { resource });
+  constructor(resource: string = "Resource") {
+    super(`${resource} not found`, 404, "NOT_FOUND", { resource });
     Object.setPrototypeOf(this, NotFoundError.prototype);
   }
 }
@@ -91,8 +94,8 @@ export class NotFoundError extends ApiError {
  * Use for duplicate entries, version conflicts, etc.
  */
 export class ConflictError extends ApiError {
-  constructor(message: string = 'Resource already exists') {
-    super(message, 409, 'CONFLICT');
+  constructor(message: string = "Resource already exists") {
+    super(message, 409, "CONFLICT");
     Object.setPrototypeOf(this, ConflictError.prototype);
   }
 }
@@ -106,9 +109,9 @@ export class ValidationError extends ApiError {
 
   constructor(
     errors: Array<{ field: string; message: string }>,
-    message: string = 'Validation failed'
+    message: string = "Validation failed",
   ) {
-    super(message, 422, 'VALIDATION_ERROR', { errors });
+    super(message, 422, "VALIDATION_ERROR", { errors });
     this.errors = errors;
     Object.setPrototypeOf(this, ValidationError.prototype);
   }
@@ -121,8 +124,8 @@ export class ValidationError extends ApiError {
 export class TooManyRequestsError extends ApiError {
   public readonly retryAfter: number;
 
-  constructor(retryAfter: number = 60, message: string = 'Too many requests') {
-    super(message, 429, 'RATE_LIMIT_EXCEEDED', { retryAfter });
+  constructor(retryAfter: number = 60, message: string = "Too many requests") {
+    super(message, 429, "RATE_LIMIT_EXCEEDED", { retryAfter });
     this.retryAfter = retryAfter;
     Object.setPrototypeOf(this, TooManyRequestsError.prototype);
   }
@@ -133,8 +136,8 @@ export class TooManyRequestsError extends ApiError {
  * Use for unexpected errors
  */
 export class InternalServerError extends ApiError {
-  constructor(message: string = 'Internal server error') {
-    super(message, 500, 'INTERNAL_ERROR');
+  constructor(message: string = "Internal server error") {
+    super(message, 500, "INTERNAL_ERROR");
     Object.setPrototypeOf(this, InternalServerError.prototype);
   }
 }
@@ -145,12 +148,9 @@ export class InternalServerError extends ApiError {
  */
 export class BadGatewayError extends ApiError {
   constructor(service: string, message?: string) {
-    super(
-      message || `External service error: ${service}`,
-      502,
-      'BAD_GATEWAY',
-      { service }
-    );
+    super(message || `External service error: ${service}`, 502, "BAD_GATEWAY", {
+      service,
+    });
     Object.setPrototypeOf(this, BadGatewayError.prototype);
   }
 }
@@ -160,8 +160,8 @@ export class BadGatewayError extends ApiError {
  * Use when the service is temporarily unavailable
  */
 export class ServiceUnavailableError extends ApiError {
-  constructor(message: string = 'Service temporarily unavailable') {
-    super(message, 503, 'SERVICE_UNAVAILABLE');
+  constructor(message: string = "Service temporarily unavailable") {
+    super(message, 503, "SERVICE_UNAVAILABLE");
     Object.setPrototypeOf(this, ServiceUnavailableError.prototype);
   }
 }
@@ -171,8 +171,8 @@ export class ServiceUnavailableError extends ApiError {
  * Use for MongoDB/database-related errors
  */
 export class DatabaseError extends ApiError {
-  constructor(message: string = 'Database operation failed') {
-    super(message, 500, 'DATABASE_ERROR');
+  constructor(message: string = "Database operation failed") {
+    super(message, 500, "DATABASE_ERROR");
     Object.setPrototypeOf(this, DatabaseError.prototype);
   }
 }
@@ -188,8 +188,8 @@ export class ExternalServiceError extends ApiError {
     super(
       message || `${service} service error`,
       statusCode,
-      'EXTERNAL_SERVICE_ERROR',
-      { service }
+      "EXTERNAL_SERVICE_ERROR",
+      { service },
     );
     this.service = service;
     Object.setPrototypeOf(this, ExternalServiceError.prototype);

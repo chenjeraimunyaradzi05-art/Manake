@@ -1,12 +1,12 @@
-import { Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { useFonts } from 'expo-font';
-import * as SplashScreen from 'expo-splash-screen';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { theme } from '../constants';
-import { ErrorBoundary, ToastProvider, NoInternetBanner } from '../components';
-import { useAuth, useNotifications } from '../hooks';
-import { syncManager } from '../services/syncManager';
+import { Stack } from "expo-router";
+import { useEffect } from "react";
+import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
+import { theme } from "../constants";
+import { ErrorBoundary, ToastProvider, NoInternetBanner } from "../components";
+import { useAuth, useNotifications } from "../hooks";
+import { syncManager } from "../services/syncManager";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,10 +19,16 @@ function RootLayoutContent() {
   // Initialize push notifications
   useNotifications({
     onNotificationReceived: (notification) => {
-      console.log('Notification received in foreground:', notification.request.content.title);
+      console.log(
+        "Notification received in foreground:",
+        notification.request.content.title,
+      );
     },
     onNotificationTapped: (response) => {
-      console.log('User tapped notification:', response.notification.request.content.title);
+      console.log(
+        "User tapped notification:",
+        response.notification.request.content.title,
+      );
     },
   });
 
@@ -57,25 +63,25 @@ function RootLayoutContent() {
           name="profile/edit"
           options={{
             headerShown: true,
-            headerTitle: 'Edit Profile',
+            headerTitle: "Edit Profile",
           }}
         />
         <Stack.Screen
           name="settings/index"
           options={{
             headerShown: true,
-            headerTitle: 'Settings',
+            headerTitle: "Settings",
           }}
         />
         <Stack.Screen
           name="story/[id]"
           options={{
             headerShown: true,
-            headerTitle: '',
+            headerTitle: "",
             headerTransparent: true,
-            headerTintColor: '#fff',
+            headerTintColor: "#fff",
             headerStyle: {
-              backgroundColor: 'transparent',
+              backgroundColor: "transparent",
             },
           }}
         />
@@ -83,8 +89,8 @@ function RootLayoutContent() {
           name="story/create"
           options={{
             headerShown: true,
-            headerTitle: 'Share Your Story',
-            presentation: 'modal',
+            headerTitle: "Share Your Story",
+            presentation: "modal",
           }}
         />
       </Stack>
@@ -108,8 +114,8 @@ const styles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: theme.colors.background,
   },
 });

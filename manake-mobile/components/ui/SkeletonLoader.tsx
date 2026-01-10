@@ -1,6 +1,12 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Animated, StyleSheet, ViewStyle, DimensionValue } from 'react-native';
-import { theme } from '../../constants';
+import React, { useEffect, useRef } from "react";
+import {
+  View,
+  Animated,
+  StyleSheet,
+  ViewStyle,
+  DimensionValue,
+} from "react-native";
+import { theme } from "../../constants";
 
 interface SkeletonLoaderProps {
   /** Width of the skeleton. Can be a number or percentage string */
@@ -19,7 +25,7 @@ interface SkeletonLoaderProps {
  * A skeleton loader component for showing loading placeholders
  */
 export function SkeletonLoader({
-  width = '100%',
+  width = "100%",
   height = 16,
   borderRadius = 4,
   circle = false,
@@ -40,7 +46,7 @@ export function SkeletonLoader({
           duration: 1000,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
 
     animation.start();
@@ -53,7 +59,7 @@ export function SkeletonLoader({
     outputRange: [0.3, 0.7],
   });
 
-  const size = circle ? (typeof height === 'number' ? height : 40) : undefined;
+  const size = circle ? (typeof height === "number" ? height : 40) : undefined;
 
   return (
     <Animated.View
@@ -77,7 +83,11 @@ export function SkeletonLoader({
 export function StoryCardSkeleton() {
   return (
     <View style={styles.storyCard}>
-      <SkeletonLoader height={200} borderRadius={12} style={styles.storyImage} />
+      <SkeletonLoader
+        height={200}
+        borderRadius={12}
+        style={styles.storyImage}
+      />
       <View style={styles.storyContent}>
         <SkeletonLoader width="80%" height={20} style={styles.mb8} />
         <SkeletonLoader width="100%" height={14} style={styles.mb4} />
@@ -118,29 +128,29 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.border,
   },
   storyCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     marginBottom: 16,
   },
   storyImage: {
-    width: '100%',
+    width: "100%",
   },
   storyContent: {
     padding: 16,
   },
   storyFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   authorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   listItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,

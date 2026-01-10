@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import type { Story } from '../types';
-import { storiesApi, mockData } from '../services/api';
+import { create } from "zustand";
+import type { Story } from "../types";
+import { storiesApi, mockData } from "../services/api";
 
 interface StoriesState {
   stories: Story[];
@@ -37,19 +37,19 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
   // Actions
   fetchStories: async (refresh = false) => {
     const { currentPage, stories, isLoading } = get();
-    
+
     if (isLoading) return;
-    
+
     const page = refresh ? 1 : currentPage;
     set({ isLoading: true, error: null });
 
     try {
       const response = await storiesApi.getAll(page);
       if (response.success) {
-        const newStories = refresh 
-          ? response.data 
+        const newStories = refresh
+          ? response.data
           : [...stories, ...response.data];
-        
+
         set({
           stories: newStories,
           currentPage: page + 1,
@@ -57,7 +57,7 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error('Failed to fetch stories');
+        throw new Error("Failed to fetch stories");
       }
     } catch (error) {
       // Use mock data as fallback in development
@@ -69,7 +69,8 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
         });
       } else {
         set({
-          error: error instanceof Error ? error.message : 'Failed to fetch stories',
+          error:
+            error instanceof Error ? error.message : "Failed to fetch stories",
           isLoading: false,
         });
       }
@@ -87,18 +88,21 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error('Failed to fetch featured stories');
+        throw new Error("Failed to fetch featured stories");
       }
     } catch (error) {
       // Use mock data as fallback in development
       if (__DEV__) {
         set({
-          featuredStories: mockData.stories.filter(s => s.featured),
+          featuredStories: mockData.stories.filter((s) => s.featured),
           isLoading: false,
         });
       } else {
         set({
-          error: error instanceof Error ? error.message : 'Failed to fetch featured stories',
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to fetch featured stories",
           isLoading: false,
         });
       }
@@ -116,12 +120,12 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
           isLoading: false,
         });
       } else {
-        throw new Error('Story not found');
+        throw new Error("Story not found");
       }
     } catch (error) {
       // Use mock data as fallback in development
       if (__DEV__) {
-        const story = mockData.stories.find(s => s.id === id);
+        const story = mockData.stories.find((s) => s.id === id);
         if (story) {
           set({
             currentStory: story,
@@ -129,13 +133,14 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
           });
         } else {
           set({
-            error: 'Story not found',
+            error: "Story not found",
             isLoading: false,
           });
         }
       } else {
         set({
-          error: error instanceof Error ? error.message : 'Failed to fetch story',
+          error:
+            error instanceof Error ? error.message : "Failed to fetch story",
           isLoading: false,
         });
       }
@@ -144,32 +149,38 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
 
   likeStory: async (id: string) => {
     const { stories, currentStory, featuredStories } = get();
-    
+
     try {
       await storiesApi.likeStory(id);
-      
+
       // Update stories list
       set({
-        stories: stories.map(s => 
-          s.id === id ? { ...s, likes: s.likes + 1, isLiked: true } : s
+        stories: stories.map((s) =>
+          s.id === id ? { ...s, likes: s.likes + 1, isLiked: true } : s,
         ),
-        featuredStories: featuredStories.map(s => 
-          s.id === id ? { ...s, likes: s.likes + 1, isLiked: true } : s
+        featuredStories: featuredStories.map((s) =>
+          s.id === id ? { ...s, likes: s.likes + 1, isLiked: true } : s,
         ),
-        currentStory: currentStory?.id === id 
-          ? { ...currentStory, likes: currentStory.likes + 1, isLiked: true }
-          : currentStory,
+        currentStory:
+          currentStory?.id === id
+            ? { ...currentStory, likes: currentStory.likes + 1, isLiked: true }
+            : currentStory,
       });
     } catch (error) {
       // Optimistically update UI even if API fails in dev mode
       if (__DEV__) {
         set({
-          stories: stories.map(s => 
-            s.id === id ? { ...s, likes: s.likes + 1, isLiked: true } : s
+          stories: stories.map((s) =>
+            s.id === id ? { ...s, likes: s.likes + 1, isLiked: true } : s,
           ),
-          currentStory: currentStory?.id === id 
-            ? { ...currentStory, likes: currentStory.likes + 1, isLiked: true }
-            : currentStory,
+          currentStory:
+            currentStory?.id === id
+              ? {
+                  ...currentStory,
+                  likes: currentStory.likes + 1,
+                  isLiked: true,
+                }
+              : currentStory,
         });
       }
     }
@@ -177,31 +188,37 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
 
   unlikeStory: async (id: string) => {
     const { stories, currentStory, featuredStories } = get();
-    
+
     try {
       await storiesApi.unlikeStory(id);
-      
+
       set({
-        stories: stories.map(s => 
-          s.id === id ? { ...s, likes: s.likes - 1, isLiked: false } : s
+        stories: stories.map((s) =>
+          s.id === id ? { ...s, likes: s.likes - 1, isLiked: false } : s,
         ),
-        featuredStories: featuredStories.map(s => 
-          s.id === id ? { ...s, likes: s.likes - 1, isLiked: false } : s
+        featuredStories: featuredStories.map((s) =>
+          s.id === id ? { ...s, likes: s.likes - 1, isLiked: false } : s,
         ),
-        currentStory: currentStory?.id === id 
-          ? { ...currentStory, likes: currentStory.likes - 1, isLiked: false }
-          : currentStory,
+        currentStory:
+          currentStory?.id === id
+            ? { ...currentStory, likes: currentStory.likes - 1, isLiked: false }
+            : currentStory,
       });
     } catch (error) {
       // Optimistically update UI even if API fails in dev mode
       if (__DEV__) {
         set({
-          stories: stories.map(s => 
-            s.id === id ? { ...s, likes: s.likes - 1, isLiked: false } : s
+          stories: stories.map((s) =>
+            s.id === id ? { ...s, likes: s.likes - 1, isLiked: false } : s,
           ),
-          currentStory: currentStory?.id === id 
-            ? { ...currentStory, likes: currentStory.likes - 1, isLiked: false }
-            : currentStory,
+          currentStory:
+            currentStory?.id === id
+              ? {
+                  ...currentStory,
+                  likes: currentStory.likes - 1,
+                  isLiked: false,
+                }
+              : currentStory,
         });
       }
     }
@@ -214,7 +231,7 @@ export const useStoriesStore = create<StoriesStore>((set, get) => ({
   loadMockData: () => {
     set({
       stories: mockData.stories,
-      featuredStories: mockData.stories.filter(s => s.featured),
+      featuredStories: mockData.stories.filter((s) => s.featured),
       isLoading: false,
       hasMore: false,
     });

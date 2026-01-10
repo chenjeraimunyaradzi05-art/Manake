@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -9,109 +9,117 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
-} from 'react-native';
-import { Link, router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
-import { theme } from '../../constants';
-import { ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../constants/messages';
-import { Button, Input, SocialAuthButtons } from '../../components/ui';
-import { useToast } from '../../components/ui/Toast';
-import { useAuth } from '../../hooks';
-import { useBiometric } from '../../hooks/useBiometric';
-import { secureStorage, STORAGE_KEYS } from '../../services/storage';
-import { setAuthToken } from '../../services/api';
-import { useAuthStore } from '../../store/authStore';
-import { startAppleAuth, startGoogleAuth } from '../../services/socialAuth';
+} from "react-native";
+import { Link, router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
+import { theme } from "../../constants";
+import { ERROR_MESSAGES, SUCCESS_MESSAGES } from "../../constants/messages";
+import { Button, Input, SocialAuthButtons } from "../../components/ui";
+import { useToast } from "../../components/ui/Toast";
+import { useAuth } from "../../hooks";
+import { useBiometric } from "../../hooks/useBiometric";
+import { secureStorage, STORAGE_KEYS } from "../../services/storage";
+import { setAuthToken } from "../../services/api";
+import { useAuthStore } from "../../store/authStore";
+import { startAppleAuth, startGoogleAuth } from "../../services/socialAuth";
 
 // Email validation regex
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
-  const { login, socialLogin, isLoading, error, clearError, setDemoMode } = useAuth();
+  const { login, socialLogin, isLoading, error, clearError, setDemoMode } =
+    useAuth();
   const { showToast } = useToast();
   const biometric = useBiometric({
-    promptMessage: 'Unlock Manake',
-    cancelLabel: 'Cancel',
-    fallbackLabel: 'Use passcode',
+    promptMessage: "Unlock Manake",
+    cancelLabel: "Cancel",
+    fallbackLabel: "Use passcode",
   });
 
-  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  
+  const [socialLoading, setSocialLoading] = useState<"google" | "apple" | null>(
+    null,
+  );
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {},
+  );
+
   const passwordInputRef = useRef<TextInput>(null);
 
   const validateForm = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
-    
+
     if (!email.trim()) {
       newErrors.email = ERROR_MESSAGES.REQUIRED_FIELD;
     } else if (!EMAIL_REGEX.test(email)) {
       newErrors.email = ERROR_MESSAGES.INVALID_EMAIL;
     }
-    
+
     if (!password) {
       newErrors.password = ERROR_MESSAGES.REQUIRED_FIELD;
     } else if (password.length < 8) {
       newErrors.password = ERROR_MESSAGES.PASSWORD_TOO_SHORT;
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
     clearError();
-    
+
     if (!validateForm()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-    
+
     try {
       await login({ email: email.trim().toLowerCase(), password });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, 'success');
-      router.replace('/(tabs)');
+      showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, "success");
+      router.replace("/(tabs)");
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showToast(
         err instanceof Error ? err.message : ERROR_MESSAGES.LOGIN_FAILED,
-        'error'
+        "error",
       );
     }
   };
 
   const handleDemoMode = () => {
     setDemoMode();
-    showToast('Demo mode activated!', 'info');
-    router.replace('/(tabs)');
+    showToast("Demo mode activated!", "info");
+    router.replace("/(tabs)");
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'apple') => {
+  const handleSocialLogin = async (provider: "google" | "apple") => {
     clearError();
     setSocialLoading(provider);
 
     try {
-      if (provider === 'google') {
+      if (provider === "google") {
         const result = await startGoogleAuth();
         if (!result.ok) {
-          showToast(result.error, 'error');
+          showToast(result.error, "error");
           return;
         }
 
-        await socialLogin('google', { idToken: result.idToken, redirectUri: result.redirectUri });
+        await socialLogin("google", {
+          idToken: result.idToken,
+          redirectUri: result.redirectUri,
+        });
       } else {
         const result = await startAppleAuth();
         if (!result.ok) {
-          showToast(result.error, 'error');
+          showToast(result.error, "error");
           return;
         }
 
-        await socialLogin('apple', {
+        await socialLogin("apple", {
           code: result.code,
           codeVerifier: result.codeVerifier,
           redirectUri: result.redirectUri,
@@ -119,10 +127,13 @@ export default function LoginScreen() {
         });
       }
 
-      showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, 'success');
-      router.replace('/(tabs)');
+      showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, "success");
+      router.replace("/(tabs)");
     } catch (e) {
-      showToast(e instanceof Error ? e.message : 'Social login failed', 'error');
+      showToast(
+        e instanceof Error ? e.message : "Social login failed",
+        "error",
+      );
     } finally {
       setSocialLoading(null);
     }
@@ -131,23 +142,23 @@ export default function LoginScreen() {
   const handleBiometricUnlock = async () => {
     const result = await biometric.authenticate();
     if (!result.success) {
-      showToast(result.error ?? 'Biometric authentication failed', 'error');
+      showToast(result.error ?? "Biometric authentication failed", "error");
       return;
     }
 
     const token = await secureStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
     if (!token) {
-      showToast('No saved session found. Please sign in.', 'warning');
+      showToast("No saved session found. Please sign in.", "warning");
       return;
     }
 
     try {
       setAuthToken(token);
       await useAuthStore.getState().loadUser();
-      showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, 'success');
-      router.replace('/(tabs)');
+      showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, "success");
+      router.replace("/(tabs)");
     } catch {
-      showToast(ERROR_MESSAGES.SESSION_EXPIRED, 'error');
+      showToast(ERROR_MESSAGES.SESSION_EXPIRED, "error");
     }
   };
 
@@ -155,7 +166,7 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -165,18 +176,24 @@ export default function LoginScreen() {
           {/* Logo and Header */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <FontAwesome name="heart" size={48} color={theme.colors.primary} />
+              <FontAwesome
+                name="heart"
+                size={48}
+                color={theme.colors.primary}
+              />
             </View>
             <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>
-              Sign in to continue to Manake
-            </Text>
+            <Text style={styles.subtitle}>Sign in to continue to Manake</Text>
           </View>
 
           {/* Error Banner */}
           {error && (
             <View style={styles.errorBanner}>
-              <FontAwesome name="exclamation-circle" size={16} color={theme.colors.danger} />
+              <FontAwesome
+                name="exclamation-circle"
+                size={16}
+                color={theme.colors.danger}
+              />
               <Text style={styles.errorBannerText}>{error}</Text>
             </View>
           )}
@@ -212,7 +229,8 @@ export default function LoginScreen() {
               value={password}
               onChangeText={(text) => {
                 setPassword(text);
-                if (errors.password) setErrors({ ...errors, password: undefined });
+                if (errors.password)
+                  setErrors({ ...errors, password: undefined });
               }}
               error={errors.password}
               leftIcon="lock"
@@ -246,10 +264,10 @@ export default function LoginScreen() {
 
           <SocialAuthButtons
             onProviderPress={(p) => {
-              if (p === 'google' || p === 'apple') {
+              if (p === "google" || p === "apple") {
                 handleSocialLogin(p);
               } else {
-                showToast('Provider not supported yet', 'info');
+                showToast("Provider not supported yet", "info");
               }
             }}
             disabled={isLoading || socialLoading !== null}
@@ -295,7 +313,7 @@ export default function LoginScreen() {
 }
 
 // Import FontAwesome for logo placeholder
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome } from "@expo/vector-icons";
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -312,7 +330,7 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: theme.spacing.xl,
   },
   logoContainer: {
@@ -320,13 +338,13 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     backgroundColor: `${theme.colors.primary}15`,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: theme.spacing.m,
   },
   title: {
-    fontSize: theme.fontSize['2xl'],
-    fontWeight: '700',
+    fontSize: theme.fontSize["2xl"],
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
@@ -335,8 +353,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: `${theme.colors.danger}15`,
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.m,
@@ -352,18 +370,18 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.l,
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
+    alignSelf: "flex-end",
     marginBottom: theme.spacing.l,
     marginTop: -theme.spacing.s,
   },
   forgotPasswordText: {
     fontSize: theme.fontSize.sm,
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: theme.spacing.l,
   },
   socialButtons: {
@@ -380,8 +398,8 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   signupContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginTop: theme.spacing.xl,
   },
   signupText: {
@@ -391,7 +409,7 @@ const styles = StyleSheet.create({
   signupLink: {
     fontSize: theme.fontSize.md,
     color: theme.colors.primary,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   biometricContainer: {
     marginTop: theme.spacing.m,

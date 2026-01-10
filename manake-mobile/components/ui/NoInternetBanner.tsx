@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
-import { useConnectivity } from '../../hooks';
+import React from "react";
+import { View, Text, StyleSheet, Animated } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
+import { useConnectivity } from "../../hooks";
 
 interface NoInternetBannerProps {
   /** Whether to show the banner when offline. Defaults to true */
@@ -38,18 +38,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
   icon: {
     marginRight: 8,
     opacity: 0.9,
   },
   text: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });
 

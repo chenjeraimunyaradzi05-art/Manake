@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { theme } from '../../constants';
+import React from "react";
+import { View, Text, StyleSheet, ViewStyle } from "react-native";
+import { theme } from "../../constants";
 
 export interface VideoPlayerProps {
   uri?: string;
@@ -17,17 +17,17 @@ export function VideoPlayer({ style }: VideoPlayerProps) {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
+    width: "100%",
     aspectRatio: 16 / 9,
     borderRadius: 12,
     backgroundColor: theme.colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   text: {
     color: theme.colors.textSecondary,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

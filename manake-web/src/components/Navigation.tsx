@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Heart, LogOut, User, Shield } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useMemo, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X, Heart, LogOut, User, Shield } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,29 +9,29 @@ export const Navigation = () => {
   const { user, logout } = useAuth();
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Stories', path: '/stories' },
-    { name: 'Programs', path: '/programs' },
-    { name: 'Get Help', path: '/get-help' },
-    { name: 'About', path: '/about' },
-    { name: 'Contact', path: '/contact' },
+    { name: "Home", path: "/" },
+    { name: "Stories", path: "/stories" },
+    { name: "Programs", path: "/programs" },
+    { name: "Get Help", path: "/get-help" },
+    { name: "About", path: "/about" },
+    { name: "Contact", path: "/contact" },
   ];
 
   const userInitials = useMemo(() => {
     if (user.name) {
       return user.name
-        .split(' ')
+        .split(" ")
         .filter(Boolean)
         .slice(0, 2)
         .map((part) => part[0]?.toUpperCase())
-        .join('');
+        .join("");
     }
     if (user.email) return user.email[0]?.toUpperCase();
-    return 'M';
+    return "M";
   }, [user.name, user.email]);
 
   const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
+    if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
 
@@ -46,8 +46,12 @@ export const Navigation = () => {
               <span className="text-white font-bold text-lg">M</span>
             </div>
             <div className="flex flex-col">
-              <span className="font-display font-bold text-xl text-primary-700">Manake</span>
-              <span className="text-xs text-gray-500 hidden sm:block">Rehabilitation Center</span>
+              <span className="font-display font-bold text-xl text-primary-700">
+                Manake
+              </span>
+              <span className="text-xs text-gray-500 hidden sm:block">
+                Rehabilitation Center
+              </span>
             </div>
           </Link>
 
@@ -59,8 +63,8 @@ export const Navigation = () => {
                 to={link.path}
                 className={`text-sm font-medium transition-colors ${
                   isActive(link.path)
-                    ? 'text-primary-600'
-                    : 'text-gray-700 hover:text-primary-600'
+                    ? "text-primary-600"
+                    : "text-gray-700 hover:text-primary-600"
                 }`}
               >
                 {link.name}
@@ -70,10 +74,7 @@ export const Navigation = () => {
 
           {/* Donate + User */}
           <div className="hidden md:flex items-center gap-4">
-            <Link
-              to="/donate"
-              className="btn-primary text-sm"
-            >
+            <Link to="/donate" className="btn-primary text-sm">
               <Heart size={18} />
               Donate Now
             </Link>
@@ -83,7 +84,7 @@ export const Navigation = () => {
                 {user.avatar ? (
                   <img
                     src={user.avatar}
-                    alt={user.name || 'User avatar'}
+                    alt={user.name || "User avatar"}
                     className="w-9 h-9 rounded-full object-cover border border-gray-200"
                   />
                 ) : (
@@ -92,9 +93,13 @@ export const Navigation = () => {
                   </div>
                 )}
                 <div className="flex flex-col text-xs leading-tight">
-                  <span className="font-semibold text-gray-900">{user.name || 'Logged in'}</span>
-                  <span className="text-gray-500">{user.email || 'Welcome back'}</span>
-                  {user.role === 'admin' ? (
+                  <span className="font-semibold text-gray-900">
+                    {user.name || "Logged in"}
+                  </span>
+                  <span className="text-gray-500">
+                    {user.email || "Welcome back"}
+                  </span>
+                  {user.role === "admin" ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary-700">
                       <Shield size={12} /> Admin
                     </span>
@@ -142,8 +147,8 @@ export const Navigation = () => {
                   onClick={() => setIsOpen(false)}
                   className={`px-4 py-3 rounded-lg font-medium transition-colors ${
                     isActive(link.path)
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? "bg-primary-50 text-primary-600"
+                      : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   {link.name}
@@ -164,7 +169,7 @@ export const Navigation = () => {
                     {user.avatar ? (
                       <img
                         src={user.avatar}
-                        alt={user.name || 'User avatar'}
+                        alt={user.name || "User avatar"}
                         className="w-10 h-10 rounded-full object-cover border border-gray-200"
                       />
                     ) : (
@@ -173,9 +178,13 @@ export const Navigation = () => {
                       </div>
                     )}
                     <div className="text-sm">
-                      <p className="font-semibold text-gray-900">{user.name || 'Logged in'}</p>
-                      <p className="text-gray-500">{user.email || 'Welcome back'}</p>
-                      {user.role === 'admin' ? (
+                      <p className="font-semibold text-gray-900">
+                        {user.name || "Logged in"}
+                      </p>
+                      <p className="text-gray-500">
+                        {user.email || "Welcome back"}
+                      </p>
+                      {user.role === "admin" ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary-700">
                           <Shield size={12} /> Admin
                         </span>

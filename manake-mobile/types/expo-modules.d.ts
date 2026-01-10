@@ -1,7 +1,7 @@
 // Type declarations for optional Expo packages
 // These packages are dynamically imported and have runtime fallbacks
 
-declare module 'expo-notifications' {
+declare module "expo-notifications" {
   export interface NotificationTriggerInput {
     seconds?: number;
     repeats?: boolean;
@@ -23,7 +23,7 @@ declare module 'expo-notifications' {
   }
 
   export interface ExpoPushToken {
-    type: 'expo';
+    type: "expo";
     data: string;
   }
 
@@ -52,20 +52,26 @@ declare module 'expo-notifications' {
     remove: () => void;
   }
 
-  export type PermissionStatus = 'granted' | 'denied' | 'undetermined';
+  export type PermissionStatus = "granted" | "denied" | "undetermined";
 
   export interface NotificationPermissionsStatus {
     status: PermissionStatus;
-    expires: 'never' | number;
+    expires: "never" | number;
     granted: boolean;
     canAskAgain: boolean;
   }
 
   export function getPermissionsAsync(): Promise<NotificationPermissionsStatus>;
   export function requestPermissionsAsync(): Promise<NotificationPermissionsStatus>;
-  export function getExpoPushTokenAsync(options?: { projectId?: string }): Promise<ExpoPushToken>;
-  export function scheduleNotificationAsync(request: NotificationRequestInput): Promise<string>;
-  export function cancelScheduledNotificationAsync(identifier: string): Promise<void>;
+  export function getExpoPushTokenAsync(options?: {
+    projectId?: string;
+  }): Promise<ExpoPushToken>;
+  export function scheduleNotificationAsync(
+    request: NotificationRequestInput,
+  ): Promise<string>;
+  export function cancelScheduledNotificationAsync(
+    identifier: string,
+  ): Promise<void>;
   export function cancelAllScheduledNotificationsAsync(): Promise<void>;
   export function setNotificationHandler(handler: {
     handleNotification: (notification: Notification) => Promise<{
@@ -75,14 +81,14 @@ declare module 'expo-notifications' {
     }>;
   }): void;
   export function addNotificationReceivedListener(
-    listener: (notification: Notification) => void
+    listener: (notification: Notification) => void,
   ): Subscription;
   export function addNotificationResponseReceivedListener(
-    listener: (response: NotificationResponse) => void
+    listener: (response: NotificationResponse) => void,
   ): Subscription;
   export function setNotificationChannelAsync(
     channelId: string,
-    channel: NotificationChannel
+    channel: NotificationChannel,
   ): Promise<NotificationChannel | null>;
 
   export const AndroidImportance: {
@@ -94,7 +100,7 @@ declare module 'expo-notifications' {
   };
 }
 
-declare module 'expo-device' {
+declare module "expo-device" {
   export const isDevice: boolean;
   export const brand: string | null;
   export const manufacturer: string | null;
@@ -130,7 +136,7 @@ declare module 'expo-device' {
   export function hasPlatformFeatureAsync(feature: string): Promise<boolean>;
 }
 
-declare module 'expo-image-picker' {
+declare module "expo-image-picker" {
   export interface ImagePickerOptions {
     mediaTypes?: MediaTypeOptions;
     allowsEditing?: boolean;
@@ -141,12 +147,19 @@ declare module 'expo-image-picker' {
     videoMaxDuration?: number;
     allowsMultipleSelection?: boolean;
     selectionLimit?: number;
-    presentationStyle?: 'fullScreen' | 'pageSheet' | 'formSheet' | 'currentContext' | 'overFullScreen' | 'overCurrentContext' | 'popover';
+    presentationStyle?:
+      | "fullScreen"
+      | "pageSheet"
+      | "formSheet"
+      | "currentContext"
+      | "overFullScreen"
+      | "overCurrentContext"
+      | "popover";
   }
 
   export interface CameraOptions extends ImagePickerOptions {
     cameraType?: CameraType;
-    videoQuality?: 'low' | 'medium' | 'high' | 'highest';
+    videoQuality?: "low" | "medium" | "high" | "highest";
   }
 
   export interface ImagePickerAsset {
@@ -154,7 +167,7 @@ declare module 'expo-image-picker' {
     uri: string;
     width: number;
     height: number;
-    type?: 'image' | 'video';
+    type?: "image" | "video";
     fileName?: string | null;
     fileSize?: number;
     exif?: Record<string, unknown> | null;
@@ -169,32 +182,36 @@ declare module 'expo-image-picker' {
   }
 
   export interface PermissionResponse {
-    status: 'granted' | 'denied' | 'undetermined';
-    expires: 'never' | number;
+    status: "granted" | "denied" | "undetermined";
+    expires: "never" | number;
     granted: boolean;
     canAskAgain: boolean;
   }
 
   export enum MediaTypeOptions {
-    All = 'All',
-    Videos = 'Videos',
-    Images = 'Images',
+    All = "All",
+    Videos = "Videos",
+    Images = "Images",
   }
 
   export enum CameraType {
-    front = 'front',
-    back = 'back',
+    front = "front",
+    back = "back",
   }
 
   export function requestCameraPermissionsAsync(): Promise<PermissionResponse>;
   export function requestMediaLibraryPermissionsAsync(): Promise<PermissionResponse>;
   export function getCameraPermissionsAsync(): Promise<PermissionResponse>;
   export function getMediaLibraryPermissionsAsync(): Promise<PermissionResponse>;
-  export function launchCameraAsync(options?: CameraOptions): Promise<ImagePickerResult>;
-  export function launchImageLibraryAsync(options?: ImagePickerOptions): Promise<ImagePickerResult>;
+  export function launchCameraAsync(
+    options?: CameraOptions,
+  ): Promise<ImagePickerResult>;
+  export function launchImageLibraryAsync(
+    options?: ImagePickerOptions,
+  ): Promise<ImagePickerResult>;
 }
 
-declare module 'expo-file-system' {
+declare module "expo-file-system" {
   export const documentDirectory: string | null;
   export const cacheDirectory: string | null;
   export const bundleDirectory: string | null;
@@ -257,72 +274,112 @@ declare module 'expo-file-system' {
   }
 
   export enum EncodingType {
-    UTF8 = 'utf8',
-    Base64 = 'base64',
+    UTF8 = "utf8",
+    Base64 = "base64",
   }
 
   export function getInfoAsync(
     fileUri: string,
-    options?: { md5?: boolean; size?: boolean }
+    options?: { md5?: boolean; size?: boolean },
   ): Promise<FileInfo>;
   export function readAsStringAsync(
     fileUri: string,
-    options?: ReadingOptions
+    options?: ReadingOptions,
   ): Promise<string>;
   export function writeAsStringAsync(
     fileUri: string,
     contents: string,
-    options?: WritingOptions
+    options?: WritingOptions,
   ): Promise<void>;
   export function deleteAsync(
     fileUri: string,
-    options?: { idempotent?: boolean }
+    options?: { idempotent?: boolean },
   ): Promise<void>;
-  export function moveAsync(options: { from: string; to: string }): Promise<void>;
-  export function copyAsync(options: { from: string; to: string }): Promise<void>;
+  export function moveAsync(options: {
+    from: string;
+    to: string;
+  }): Promise<void>;
+  export function copyAsync(options: {
+    from: string;
+    to: string;
+  }): Promise<void>;
   export function makeDirectoryAsync(
     fileUri: string,
-    options?: { intermediates?: boolean }
+    options?: { intermediates?: boolean },
   ): Promise<void>;
   export function readDirectoryAsync(fileUri: string): Promise<string[]>;
   export function downloadAsync(
     uri: string,
     fileUri: string,
-    options?: DownloadOptions
+    options?: DownloadOptions,
   ): Promise<DownloadResult>;
   export function uploadAsync(
     url: string,
     fileUri: string,
     options?: {
       headers?: Record<string, string>;
-      httpMethod?: 'POST' | 'PUT' | 'PATCH';
+      httpMethod?: "POST" | "PUT" | "PATCH";
       uploadType?: number;
       fieldName?: string;
       mimeType?: string;
       parameters?: Record<string, string>;
-    }
+    },
   ): Promise<UploadResult>;
   export function createDownloadResumable(
     uri: string,
     fileUri: string,
     options?: DownloadOptions,
     callback?: (downloadProgress: DownloadProgressData) => void,
-    resumeData?: string
+    resumeData?: string,
   ): DownloadResumable;
 }
 
-declare module '@react-native-async-storage/async-storage' {
+declare module "@react-native-async-storage/async-storage" {
   export interface AsyncStorageStatic {
-    getItem(key: string, callback?: (error?: Error | null, result?: string | null) => void): Promise<string | null>;
-    setItem(key: string, value: string, callback?: (error?: Error | null) => void): Promise<void>;
-    removeItem(key: string, callback?: (error?: Error | null) => void): Promise<void>;
-    mergeItem(key: string, value: string, callback?: (error?: Error | null) => void): Promise<void>;
+    getItem(
+      key: string,
+      callback?: (error?: Error | null, result?: string | null) => void,
+    ): Promise<string | null>;
+    setItem(
+      key: string,
+      value: string,
+      callback?: (error?: Error | null) => void,
+    ): Promise<void>;
+    removeItem(
+      key: string,
+      callback?: (error?: Error | null) => void,
+    ): Promise<void>;
+    mergeItem(
+      key: string,
+      value: string,
+      callback?: (error?: Error | null) => void,
+    ): Promise<void>;
     clear(callback?: (error?: Error | null) => void): Promise<void>;
-    getAllKeys(callback?: (error?: Error | null, keys?: readonly string[] | null) => void): Promise<readonly string[]>;
-    multiGet(keys: readonly string[], callback?: (errors?: readonly (Error | null)[] | null, result?: readonly [string, string | null][] | null) => void): Promise<readonly [string, string | null][]>;
-    multiSet(keyValuePairs: readonly [string, string][], callback?: (errors?: readonly (Error | null)[] | null) => void): Promise<void>;
-    multiRemove(keys: readonly string[], callback?: (errors?: readonly (Error | null)[] | null) => void): Promise<void>;
-    multiMerge(keyValuePairs: readonly [string, string][], callback?: (errors?: readonly (Error | null)[] | null) => void): Promise<void>;
+    getAllKeys(
+      callback?: (
+        error?: Error | null,
+        keys?: readonly string[] | null,
+      ) => void,
+    ): Promise<readonly string[]>;
+    multiGet(
+      keys: readonly string[],
+      callback?: (
+        errors?: readonly (Error | null)[] | null,
+        result?: readonly [string, string | null][] | null,
+      ) => void,
+    ): Promise<readonly [string, string | null][]>;
+    multiSet(
+      keyValuePairs: readonly [string, string][],
+      callback?: (errors?: readonly (Error | null)[] | null) => void,
+    ): Promise<void>;
+    multiRemove(
+      keys: readonly string[],
+      callback?: (errors?: readonly (Error | null)[] | null) => void,
+    ): Promise<void>;
+    multiMerge(
+      keyValuePairs: readonly [string, string][],
+      callback?: (errors?: readonly (Error | null)[] | null) => void,
+    ): Promise<void>;
   }
 
   const AsyncStorage: AsyncStorageStatic;

@@ -1,4 +1,4 @@
-import React, { useState, forwardRef } from 'react';
+import React, { useState, forwardRef } from "react";
 import {
   TextInput,
   View,
@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   TextInputProps,
   ViewStyle,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -36,7 +36,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       secureTextEntry,
       ...props
     },
-    ref
+    ref,
   ) => {
     const [isFocused, setIsFocused] = useState(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -58,7 +58,7 @@ export const Input = forwardRef<TextInput, InputProps>(
             {required && <Text style={styles.required}> *</Text>}
           </Text>
         )}
-        
+
         <View
           style={[
             styles.inputContainer,
@@ -75,7 +75,7 @@ export const Input = forwardRef<TextInput, InputProps>(
               style={styles.leftIcon}
             />
           )}
-          
+
           <TextInput
             ref={ref}
             style={[
@@ -89,20 +89,20 @@ export const Input = forwardRef<TextInput, InputProps>(
             secureTextEntry={isPassword && !showPassword}
             {...props}
           />
-          
+
           {isPassword && (
             <TouchableOpacity
               onPress={() => setIsPasswordVisible(!isPasswordVisible)}
               style={styles.rightIconButton}
             >
               <FontAwesome
-                name={showPassword ? 'eye-slash' : 'eye'}
+                name={showPassword ? "eye-slash" : "eye"}
                 size={18}
                 color={theme.colors.textSecondary}
               />
             </TouchableOpacity>
           )}
-          
+
           {!isPassword && rightIcon && (
             <TouchableOpacity
               onPress={onRightIconPress}
@@ -117,20 +117,16 @@ export const Input = forwardRef<TextInput, InputProps>(
             </TouchableOpacity>
           )}
         </View>
-        
-        {error && (
-          <Text style={styles.errorText}>{error}</Text>
-        )}
-        
-        {hint && !error && (
-          <Text style={styles.hintText}>{hint}</Text>
-        )}
+
+        {error && <Text style={styles.errorText}>{error}</Text>}
+
+        {hint && !error && <Text style={styles.hintText}>{hint}</Text>}
       </View>
     );
-  }
+  },
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";
 
 const styles = StyleSheet.create({
   container: {
@@ -138,7 +134,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: theme.fontSize.sm,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginBottom: theme.spacing.xs,
   },
@@ -146,8 +142,8 @@ const styles = StyleSheet.create({
     color: theme.colors.danger,
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
     borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.surface,

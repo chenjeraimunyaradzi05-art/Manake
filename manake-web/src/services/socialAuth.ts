@@ -1,6 +1,6 @@
-import api from './api';
+import api from "./api";
 
-export type SocialProvider = 'google' | 'facebook';
+export type SocialProvider = "google" | "facebook";
 
 export type AuthUser = {
   id?: string;
@@ -26,7 +26,7 @@ type CallbackResponse = {
 
 export const startSocialAuth = async (
   provider: SocialProvider,
-  redirectUri: string
+  redirectUri: string,
 ): Promise<StartResponse> => {
   const { data } = await api.get(`/v1/social/${provider}/authorize`, {
     params: { redirectUri },
@@ -36,7 +36,12 @@ export const startSocialAuth = async (
 
 export const completeSocialAuth = async (
   provider: SocialProvider,
-  params: { code: string; state?: string; redirectUri?: string; mode?: 'login' | 'link' }
+  params: {
+    code: string;
+    state?: string;
+    redirectUri?: string;
+    mode?: "login" | "link";
+  },
 ): Promise<CallbackResponse> => {
   const { data } = await api.get(`/v1/social/${provider}/callback`, {
     params,

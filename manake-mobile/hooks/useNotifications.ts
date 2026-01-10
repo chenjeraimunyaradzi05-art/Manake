@@ -3,9 +3,9 @@
  * Manages push notification registration and listeners
  */
 
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { useRouter } from 'expo-router';
-import { useAuth } from './useAuth';
+import { useEffect, useRef, useCallback, useState } from "react";
+import { useRouter } from "expo-router";
+import { useAuth } from "./useAuth";
 import notifications, {
   registerForPushNotifications,
   savePushTokenToServer,
@@ -16,7 +16,7 @@ import notifications, {
   Notification,
   NotificationResponse,
   Subscription,
-} from '../services/notifications';
+} from "../services/notifications";
 
 interface UseNotificationsOptions {
   onNotificationReceived?: (notification: Notification) => void;
@@ -27,7 +27,9 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const { user, isAuthenticated } = useAuth();
   const router = useRouter();
   const [pushToken, setPushToken] = useState<string | null>(null);
-  const [permissionGranted, setPermissionGranted] = useState<boolean | null>(null);
+  const [permissionGranted, setPermissionGranted] = useState<boolean | null>(
+    null,
+  );
   const notificationListener = useRef<Subscription>();
   const responseListener = useRef<Subscription>();
   const lastTokenRef = useRef<string | null>(null);
@@ -36,42 +38,42 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
   const handleNotificationNavigation = useCallback(
     (data: Record<string, unknown>) => {
       // Navigate based on notification type
-      if (data.type === 'story' && data.storyId) {
+      if (data.type === "story" && data.storyId) {
         router.push(`/story/${data.storyId}`);
-      } else if (data.type === 'message' && data.conversationId) {
-        router.push('/messages');
-      } else if (data.type === 'emergency') {
+      } else if (data.type === "message" && data.conversationId) {
+        router.push("/messages");
+      } else if (data.type === "emergency") {
         // Handle emergency notification
-        router.push('/');
+        router.push("/");
       } else if (data.route) {
         router.push(data.route as string);
       }
     },
-    [router]
+    [router],
   );
 
   // Register for push notifications
   const register = useCallback(async () => {
     try {
       const result = await registerForPushNotifications();
-      
+
       if (result) {
         setPushToken(result.token);
         setPermissionGranted(true);
-        
+
         // Save to server if authenticated and token changed
         if (isAuthenticated && result.token !== lastTokenRef.current) {
           await savePushTokenToServer(result.token);
           lastTokenRef.current = result.token;
         }
-        
+
         return result.token;
       } else {
         setPermissionGranted(false);
         return null;
       }
     } catch (error) {
-      console.error('Failed to register for push notifications:', error);
+      console.error("Failed to register for push notifications:", error);
       setPermissionGranted(false);
       return null;
     }
@@ -94,16 +96,18 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
     }
 
     // Notification received while app is foregrounded
-    notificationListener.current = addNotificationReceivedListener((notification) => {
-      console.log('Notification received:', notification);
-      options.onNotificationReceived?.(notification);
-    });
+    notificationListener.current = addNotificationReceivedListener(
+      (notification) => {
+        console.log("Notification received:", notification);
+        options.onNotificationReceived?.(notification);
+      },
+    );
 
     // Notification tapped / interacted with
     responseListener.current = addNotificationResponseListener((response) => {
-      console.log('Notification tapped:', response);
+      console.log("Notification tapped:", response);
       options.onNotificationTapped?.(response);
-      
+
       // Handle navigation
       const data = response.notification.request.content.data;
       if (data) {

@@ -1,33 +1,51 @@
-import { Request, Response } from 'express';
-import { Donation } from '../models/Donation';
-import { stripe } from '../config/stripe';
+import { Request, Response } from "express";
+import { Donation } from "../models/Donation";
+import { stripe } from "../config/stripe";
 
 // Validation constants
 const MIN_DONATION_CENTS = 100; // $1 minimum
 const MAX_DONATION_CENTS = 10000000; // $100,000 maximum
-const ALLOWED_CURRENCIES = ['usd', 'zwl'];
+const ALLOWED_CURRENCIES = ["usd", "zwl"];
 
 export const createPaymentIntent = async (req: Request, res: Response) => {
   try {
-    const { amount, currency = 'usd', donorName, donorEmail, recurring, paymentMethod = 'card', purpose } = req.body;
+    const {
+      amount,
+      currency = "usd",
+      donorName,
+      donorEmail,
+      recurring,
+      paymentMethod = "card",
+      purpose,
+    } = req.body;
 
     // Validate amount (frontend sends cents)
     const amountCents = parseInt(amount, 10);
     if (isNaN(amountCents) || amountCents < MIN_DONATION_CENTS) {
-      return res.status(400).json({ message: `Minimum donation is $${MIN_DONATION_CENTS / 100}` });
+      return res
+        .status(400)
+        .json({ message: `Minimum donation is $${MIN_DONATION_CENTS / 100}` });
     }
     if (amountCents > MAX_DONATION_CENTS) {
-      return res.status(400).json({ message: `Maximum donation is $${MAX_DONATION_CENTS / 100}` });
+      return res
+        .status(400)
+        .json({ message: `Maximum donation is $${MAX_DONATION_CENTS / 100}` });
     }
 
     // Validate currency
     if (!ALLOWED_CURRENCIES.includes(currency.toLowerCase())) {
-      return res.status(400).json({ message: `Currency must be one of: ${ALLOWED_CURRENCIES.join(', ')}` });
+      return res
+        .status(400)
+        .json({
+          message: `Currency must be one of: ${ALLOWED_CURRENCIES.join(", ")}`,
+        });
     }
 
     // Validate email
     if (!donorEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donorEmail)) {
-      return res.status(400).json({ message: 'Valid email address is required' });
+      return res
+        .status(400)
+        .json({ message: "Valid email address is required" });
     }
 
     // Generate a unique reference for this donation
@@ -35,46 +53,48 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
     const amountDollars = amountCents / 100;
 
     // Handle different payment methods
-    if (paymentMethod === 'card') {
+    if (paymentMethod === "card") {
       // Create a Stripe Checkout Session (cleaner than PaymentIntent for donations)
       const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        mode: recurring ? 'subscription' : 'payment',
+        payment_method_types: ["card"],
+        mode: recurring ? "subscription" : "payment",
         customer_email: donorEmail,
         line_items: [
           {
             price_data: {
               currency: currency.toLowerCase(),
               product_data: {
-                name: 'Donation to Manake Rehabilitation Center',
-                description: purpose || 'General donation to support youth recovery programs',
+                name: "Donation to Manake Rehabilitation Center",
+                description:
+                  purpose ||
+                  "General donation to support youth recovery programs",
               },
               unit_amount: amountCents,
-              ...(recurring && { recurring: { interval: 'month' } }),
+              ...(recurring && { recurring: { interval: "month" } }),
             },
             quantity: 1,
           },
         ],
         metadata: {
-          donorName: donorName || 'Anonymous',
+          donorName: donorName || "Anonymous",
           donorEmail,
-          purpose: purpose || 'general_donation',
+          purpose: purpose || "general_donation",
           reference,
         },
-        success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/thank-you?ref=${reference}`,
-        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/donate`,
+        success_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/thank-you?ref=${reference}`,
+        cancel_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/donate`,
       });
 
       // Save pending donation record
       await Donation.create({
         amount: amountDollars,
         currency,
-        donorName: donorName || 'Anonymous',
+        donorName: donorName || "Anonymous",
         donorEmail,
-        type: purpose || 'general_donation',
+        type: purpose || "general_donation",
         paymentIntentId: session.id,
         reference,
-        status: 'pending',
+        status: "pending",
       });
 
       return res.json({
@@ -87,24 +107,29 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
     await Donation.create({
       amount: amountDollars,
       currency,
-      donorName: donorName || 'Anonymous',
+      donorName: donorName || "Anonymous",
       donorEmail,
-      type: purpose || 'general_donation',
+      type: purpose || "general_donation",
       reference,
       paymentMethod,
-      status: 'pending',
+      status: "pending",
     });
 
     return res.json({
       reference,
       paymentMethod,
-      instructions: paymentMethod === 'ecocash'
-        ? 'Send payment to EcoCash number: 0775 772 277. Use reference: ' + reference
-        : 'Bank: CBZ Bank, Account: 12345678, Branch: Harare. Use reference: ' + reference,
+      instructions:
+        paymentMethod === "ecocash"
+          ? "Send payment to EcoCash number: 0775 772 277. Use reference: " +
+            reference
+          : "Bank: CBZ Bank, Account: 12345678, Branch: Harare. Use reference: " +
+            reference,
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Payment Error:', message, error);
-    res.status(500).json({ message: 'Payment initiation failed. Please try again.' });
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Payment Error:", message, error);
+    res
+      .status(500)
+      .json({ message: "Payment initiation failed. Please try again." });
   }
 };

@@ -6,12 +6,12 @@ interface TestimonialCardProps {
   rating?: number;
 }
 
-export const TestimonialCard = ({ 
-  quote, 
-  author, 
-  role, 
+export const TestimonialCard = ({
+  quote,
+  author,
+  role,
   image,
-  rating = 5 
+  rating = 5,
 }: TestimonialCardProps) => {
   return (
     <div className="bg-white rounded-2xl p-8 shadow-lg relative">
@@ -19,14 +19,14 @@ export const TestimonialCard = ({
       <div className="absolute top-6 left-6 text-6xl text-primary-100 font-serif leading-none">
         "
       </div>
-      
+
       {/* Rating */}
       {rating > 0 && (
         <div className="flex gap-1 mb-4 relative z-10">
           {[...Array(5)].map((_, i) => (
-            <span 
-              key={i} 
-              className={`text-xl ${i < rating ? 'text-yellow-400' : 'text-gray-200'}`}
+            <span
+              key={i}
+              className={`text-xl ${i < rating ? "text-yellow-400" : "text-gray-200"}`}
             >
               ★
             </span>
@@ -42,8 +42,8 @@ export const TestimonialCard = ({
       {/* Author */}
       <div className="flex items-center gap-4">
         {image ? (
-          <img 
-            src={image} 
+          <img
+            src={image}
             alt={author}
             className="w-12 h-12 rounded-full object-cover"
           />

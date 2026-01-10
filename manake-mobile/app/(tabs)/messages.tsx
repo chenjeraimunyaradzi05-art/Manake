@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -10,18 +10,22 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
-} from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
-import { useAuth, useConnectivity } from '../../hooks';
-import { useToast } from '../../components';
-import { messagingApi, Message, MessagingChannel } from '../../services/messaging';
+} from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
+import { useAuth, useConnectivity } from "../../hooks";
+import { useToast } from "../../components";
+import {
+  messagingApi,
+  Message,
+  MessagingChannel,
+} from "../../services/messaging";
 
 const CHANNELS: { key: MessagingChannel; label: string; icon: string }[] = [
-  { key: 'inapp', label: 'In-App', icon: 'inbox' },
-  { key: 'whatsapp', label: 'WhatsApp', icon: 'whatsapp' },
-  { key: 'instagram', label: 'Instagram', icon: 'instagram' },
-  { key: 'facebook', label: 'Facebook', icon: 'facebook' },
+  { key: "inapp", label: "In-App", icon: "inbox" },
+  { key: "whatsapp", label: "WhatsApp", icon: "whatsapp" },
+  { key: "instagram", label: "Instagram", icon: "instagram" },
+  { key: "facebook", label: "Facebook", icon: "facebook" },
 ];
 
 export default function MessagesScreen() {
@@ -33,8 +37,9 @@ export default function MessagesScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sending, setSending] = useState(false);
-  const [newMessage, setNewMessage] = useState('');
-  const [selectedChannel, setSelectedChannel] = useState<MessagingChannel>('inapp');
+  const [newMessage, setNewMessage] = useState("");
+  const [selectedChannel, setSelectedChannel] =
+    useState<MessagingChannel>("inapp");
 
   const markedReadIdsRef = useRef<Set<string>>(new Set());
 
@@ -47,11 +52,11 @@ export default function MessagesScreen() {
       if (hasInternet) {
         const unreadInbound = (data || []).filter(
           (m) =>
-            m.direction === 'inbound' &&
+            m.direction === "inbound" &&
             m.id &&
             !markedReadIdsRef.current.has(m.id) &&
             !m.readAt &&
-            m.status !== 'read'
+            m.status !== "read",
         );
 
         if (unreadInbound.length > 0) {
@@ -63,7 +68,7 @@ export default function MessagesScreen() {
               } catch {
                 markedReadIdsRef.current.delete(m.id);
               }
-            })
+            }),
           );
 
           // Keep local state consistent without requiring a refetch
@@ -72,16 +77,16 @@ export default function MessagesScreen() {
               unreadInbound.some((u) => u.id === m.id)
                 ? {
                     ...m,
-                    status: 'read',
+                    status: "read",
                     readAt: m.readAt || new Date().toISOString(),
                   }
-                : m
-            )
+                : m,
+            ),
           );
         }
       }
     } catch (err) {
-      console.error('Failed to fetch messages', err);
+      console.error("Failed to fetch messages", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -106,23 +111,33 @@ export default function MessagesScreen() {
         channels: [selectedChannel],
         message: newMessage.trim(),
       });
-      setNewMessage('');
-      showToast('Message sent', 'success');
+      setNewMessage("");
+      showToast("Message sent", "success");
       fetchMessages();
     } catch (err) {
-      showToast('Failed to send message', 'error');
+      showToast("Failed to send message", "error");
     } finally {
       setSending(false);
     }
   };
 
   const renderMessage = ({ item }: { item: Message }) => {
-    const isOutbound = item.direction === 'outbound';
+    const isOutbound = item.direction === "outbound";
     return (
-      <View style={[styles.messageBubble, isOutbound ? styles.outbound : styles.inbound]}>
-        <Text style={[styles.messageText, isOutbound && styles.outboundText]}>{item.content}</Text>
+      <View
+        style={[
+          styles.messageBubble,
+          isOutbound ? styles.outbound : styles.inbound,
+        ]}
+      >
+        <Text style={[styles.messageText, isOutbound && styles.outboundText]}>
+          {item.content}
+        </Text>
         <Text style={styles.timestamp}>
-          {new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(item.createdAt).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </Text>
       </View>
     );
@@ -140,7 +155,7 @@ export default function MessagesScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={100}
     >
       {/* Channel selector */}
@@ -148,19 +163,27 @@ export default function MessagesScreen() {
         {CHANNELS.map((ch) => (
           <TouchableOpacity
             key={ch.key}
-            style={[styles.channelButton, selectedChannel === ch.key && styles.channelButtonActive]}
+            style={[
+              styles.channelButton,
+              selectedChannel === ch.key && styles.channelButtonActive,
+            ]}
             onPress={() => {
               setSelectedChannel(ch.key);
               setLoading(true);
             }}
           >
             <FontAwesome
-              name={ch.icon as 'inbox'}
+              name={ch.icon as "inbox"}
               size={18}
-              color={selectedChannel === ch.key ? '#fff' : theme.colors.textSecondary}
+              color={
+                selectedChannel === ch.key ? "#fff" : theme.colors.textSecondary
+              }
             />
             <Text
-              style={[styles.channelLabel, selectedChannel === ch.key && styles.channelLabelActive]}
+              style={[
+                styles.channelLabel,
+                selectedChannel === ch.key && styles.channelLabelActive,
+              ]}
             >
               {ch.label}
             </Text>
@@ -175,7 +198,11 @@ export default function MessagesScreen() {
         </View>
       ) : messages.length === 0 ? (
         <View style={styles.center}>
-          <FontAwesome name="comments-o" size={48} color={theme.colors.textSecondary} />
+          <FontAwesome
+            name="comments-o"
+            size={48}
+            color={theme.colors.textSecondary}
+          />
           <Text style={styles.emptyText}>No messages yet</Text>
         </View>
       ) : (
@@ -185,7 +212,9 @@ export default function MessagesScreen() {
           renderItem={renderMessage}
           contentContainerStyle={styles.list}
           inverted
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
         />
       )}
 
@@ -201,7 +230,10 @@ export default function MessagesScreen() {
           editable={!sending}
         />
         <TouchableOpacity
-          style={[styles.sendButton, (!newMessage.trim() || sending) && styles.sendButtonDisabled]}
+          style={[
+            styles.sendButton,
+            (!newMessage.trim() || sending) && styles.sendButtonDisabled,
+          ]}
           onPress={handleSend}
           disabled={!newMessage.trim() || sending}
         >
@@ -218,19 +250,24 @@ export default function MessagesScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
   emptyText: { marginTop: 12, fontSize: 16, color: theme.colors.textSecondary },
   channelBar: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 8,
     paddingVertical: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   channelButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 6,
     paddingHorizontal: 10,
     marginHorizontal: 4,
@@ -238,27 +275,36 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
   },
   channelButtonActive: { backgroundColor: theme.colors.primary },
-  channelLabel: { marginLeft: 6, fontSize: 12, color: theme.colors.textSecondary },
-  channelLabelActive: { color: '#fff' },
+  channelLabel: {
+    marginLeft: 6,
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  channelLabelActive: { color: "#fff" },
   list: { paddingHorizontal: 12, paddingVertical: 8 },
   messageBubble: {
-    maxWidth: '80%',
+    maxWidth: "80%",
     padding: 10,
     borderRadius: 12,
     marginVertical: 4,
   },
-  inbound: { alignSelf: 'flex-start', backgroundColor: '#e5e5ea' },
-  outbound: { alignSelf: 'flex-end', backgroundColor: theme.colors.primary },
+  inbound: { alignSelf: "flex-start", backgroundColor: "#e5e5ea" },
+  outbound: { alignSelf: "flex-end", backgroundColor: theme.colors.primary },
   messageText: { fontSize: 15, color: theme.colors.text },
-  outboundText: { color: '#fff' },
-  timestamp: { fontSize: 10, color: theme.colors.textSecondary, marginTop: 4, textAlign: 'right' },
+  outboundText: { color: "#fff" },
+  timestamp: {
+    fontSize: 10,
+    color: theme.colors.textSecondary,
+    marginTop: 4,
+    textAlign: "right",
+  },
   composer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   input: {
     flex: 1,
@@ -276,8 +322,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   sendButtonDisabled: { opacity: 0.5 },
 });

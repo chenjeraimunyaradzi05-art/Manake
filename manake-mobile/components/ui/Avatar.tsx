@@ -1,12 +1,12 @@
-import React from 'react';
-import { View, Image, StyleSheet, Text, ViewStyle } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
+import React from "react";
+import { View, Image, StyleSheet, Text, ViewStyle } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
 
 interface AvatarProps {
   uri?: string | null;
   name?: string;
-  size?: 'small' | 'medium' | 'large' | 'xlarge';
+  size?: "small" | "medium" | "large" | "xlarge";
   style?: ViewStyle;
   showBadge?: boolean;
   badgeColor?: string;
@@ -15,20 +15,20 @@ interface AvatarProps {
 export function Avatar({
   uri,
   name,
-  size = 'medium',
+  size = "medium",
   style,
   showBadge = false,
   badgeColor = theme.colors.primary,
 }: AvatarProps) {
   const getSize = () => {
     switch (size) {
-      case 'small':
+      case "small":
         return 32;
-      case 'medium':
+      case "medium":
         return 48;
-      case 'large':
+      case "large":
         return 64;
-      case 'xlarge':
+      case "xlarge":
         return 96;
       default:
         return 48;
@@ -36,8 +36,8 @@ export function Avatar({
   };
 
   const getInitials = () => {
-    if (!name) return '?';
-    const names = name.split(' ');
+    if (!name) return "?";
+    const names = name.split(" ");
     if (names.length >= 2) {
       return `${names[0][0]}${names[1][0]}`.toUpperCase();
     }
@@ -49,17 +49,34 @@ export function Avatar({
   const badgeSize = avatarSize * 0.25;
 
   return (
-    <View style={[styles.container, { width: avatarSize, height: avatarSize }, style]}>
+    <View
+      style={[
+        styles.container,
+        { width: avatarSize, height: avatarSize },
+        style,
+      ]}
+    >
       {uri ? (
         <Image
           source={{ uri }}
-          style={[styles.image, { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 }]}
+          style={[
+            styles.image,
+            {
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: avatarSize / 2,
+            },
+          ]}
         />
       ) : (
         <View
           style={[
             styles.placeholder,
-            { width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2 },
+            {
+              width: avatarSize,
+              height: avatarSize,
+              borderRadius: avatarSize / 2,
+            },
           ]}
         >
           {name ? (
@@ -88,26 +105,26 @@ export function Avatar({
 
 const styles = StyleSheet.create({
   container: {
-    position: 'relative',
+    position: "relative",
   },
   image: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
   },
   placeholder: {
     backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   initials: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   badge: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     right: 0,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
 });
 

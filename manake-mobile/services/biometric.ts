@@ -1,4 +1,4 @@
-export type BiometricType = 'fingerprint' | 'facial' | 'iris' | 'none';
+export type BiometricType = "fingerprint" | "facial" | "iris" | "none";
 
 export interface BiometricResult {
   success: boolean;
@@ -27,7 +27,7 @@ declare const require: any;
 async function loadBiometricModule() {
   if (LocalAuthentication) return LocalAuthentication;
   try {
-    const imported = require('expo-local-authentication');
+    const imported = require("expo-local-authentication");
     LocalAuthentication = imported?.default ?? imported;
   } catch {
     LocalAuthentication = null;
@@ -36,64 +36,65 @@ async function loadBiometricModule() {
 }
 
 function mapAuthTypeToBiometricType(module: any, type: number): BiometricType {
-  if (!module?.AuthenticationType) return 'none';
-  if (type === module.AuthenticationType.FINGERPRINT) return 'fingerprint';
-  if (type === module.AuthenticationType.FACIAL_RECOGNITION) return 'facial';
-  if (type === module.AuthenticationType.IRIS) return 'iris';
-  return 'none';
+  if (!module?.AuthenticationType) return "none";
+  if (type === module.AuthenticationType.FINGERPRINT) return "fingerprint";
+  if (type === module.AuthenticationType.FACIAL_RECOGNITION) return "facial";
+  if (type === module.AuthenticationType.IRIS) return "iris";
+  return "none";
 }
 
 export function getBiometricLabel(biometricType: BiometricType): string {
-  if (biometricType === 'facial') return 'Face ID';
-  if (biometricType === 'fingerprint') return 'Fingerprint';
-  if (biometricType === 'iris') return 'Iris';
-  return 'Biometrics';
+  if (biometricType === "facial") return "Face ID";
+  if (biometricType === "fingerprint") return "Fingerprint";
+  if (biometricType === "iris") return "Iris";
+  return "Biometrics";
 }
 
 export async function getBiometricStatus(): Promise<BiometricStatus> {
   try {
     const mod = await loadBiometricModule();
     if (!mod) {
-      return { isAvailable: false, isEnrolled: false, biometricType: 'none' };
+      return { isAvailable: false, isEnrolled: false, biometricType: "none" };
     }
 
     const hasHardware = await mod.hasHardwareAsync();
     if (!hasHardware) {
-      return { isAvailable: false, isEnrolled: false, biometricType: 'none' };
+      return { isAvailable: false, isEnrolled: false, biometricType: "none" };
     }
 
     const enrolled = await mod.isEnrolledAsync();
     if (!enrolled) {
-      return { isAvailable: false, isEnrolled: false, biometricType: 'none' };
+      return { isAvailable: false, isEnrolled: false, biometricType: "none" };
     }
 
-    const supportedTypes: number[] = await mod.supportedAuthenticationTypesAsync();
+    const supportedTypes: number[] =
+      await mod.supportedAuthenticationTypesAsync();
     const mapped = supportedTypes
       .map((t) => mapAuthTypeToBiometricType(mod, t))
-      .find((t) => t !== 'none');
+      .find((t) => t !== "none");
 
     return {
       isAvailable: true,
       isEnrolled: true,
-      biometricType: mapped ?? 'none',
+      biometricType: mapped ?? "none",
     };
   } catch (e) {
     return {
       isAvailable: false,
       isEnrolled: false,
-      biometricType: 'none',
-      error: e instanceof Error ? e.message : 'Failed to check biometrics',
+      biometricType: "none",
+      error: e instanceof Error ? e.message : "Failed to check biometrics",
     };
   }
 }
 
 export async function authenticateBiometric(
-  options: AuthenticateBiometricOptions
+  options: AuthenticateBiometricOptions,
 ): Promise<BiometricResult> {
   try {
     const mod = await loadBiometricModule();
     if (!mod) {
-      return { success: false, error: 'Biometrics not available' };
+      return { success: false, error: "Biometrics not available" };
     }
 
     const result = await mod.authenticateAsync({
@@ -107,12 +108,12 @@ export async function authenticateBiometric(
 
     return {
       success: false,
-      error: result?.error ?? 'Authentication cancelled',
+      error: result?.error ?? "Authentication cancelled",
     };
   } catch (e) {
     return {
       success: false,
-      error: e instanceof Error ? e.message : 'Authentication failed',
+      error: e instanceof Error ? e.message : "Authentication failed",
     };
   }
 }

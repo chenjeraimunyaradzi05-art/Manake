@@ -1,34 +1,41 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
   ScrollView,
   Image,
   TouchableOpacity,
   Share,
   ActivityIndicator,
   Dimensions,
-} from 'react-native';
-import { useLocalSearchParams, router, Stack } from 'expo-router';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
-import { Avatar, Button, Input } from '../../components';
-import { useAuth } from '../../hooks';
-import { useStoriesStore } from '../../store';
-import { storiesApi } from '../../services/api';
-import type { StoryComment } from '../../types';
+} from "react-native";
+import { useLocalSearchParams, router, Stack } from "expo-router";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
+import { Avatar, Button, Input } from "../../components";
+import { useAuth } from "../../hooks";
+import { useStoriesStore } from "../../store";
+import { storiesApi } from "../../services/api";
+import type { StoryComment } from "../../types";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function StoryDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { currentStory, isLoading, fetchStoryById, likeStory, unlikeStory, clearCurrentStory } = useStoriesStore();
+  const {
+    currentStory,
+    isLoading,
+    fetchStoryById,
+    likeStory,
+    unlikeStory,
+    clearCurrentStory,
+  } = useStoriesStore();
   const { user } = useAuth();
 
   const [comments, setComments] = useState<StoryComment[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentText, setCommentText] = useState('');
+  const [commentText, setCommentText] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [postingComment, setPostingComment] = useState(false);
 
@@ -36,7 +43,7 @@ export default function StoryDetailScreen() {
     if (id) {
       fetchStoryById(id);
     }
-    
+
     return () => clearCurrentStory();
   }, [id]);
 
@@ -53,11 +60,13 @@ export default function StoryDetailScreen() {
         if (resp.success) {
           setComments(resp.data);
         } else {
-          setCommentError(resp.message || 'Failed to load comments');
+          setCommentError(resp.message || "Failed to load comments");
         }
       } catch (e) {
         if (!isMounted) return;
-        setCommentError(e instanceof Error ? e.message : 'Failed to load comments');
+        setCommentError(
+          e instanceof Error ? e.message : "Failed to load comments",
+        );
       } finally {
         if (isMounted) setCommentsLoading(false);
       }
@@ -83,31 +92,39 @@ export default function StoryDetailScreen() {
     if (!id) return;
     const trimmed = commentText.trim();
     if (trimmed.length < 5) {
-      setCommentError('Comment must be at least 5 characters');
+      setCommentError("Comment must be at least 5 characters");
       return;
     }
     if (!user?.name) {
-      setCommentError('You must be logged in to comment');
+      setCommentError("You must be logged in to comment");
       return;
     }
 
     setPostingComment(true);
     setCommentError(null);
     try {
-      const resp = await storiesApi.addComment(id, { author: user.name, content: trimmed });
+      const resp = await storiesApi.addComment(id, {
+        author: user.name,
+        content: trimmed,
+      });
       if (resp.success) {
         setComments((prev) => [resp.data, ...prev]);
-        setCommentText('');
+        setCommentText("");
         if (currentStory) {
           useStoriesStore.setState({
-            currentStory: { ...currentStory, comments: (currentStory.comments || 0) + 1 },
+            currentStory: {
+              ...currentStory,
+              comments: (currentStory.comments || 0) + 1,
+            },
           });
         }
       } else {
-        setCommentError(resp.message || 'Failed to post comment');
+        setCommentError(resp.message || "Failed to post comment");
       }
     } catch (e) {
-      setCommentError(e instanceof Error ? e.message : 'Failed to post comment');
+      setCommentError(
+        e instanceof Error ? e.message : "Failed to post comment",
+      );
     } finally {
       setPostingComment(false);
     }
@@ -115,22 +132,22 @@ export default function StoryDetailScreen() {
 
   const handleShare = async () => {
     if (!currentStory) return;
-    
+
     try {
       await Share.share({
         message: `Check out this inspiring story from Manake: "${currentStory.title}" - Read more at manake.org/stories/${currentStory.slug}`,
         title: currentStory.title,
       });
     } catch (error) {
-      console.log('Error sharing:', error);
+      console.log("Error sharing:", error);
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -146,11 +163,17 @@ export default function StoryDetailScreen() {
   if (!currentStory) {
     return (
       <View style={styles.errorContainer}>
-        <FontAwesome name="exclamation-circle" size={48} color={theme.colors.textLight} />
+        <FontAwesome
+          name="exclamation-circle"
+          size={48}
+          color={theme.colors.textLight}
+        />
         <Text style={styles.errorTitle}>Story Not Found</Text>
-        <Text style={styles.errorText}>The story you're looking for doesn't exist.</Text>
-        <Button 
-          title="Go Back" 
+        <Text style={styles.errorText}>
+          The story you're looking for doesn't exist.
+        </Text>
+        <Button
+          title="Go Back"
           onPress={() => router.back()}
           variant="primary"
         />
@@ -164,10 +187,10 @@ export default function StoryDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          headerTitle: '',
+          headerTitle: "",
           headerTransparent: true,
           headerLeft: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.headerButton}
               onPress={() => router.back()}
             >
@@ -176,23 +199,29 @@ export default function StoryDetailScreen() {
           ),
           headerRight: () => (
             <View style={styles.headerButtons}>
-              <TouchableOpacity style={styles.headerButton} onPress={handleShare}>
+              <TouchableOpacity
+                style={styles.headerButton}
+                onPress={handleShare}
+              >
                 <FontAwesome name="share" size={18} color="#fff" />
               </TouchableOpacity>
             </View>
           ),
         }}
       />
-      
+
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         {/* Hero Image */}
         <View style={styles.heroContainer}>
-          <Image source={{ uri: currentStory.image }} style={styles.heroImage} />
+          <Image
+            source={{ uri: currentStory.image }}
+            style={styles.heroImage}
+          />
           <View style={styles.heroOverlay} />
           <View style={styles.heroContent}>
             <View style={styles.categoryBadge}>
               <Text style={styles.categoryText}>
-                {currentStory.category.toUpperCase().replace('-', ' ')}
+                {currentStory.category.toUpperCase().replace("-", " ")}
               </Text>
             </View>
             <Text style={styles.title}>{currentStory.title}</Text>
@@ -204,15 +233,16 @@ export default function StoryDetailScreen() {
           {/* Author Info */}
           <View style={styles.authorSection}>
             <View style={styles.authorInfo}>
-              <Avatar 
-                uri={currentStory.authorImage} 
+              <Avatar
+                uri={currentStory.authorImage}
                 name={currentStory.author}
                 size="medium"
               />
               <View style={styles.authorText}>
                 <Text style={styles.authorName}>{currentStory.author}</Text>
                 <Text style={styles.publishDate}>
-                  {formatDate(currentStory.publishedAt)} • {currentStory.readTime} min read
+                  {formatDate(currentStory.publishedAt)} •{" "}
+                  {currentStory.readTime} min read
                 </Text>
               </View>
             </View>
@@ -220,41 +250,66 @@ export default function StoryDetailScreen() {
 
           {/* Engagement Bar */}
           <View style={styles.engagementBar}>
-            <TouchableOpacity style={styles.engagementButton} onPress={handleLike}>
-              <FontAwesome 
-                name={currentStory.isLiked ? 'heart' : 'heart-o'} 
-                size={22} 
-                color={currentStory.isLiked ? theme.colors.danger : theme.colors.textLight} 
+            <TouchableOpacity
+              style={styles.engagementButton}
+              onPress={handleLike}
+            >
+              <FontAwesome
+                name={currentStory.isLiked ? "heart" : "heart-o"}
+                size={22}
+                color={
+                  currentStory.isLiked
+                    ? theme.colors.danger
+                    : theme.colors.textLight
+                }
               />
-              <Text style={[
-                styles.engagementText,
-                currentStory.isLiked && styles.engagementTextActive
-              ]}>
+              <Text
+                style={[
+                  styles.engagementText,
+                  currentStory.isLiked && styles.engagementTextActive,
+                ]}
+              >
                 {likeCount}
               </Text>
             </TouchableOpacity>
-            
+
             <View style={styles.engagementButton}>
-              <FontAwesome name="comment-o" size={22} color={theme.colors.textLight} />
+              <FontAwesome
+                name="comment-o"
+                size={22}
+                color={theme.colors.textLight}
+              />
               <Text style={styles.engagementText}>{currentStory.comments}</Text>
             </View>
-            
-            <TouchableOpacity style={styles.engagementButton} onPress={handleShare}>
-              <FontAwesome name="share" size={22} color={theme.colors.textLight} />
+
+            <TouchableOpacity
+              style={styles.engagementButton}
+              onPress={handleShare}
+            >
+              <FontAwesome
+                name="share"
+                size={22}
+                color={theme.colors.textLight}
+              />
               <Text style={styles.engagementText}>Share</Text>
             </TouchableOpacity>
           </View>
 
           {/* Story Excerpt */}
           <View style={styles.excerptBox}>
-            <FontAwesome name="quote-left" size={20} color={theme.colors.primary} />
+            <FontAwesome
+              name="quote-left"
+              size={20}
+              color={theme.colors.primary}
+            />
             <Text style={styles.excerpt}>{currentStory.excerpt}</Text>
           </View>
 
           {/* Story Content */}
           <View style={styles.storyContent}>
             <Text style={styles.paragraph}>
-              {currentStory.content || `This is the beginning of ${currentStory.author}'s journey. A story of resilience, hope, and transformation that started with a single step towards recovery.
+              {currentStory.content ||
+                `This is the beginning of ${currentStory.author}'s journey. A story of resilience, hope, and transformation that started with a single step towards recovery.
 
 When I first arrived at Manake Rehabilitation Center, I was at my lowest point. Years of struggle had taken their toll on my health, relationships, and sense of self-worth. But from the moment I walked through those doors, I felt something different – a genuine sense of care and understanding.
 
@@ -284,9 +339,11 @@ To anyone reading this who is struggling: recovery is possible. It won't be easy
                 editable={!postingComment}
                 containerStyle={styles.commentInputContainer}
               />
-              {commentError && <Text style={styles.commentError}>{commentError}</Text>}
+              {commentError && (
+                <Text style={styles.commentError}>{commentError}</Text>
+              )}
               <Button
-                title={postingComment ? 'Posting...' : 'Post Comment'}
+                title={postingComment ? "Posting..." : "Post Comment"}
                 onPress={handlePostComment}
                 variant="primary"
                 fullWidth
@@ -297,14 +354,21 @@ To anyone reading this who is struggling: recovery is possible. It won't be easy
             {commentsLoading ? (
               <View style={styles.commentsLoading}>
                 <ActivityIndicator size="small" color={theme.colors.primary} />
-                <Text style={styles.commentsLoadingText}>Loading comments...</Text>
+                <Text style={styles.commentsLoadingText}>
+                  Loading comments...
+                </Text>
               </View>
             ) : comments.length === 0 ? (
-              <Text style={styles.noCommentsText}>Be the first to comment.</Text>
+              <Text style={styles.noCommentsText}>
+                Be the first to comment.
+              </Text>
             ) : (
               <View style={styles.commentsList}>
                 {comments.map((c) => (
-                  <View key={(c.id || c.createdAt) as string} style={styles.commentItem}>
+                  <View
+                    key={(c.id || c.createdAt) as string}
+                    style={styles.commentItem}
+                  >
                     <View style={styles.commentHeader}>
                       <Text style={styles.commentAuthor}>{c.author}</Text>
                       <Text style={styles.commentDate}>
@@ -337,11 +401,12 @@ To anyone reading this who is struggling: recovery is possible. It won't be easy
             <View style={styles.ctaCard}>
               <Text style={styles.ctaTitle}>Inspired by this story?</Text>
               <Text style={styles.ctaText}>
-                Your donation helps provide the same life-changing support to others in need.
+                Your donation helps provide the same life-changing support to
+                others in need.
               </Text>
-              <Button 
+              <Button
                 title="Support Recovery"
-                onPress={() => router.push('/(tabs)/donate')}
+                onPress={() => router.push("/(tabs)/donate")}
                 icon="heart"
                 fullWidth
               />
@@ -350,11 +415,15 @@ To anyone reading this who is struggling: recovery is possible. It won't be easy
 
           {/* Navigation */}
           <View style={styles.navSection}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.navButton}
-              onPress={() => router.push('/(tabs)/stories')}
+              onPress={() => router.push("/(tabs)/stories")}
             >
-              <FontAwesome name="arrow-left" size={16} color={theme.colors.primary} />
+              <FontAwesome
+                name="arrow-left"
+                size={16}
+                color={theme.colors.primary}
+              />
               <Text style={styles.navButtonText}>More Stories</Text>
             </TouchableOpacity>
           </View>
@@ -367,14 +436,14 @@ To anyone reading this who is struggling: recovery is possible. It won't be easy
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   // Loading State
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
   loadingText: {
     marginTop: 16,
@@ -384,14 +453,14 @@ const styles = StyleSheet.create({
   // Error State
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 40,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   errorTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
     marginTop: 16,
     marginBottom: 8,
@@ -399,7 +468,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 14,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
   },
   // Header Buttons
@@ -407,36 +476,36 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "rgba(0,0,0,0.3)",
+    alignItems: "center",
+    justifyContent: "center",
   },
   headerButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   // Hero
   heroContainer: {
     height: 360,
-    position: 'relative',
+    position: "relative",
   },
   heroImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   heroOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   heroContent: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
     padding: 24,
   },
   categoryBadge: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     backgroundColor: theme.colors.primary,
     paddingHorizontal: 14,
     paddingVertical: 6,
@@ -444,15 +513,15 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   categoryText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 0.5,
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
     lineHeight: 36,
   },
   // Content
@@ -464,14 +533,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   authorInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 14,
   },
   authorText: {},
   authorName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.text,
   },
   publishDate: {
@@ -481,30 +550,30 @@ const styles = StyleSheet.create({
   },
   // Engagement Bar
   engagementBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingVertical: 16,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0f0f0",
     marginBottom: 24,
   },
   engagementButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   engagementText: {
     fontSize: 14,
     color: theme.colors.textLight,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   engagementTextActive: {
     color: theme.colors.danger,
   },
   // Excerpt
   excerptBox: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     padding: 20,
     borderRadius: 16,
     borderLeftWidth: 4,
@@ -515,7 +584,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.text,
     lineHeight: 26,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: 12,
   },
   // Story Content
@@ -533,7 +602,7 @@ const styles = StyleSheet.create({
   },
   commentsTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: 12,
   },
@@ -554,8 +623,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   commentsLoading: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     paddingVertical: 12,
   },
@@ -572,21 +641,21 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   commentItem: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 14,
     padding: 12,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
   commentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 6,
   },
   commentAuthor: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
   },
   commentDate: {
@@ -604,19 +673,19 @@ const styles = StyleSheet.create({
   },
   tagsSectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.textLight,
     marginBottom: 12,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   tag: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 16,
@@ -624,28 +693,28 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 13,
     color: theme.colors.textLight,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   // CTA Section
   ctaSection: {
     marginBottom: 24,
   },
   ctaCard: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
     padding: 24,
     borderRadius: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   ctaTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     color: theme.colors.text,
     marginBottom: 8,
   },
   ctaText: {
     fontSize: 14,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 20,
     lineHeight: 20,
   },
@@ -654,10 +723,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   navButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 20,
@@ -666,7 +735,7 @@ const styles = StyleSheet.create({
   },
   navButtonText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     color: theme.colors.primary,
   },
 });

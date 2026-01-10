@@ -1,37 +1,39 @@
-import { useState } from 'react';
-import { Loader2, LogIn } from 'lucide-react';
+import { useState } from "react";
+import { Loader2, LogIn } from "lucide-react";
 
 const providers = [
-  { id: 'google', label: 'Continue with Google' },
-  { id: 'facebook', label: 'Continue with Facebook' },
+  { id: "google", label: "Continue with Google" },
+  { id: "facebook", label: "Continue with Facebook" },
 ];
 
 export const SocialAuthButtons = () => {
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleClick = async (provider: string) => {
-    const token = window.prompt(`Paste your ${provider} ID/access token to sign in`);
+    const token = window.prompt(
+      `Paste your ${provider} ID/access token to sign in`,
+    );
     if (!token) return;
 
     setLoadingProvider(provider);
-    setMessage('');
-    setError('');
+    setMessage("");
+    setError("");
 
     try {
       const response = await fetch(`/api/v1/social/${provider}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token }),
       });
 
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.message || 'Social sign-in failed');
+        throw new Error(data?.message || "Social sign-in failed");
       }
 
-      setMessage(`Signed in as ${data?.user?.email || 'your account'}`);
+      setMessage(`Signed in as ${data?.user?.email || "your account"}`);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -42,7 +44,8 @@ export const SocialAuthButtons = () => {
   return (
     <div className="space-y-3">
       <div className="text-sm text-gray-600">
-        Use your Google or Facebook account. You may need to paste a token while we finish the full redirect flow.
+        Use your Google or Facebook account. You may need to paste a token while
+        we finish the full redirect flow.
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         {providers.map((provider) => (
@@ -62,8 +65,16 @@ export const SocialAuthButtons = () => {
           </button>
         ))}
       </div>
-      {message && <div className="text-sm text-green-700 bg-green-50 border border-green-100 p-3 rounded-lg">{message}</div>}
-      {error && <div className="text-sm text-red-700 bg-red-50 border border-red-100 p-3 rounded-lg">{error}</div>}
+      {message && (
+        <div className="text-sm text-green-700 bg-green-50 border border-green-100 p-3 rounded-lg">
+          {message}
+        </div>
+      )}
+      {error && (
+        <div className="text-sm text-red-700 bg-red-50 border border-red-100 p-3 rounded-lg">
+          {error}
+        </div>
+      )}
     </div>
   );
 };

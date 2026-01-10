@@ -3,7 +3,7 @@
  * Requires admin or moderator role
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -13,10 +13,10 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-} from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuthStore } from '../../store/authStore';
+} from "react-native";
+import { Stack, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useAuthStore } from "../../store/authStore";
 import {
   getDashboardStats,
   getPendingStories,
@@ -24,7 +24,7 @@ import {
   rejectStory,
   DashboardStats,
   AdminStory,
-} from '../../services/admin';
+} from "../../services/admin";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [pendingStories, setPendingStories] = useState<AdminStory[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'moderator';
+  const isAdmin = user?.role === "admin" || user?.role === "moderator";
 
   const loadData = useCallback(async () => {
     try {
@@ -46,8 +46,8 @@ export default function AdminDashboard() {
       setStats(statsData);
       setPendingStories(storiesData.data);
     } catch (error) {
-      console.error('Failed to load admin data:', error);
-      Alert.alert('Error', 'Failed to load dashboard data');
+      console.error("Failed to load admin data:", error);
+      Alert.alert("Error", "Failed to load dashboard data");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -56,7 +56,10 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!isAdmin) {
-      Alert.alert('Access Denied', 'You do not have permission to view this page.');
+      Alert.alert(
+        "Access Denied",
+        "You do not have permission to view this page.",
+      );
       router.back();
       return;
     }
@@ -75,7 +78,7 @@ export default function AdminDashboard() {
         });
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to approve story');
+      Alert.alert("Error", "Failed to approve story");
     } finally {
       setActionLoading(null);
     }
@@ -83,33 +86,38 @@ export default function AdminDashboard() {
 
   const handleReject = async (storyId: string) => {
     Alert.prompt(
-      'Reject Story',
-      'Enter rejection reason (optional):',
+      "Reject Story",
+      "Enter rejection reason (optional):",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Reject',
-          style: 'destructive',
+          text: "Reject",
+          style: "destructive",
           onPress: async (reason?: string) => {
             setActionLoading(storyId);
             try {
               await rejectStory(storyId, reason);
-              setPendingStories((prev) => prev.filter((s) => s._id !== storyId));
+              setPendingStories((prev) =>
+                prev.filter((s) => s._id !== storyId),
+              );
               if (stats) {
                 setStats({
                   ...stats,
-                  stories: { ...stats.stories, pending: stats.stories.pending - 1 },
+                  stories: {
+                    ...stats.stories,
+                    pending: stats.stories.pending - 1,
+                  },
                 });
               }
             } catch (error) {
-              Alert.alert('Error', 'Failed to reject story');
+              Alert.alert("Error", "Failed to reject story");
             } finally {
               setActionLoading(null);
             }
           },
         },
       ],
-      'plain-text'
+      "plain-text",
     );
   };
 
@@ -129,11 +137,15 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Admin Dashboard' }} />
+      <Stack.Screen options={{ title: "Admin Dashboard" }} />
       <ScrollView
         style={styles.container}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8B5CF6" />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#8B5CF6"
+          />
         }
       >
         {/* Stats Cards */}
@@ -173,8 +185,10 @@ export default function AdminDashboard() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Pending Stories</Text>
             {(stats?.stories.pending ?? 0) > 5 && (
-              <TouchableOpacity onPress={() => router.push('/admin/stories')}>
-                <Text style={styles.viewAll}>View All ({stats?.stories.pending})</Text>
+              <TouchableOpacity onPress={() => router.push("/admin/stories")}>
+                <Text style={styles.viewAll}>
+                  View All ({stats?.stories.pending})
+                </Text>
               </TouchableOpacity>
             )}
           </View>
@@ -227,22 +241,22 @@ export default function AdminDashboard() {
             <ActionButton
               icon="people"
               label="Manage Users"
-              onPress={() => router.push('/admin/users')}
+              onPress={() => router.push("/admin/users")}
             />
             <ActionButton
               icon="book"
               label="All Stories"
-              onPress={() => router.push('/admin/stories')}
+              onPress={() => router.push("/admin/stories")}
             />
             <ActionButton
               icon="stats-chart"
               label="Analytics"
-              onPress={() => router.push('/admin/analytics')}
+              onPress={() => router.push("/admin/analytics")}
             />
             <ActionButton
               icon="settings"
               label="Settings"
-              onPress={() => router.push('/admin/settings')}
+              onPress={() => router.push("/admin/settings")}
             />
           </View>
         </View>
@@ -300,32 +314,32 @@ function ActionButton({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: "#F9FAFB",
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
   },
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#6B7280',
+    color: "#6B7280",
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     padding: 16,
     gap: 12,
   },
   statCard: {
-    width: '47%',
-    backgroundColor: '#fff',
+    width: "47%",
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
     borderLeftWidth: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -335,59 +349,59 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 12,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: "700",
+    color: "#111827",
   },
   statLabel: {
     fontSize: 14,
-    color: '#6B7280',
+    color: "#6B7280",
     marginTop: 4,
   },
   statSubtext: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: "#9CA3AF",
     marginTop: 2,
   },
   section: {
     padding: 16,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
   },
   viewAll: {
     fontSize: 14,
-    color: '#8B5CF6',
-    fontWeight: '500',
+    color: "#8B5CF6",
+    fontWeight: "500",
   },
   emptyState: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 32,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
   },
   emptyText: {
     fontSize: 16,
-    color: '#6B7280',
+    color: "#6B7280",
     marginTop: 8,
   },
   storyCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
@@ -397,46 +411,46 @@ const styles = StyleSheet.create({
   },
   storyTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    fontWeight: "600",
+    color: "#111827",
   },
   storyMeta: {
     fontSize: 13,
-    color: '#6B7280',
+    color: "#6B7280",
     marginTop: 4,
   },
   storyActions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   approveBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#10B981',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#10B981",
+    justifyContent: "center",
+    alignItems: "center",
   },
   rejectBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#EF4444',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#EF4444",
+    justifyContent: "center",
+    alignItems: "center",
   },
   actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   actionButton: {
-    width: '47%',
-    backgroundColor: '#fff',
+    width: "47%",
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -444,8 +458,8 @@ const styles = StyleSheet.create({
   },
   actionLabel: {
     fontSize: 14,
-    color: '#374151',
+    color: "#374151",
     marginTop: 8,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });

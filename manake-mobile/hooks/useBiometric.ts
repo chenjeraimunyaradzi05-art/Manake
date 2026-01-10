@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   authenticateBiometric,
   getBiometricLabel,
@@ -6,7 +6,7 @@ import {
   type AuthenticateBiometricOptions,
   type BiometricResult,
   type BiometricType,
-} from '../services/biometric';
+} from "../services/biometric";
 
 export interface UseBiometricOptions {
   promptMessage?: string;
@@ -19,12 +19,12 @@ export function useBiometric(options: UseBiometricOptions = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAvailable, setIsAvailable] = useState(false);
   const [isEnrolled, setIsEnrolled] = useState(false);
-  const [biometricType, setBiometricType] = useState<BiometricType>('none');
+  const [biometricType, setBiometricType] = useState<BiometricType>("none");
   const [error, setError] = useState<string | null>(null);
 
-  const promptMessage = options.promptMessage ?? 'Authenticate to continue';
-  const cancelLabel = options.cancelLabel ?? 'Cancel';
-  const fallbackLabel = options.fallbackLabel ?? 'Use passcode';
+  const promptMessage = options.promptMessage ?? "Authenticate to continue";
+  const cancelLabel = options.cancelLabel ?? "Cancel";
+  const fallbackLabel = options.fallbackLabel ?? "Use passcode";
   const disableDeviceFallback = options.disableDeviceFallback ?? false;
 
   const refresh = useCallback(async () => {
@@ -38,10 +38,10 @@ export function useBiometric(options: UseBiometricOptions = {}) {
       setBiometricType(status.biometricType);
       setError(status.error ?? null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to check biometrics');
+      setError(e instanceof Error ? e.message : "Failed to check biometrics");
       setIsAvailable(false);
       setIsEnrolled(false);
-      setBiometricType('none');
+      setBiometricType("none");
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +64,7 @@ export function useBiometric(options: UseBiometricOptions = {}) {
 
       return result;
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Authentication failed';
+      const msg = e instanceof Error ? e.message : "Authentication failed";
       setError(msg);
       return { success: false, error: msg };
     }

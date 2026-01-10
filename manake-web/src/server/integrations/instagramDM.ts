@@ -2,10 +2,10 @@
  * Instagram Direct Messages Integration
  * Uses Meta Graph API for Instagram DMs (requires Instagram Business account)
  */
-import axios, { AxiosInstance } from 'axios';
-import { BadRequestError, UnauthorizedError } from '../errors';
+import axios, { AxiosInstance } from "axios";
+import { BadRequestError, UnauthorizedError } from "../errors";
 
-const GRAPH_API_VERSION = 'v19.0';
+const GRAPH_API_VERSION = "v19.0";
 const GRAPH_BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}`;
 
 export interface InstagramDMSendOptions {
@@ -49,12 +49,13 @@ function getClient(accessToken: string): AxiosInstance {
  * Requires: instagram_basic, instagram_manage_messages, pages_messaging permissions
  */
 export async function sendInstagramDM(
-  options: InstagramDMSendOptions
+  options: InstagramDMSendOptions,
 ): Promise<InstagramDMResult> {
   const { recipientId, message, accessToken, pageId } = options;
 
-  if (!accessToken) throw new UnauthorizedError('Instagram access token required');
-  if (!pageId) throw new BadRequestError('Instagram page ID required');
+  if (!accessToken)
+    throw new UnauthorizedError("Instagram access token required");
+  if (!pageId) throw new BadRequestError("Instagram page ID required");
 
   const client = getClient(accessToken);
 
@@ -62,19 +63,22 @@ export async function sendInstagramDM(
     const response = await client.post(`/${pageId}/messages`, {
       recipient: { id: recipientId },
       message: { text: message },
-      messaging_type: 'RESPONSE',
+      messaging_type: "RESPONSE",
     });
 
-    const data = response.data as { recipient_id?: string; message_id?: string };
+    const data = response.data as {
+      recipient_id?: string;
+      message_id?: string;
+    };
     return {
       recipientId: data.recipient_id || recipientId,
-      messageId: data.message_id || 'unknown',
+      messageId: data.message_id || "unknown",
       timestamp: new Date(),
     };
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Instagram DM send error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to send Instagram DM');
+    console.error("Instagram DM send error", axiosErr.response?.data || err);
+    throw new BadRequestError("Failed to send Instagram DM");
   }
 }
 
@@ -84,15 +88,15 @@ export async function sendInstagramDM(
 export async function getInstagramConversations(
   pageId: string,
   accessToken: string,
-  limit = 25
+  limit = 25,
 ): Promise<InstagramConversation[]> {
   const client = getClient(accessToken);
 
   try {
     const response = await client.get(`/${pageId}/conversations`, {
       params: {
-        platform: 'instagram',
-        fields: 'id,participants,updated_time',
+        platform: "instagram",
+        fields: "id,participants,updated_time",
         limit,
       },
     });
@@ -107,14 +111,17 @@ export async function getInstagramConversations(
 
     return (data.data || []).map((conv) => ({
       id: conv.id,
-      participantId: conv.participants?.data?.[0]?.id || '',
+      participantId: conv.participants?.data?.[0]?.id || "",
       participantUsername: conv.participants?.data?.[0]?.username,
-      updatedTime: conv.updated_time || '',
+      updatedTime: conv.updated_time || "",
     }));
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Instagram conversations fetch error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to fetch Instagram conversations');
+    console.error(
+      "Instagram conversations fetch error",
+      axiosErr.response?.data || err,
+    );
+    throw new BadRequestError("Failed to fetch Instagram conversations");
   }
 }
 
@@ -124,14 +131,14 @@ export async function getInstagramConversations(
 export async function getInstagramMessages(
   conversationId: string,
   accessToken: string,
-  limit = 50
+  limit = 50,
 ): Promise<InstagramMessage[]> {
   const client = getClient(accessToken);
 
   try {
     const response = await client.get(`/${conversationId}/messages`, {
       params: {
-        fields: 'id,from,to,message,created_time',
+        fields: "id,from,to,message,created_time",
         limit,
       },
     });
@@ -140,8 +147,11 @@ export async function getInstagramMessages(
     return data.data || [];
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error('Instagram messages fetch error', axiosErr.response?.data || err);
-    throw new BadRequestError('Failed to fetch Instagram messages');
+    console.error(
+      "Instagram messages fetch error",
+      axiosErr.response?.data || err,
+    );
+    throw new BadRequestError("Failed to fetch Instagram messages");
   }
 }
 
@@ -157,7 +167,9 @@ export interface InstagramWebhookMessage {
   attachments?: Array<{ type: string; payload?: { url?: string } }>;
 }
 
-export function parseInstagramWebhook(body: unknown): InstagramWebhookMessage | null {
+export function parseInstagramWebhook(
+  body: unknown,
+): InstagramWebhookMessage | null {
   const payload = body as {
     entry?: Array<{
       messaging?: Array<{
@@ -177,10 +189,10 @@ export function parseInstagramWebhook(body: unknown): InstagramWebhookMessage | 
   if (!msgEvent?.message) return null;
 
   return {
-    senderId: msgEvent.sender?.id || '',
-    recipientId: msgEvent.recipient?.id || '',
+    senderId: msgEvent.sender?.id || "",
+    recipientId: msgEvent.recipient?.id || "",
     timestamp: msgEvent.timestamp || Date.now(),
-    messageId: msgEvent.message.mid || '',
+    messageId: msgEvent.message.mid || "",
     text: msgEvent.message.text,
     attachments: msgEvent.message.attachments,
   };

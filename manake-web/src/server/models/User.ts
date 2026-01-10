@@ -2,11 +2,11 @@
  * User Model
  * Handles user authentication and profile data
  */
-import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcryptjs';
+import mongoose, { Document, Schema } from "mongoose";
+import bcrypt from "bcryptjs";
 
 // User roles
-export type UserRole = 'user' | 'admin' | 'moderator';
+export type UserRole = "user" | "admin" | "moderator";
 
 // User document interface
 export interface IUser extends Document {
@@ -33,7 +33,7 @@ export interface IUser extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
-  
+
   // Methods
   comparePassword(candidatePassword: string): Promise<boolean>;
   toPublicJSON(): Partial<IUser>;
@@ -43,33 +43,33 @@ const userSchema = new Schema<IUser>(
   {
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [true, "Email is required"],
       unique: true,
       lowercase: true,
       trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email'],
+      match: [/^\S+@\S+\.\S+$/, "Please enter a valid email"],
     },
     passwordHash: {
       type: String,
-      required: [true, 'Password is required'],
+      required: [true, "Password is required"],
       select: false, // Don't include by default in queries
     },
     name: {
       type: String,
-      required: [true, 'Name is required'],
+      required: [true, "Name is required"],
       trim: true,
-      minlength: [2, 'Name must be at least 2 characters'],
-      maxlength: [100, 'Name cannot exceed 100 characters'],
+      minlength: [2, "Name must be at least 2 characters"],
+      maxlength: [100, "Name cannot exceed 100 characters"],
     },
     phone: {
       type: String,
       trim: true,
-      match: [/^\+263[0-9]{9}$/, 'Please enter a valid Zimbabwe phone number'],
+      match: [/^\+263[0-9]{9}$/, "Please enter a valid Zimbabwe phone number"],
     },
     role: {
       type: String,
-      enum: ['user', 'admin', 'moderator'],
-      default: 'user',
+      enum: ["user", "admin", "moderator"],
+      default: "user",
     },
     avatar: {
       type: String,
@@ -117,7 +117,7 @@ const userSchema = new Schema<IUser>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 // Indexes for performance
@@ -126,11 +126,11 @@ userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 
 // Hash password before saving
-userSchema.pre('save', async function () {
-  if (!this.isModified('passwordHash')) return;
-  
+userSchema.pre("save", async function () {
+  if (!this.isModified("passwordHash")) return;
+
   // Only hash if it looks like a plain password (not already hashed)
-  if (!this.passwordHash.startsWith('$2')) {
+  if (!this.passwordHash.startsWith("$2")) {
     this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
   }
 });
@@ -143,7 +143,7 @@ userSchema.methods.updateLastLogin = async function (): Promise<void> {
 
 // Compare password for login
 userSchema.methods.comparePassword = async function (
-  candidatePassword: string
+  candidatePassword: string,
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.passwordHash);
 };
@@ -165,7 +165,7 @@ userSchema.methods.toPublicJSON = function (): Record<string, unknown> {
 
 // Static method to find by email with password
 userSchema.statics.findByEmailWithPassword = function (email: string) {
-  return this.findOne({ email }).select('+passwordHash');
+  return this.findOne({ email }).select("+passwordHash");
 };
 
-export const User = mongoose.model<IUser>('User', userSchema);
+export const User = mongoose.model<IUser>("User", userSchema);

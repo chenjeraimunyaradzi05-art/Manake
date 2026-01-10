@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { theme } from '../../constants';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { theme } from "../../constants";
 
 interface StatCardProps {
   icon: keyof typeof FontAwesome.glyphMap;
@@ -11,7 +11,13 @@ interface StatCardProps {
   onPress?: () => void;
 }
 
-export function StatCard({ icon, value, label, color = theme.colors.primary, onPress }: StatCardProps) {
+export function StatCard({
+  icon,
+  value,
+  label,
+  color = theme.colors.primary,
+  onPress,
+}: StatCardProps) {
   const content = (
     <View style={styles.card}>
       <View style={[styles.iconContainer, { backgroundColor: `${color}15` }]}>
@@ -35,12 +41,12 @@ export function StatCard({ icon, value, label, color = theme.colors.primary, onP
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
     minWidth: 100,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -50,19 +56,19 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 8,
   },
   value: {
     fontSize: 22,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 2,
   },
   label: {
     fontSize: 12,
     color: theme.colors.textLight,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 
