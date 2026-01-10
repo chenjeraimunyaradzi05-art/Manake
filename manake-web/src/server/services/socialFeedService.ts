@@ -141,9 +141,9 @@ export async function getInstagramFeed(
 /**
  * Fetch Facebook-only feed
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getFacebookFeed(
   limit = 20,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _cursor?: string,
 ): Promise<SocialFeedResponse> {
   return getSocialFeed({ platforms: ["facebook"], limit });
@@ -152,9 +152,9 @@ export async function getFacebookFeed(
 /**
  * Fetch Twitter-only feed
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getTwitterFeed(
   limit = 20,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _cursor?: string,
 ): Promise<SocialFeedResponse> {
   return getSocialFeed({ platforms: ["twitter"], limit });
