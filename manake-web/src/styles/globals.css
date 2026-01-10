@@ -1,7 +1,11 @@
 /* Import design system styles */
 @import './variables.css';
+@import './typography.css';
 @import './animations.css';
 @import './utilities.css';
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -14,7 +18,9 @@
   }
   
   body {
-    @apply font-sans text-gray-900 antialiased;
+    @apply font-sans antialiased;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
   }
   
   h1, h2, h3, h4, h5, h6 {
