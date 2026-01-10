@@ -1,3 +1,5 @@
+export * from "./theme";
+
 // Story types
 export interface Story {
   id: string;
