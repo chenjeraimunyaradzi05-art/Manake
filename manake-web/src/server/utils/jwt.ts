@@ -34,18 +34,26 @@ export interface TokenPair {
 // Get secret from environment with fallback for development
 const getAccessSecret = (): string => {
   const secret = process.env.JWT_SECRET;
-  if (!secret && process.env.NODE_ENV === "production") {
-    throw new Error("JWT_SECRET must be set in production");
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      // CRITICAL: Prevent startup in production without secrets
+      throw new Error("FATAL: JWT_SECRET must be set in production");
+    }
+    return "dev-secret-change-in-production";
   }
-  return secret || "dev-secret-change-in-production";
+  return secret;
 };
 
 const getRefreshSecret = (): string => {
   const secret = process.env.JWT_REFRESH_SECRET;
-  if (!secret && process.env.NODE_ENV === "production") {
-    throw new Error("JWT_REFRESH_SECRET must be set in production");
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      // CRITICAL: Prevent startup in production without secrets
+      throw new Error("FATAL: JWT_REFRESH_SECRET must be set in production");
+    }
+    return "dev-refresh-secret-change-in-production";
   }
-  return secret || "dev-refresh-secret-change-in-production";
+  return secret;
 };
 
 // Token expiration times

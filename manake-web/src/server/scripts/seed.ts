@@ -1,8 +1,46 @@
 import { Story } from "../models/Story";
+import { User } from "../models/User";
+import { Post } from "../models/Post";
 import { connectDB } from "../config/db";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
+
+const users = [
+  {
+    name: "Farai Moyo",
+    email: "farai@example.com",
+    role: "user",
+    avatar:
+      "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=150&h=150&fit=crop",
+    bio: "Recovering one day at a time. Harare.",
+  },
+  {
+    name: "Rudo Ndlovu",
+    email: "rudo@example.com",
+    role: "user",
+    avatar:
+      "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=150&h=150&fit=crop",
+    bio: "Proud mother and community advocate in Bulawayo.",
+  },
+  {
+    name: "Tinashe Chikara",
+    email: "tinashe@example.com",
+    role: "user",
+    avatar:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop",
+    bio: "Youth mentor @ Manake. Let's rebuild together.",
+  },
+  {
+    name: "Gamuchirai Zviko",
+    email: "gamu@example.com",
+    role: "user",
+    avatar:
+      "https://images.unsplash.com/photo-1589156191108-c762ff4b96ab?w=150&h=150&fit=crop",
+    bio: "Artist and dreamer. Finding color in life again.",
+  },
+];
 
 const stories = [
   {
@@ -60,9 +98,86 @@ const seedDB = async () => {
 
     // Clear existing data
     await Story.deleteMany({});
-    console.log("Cleared existing stories");
+    await User.deleteMany({ email: { $in: users.map((u) => u.email) } });
+    await Post.deleteMany({});
 
-    // Insert new data
+    console.log("Cleared existing stories and posts");
+
+    // Create Users
+    const hashedPassword = await bcrypt.hash("password123", 10);
+    const createdUsers = await User.insertMany(
+      users.map((u) => ({
+        ...u,
+        passwordHash: hashedPassword,
+        isActive: true,
+        isEmailVerified: true,
+      })),
+    );
+    console.log("Seeded users successfully");
+
+    // Map users for posts
+    const Farai = createdUsers.find((u) => u.name === "Farai Moyo");
+    const Rudo = createdUsers.find((u) => u.name === "Rudo Ndlovu");
+    const Tinashe = createdUsers.find((u) => u.name === "Tinashe Chikara");
+
+    // Create Posts
+    const posts = [
+      {
+        author: Farai?._id,
+        content:
+          "Just finished my first week at the Manake vocational training centre. Learning carpentry has given me something to focus on besides the cravings. Grateful for this second chance. #Recovery #Zimbabwe #Skills",
+        media: [
+          {
+            url: "https://images.unsplash.com/photo-1581092921461-eab62e97a785?w=600&fit=crop",
+            type: "image",
+            alt: "Carpentry workshop",
+          },
+        ],
+        scope: "public",
+        likes: [],
+        comments: [],
+      },
+      {
+        author: Rudo?._id,
+        content:
+          "Attended the family support group in Bulawayo today. It's comforting to know I'm not alone in this journey of supporting a child through rehab. To all mothers out there, keep the faith! 🇿🇼❤️",
+        media: [],
+        scope: "public",
+        likes: [],
+        comments: [],
+      },
+      {
+        author: Tinashe?._id,
+        content:
+          "Beautiful sunset over Harare today. Reminds me that after every dark night, there's a brighter day. 3 years clean and counting!",
+        media: [
+          {
+            url: "https://images.unsplash.com/photo-1576487248805-cf45f6bcc67f?w=600&fit=crop",
+            type: "image",
+            alt: "Harare sunset",
+          },
+        ],
+        scope: "public",
+        likes: [],
+        comments: [],
+      },
+      {
+        author: Farai?._id,
+        content:
+          "Who is coming for the soccer match this Saturday? The 'Sober Strikers' are ready to win! ⚽",
+        media: [],
+        scope: "public",
+        likes: [],
+        comments: [],
+      },
+    ];
+
+    if (Farai && Rudo && Tinashe) {
+      await Post.insertMany(posts);
+      console.log("Seeded posts successfully");
+    }
+
+    // Insert stories
     await Story.insertMany(stories);
     console.log("Seeded stories successfully");
 

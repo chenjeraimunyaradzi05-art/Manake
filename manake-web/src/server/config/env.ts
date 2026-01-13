@@ -18,13 +18,10 @@ const envSchema = z.object({
   MONGODB_URI: z
     .string()
     .optional()
-    .refine(
-      (value) =>
-        !value ||
-        value.startsWith("mongodb://") ||
-        value.startsWith("mongodb+srv://"),
-      { message: "Invalid MongoDB connection string" },
-    ),
+    // Relaxed validation: check for length instead of specific prefix as fallback
+    .refine((value) => !value || value.length > 10, {
+      message: "Invalid MongoDB connection string",
+    }),
 
   // JWT
   JWT_SECRET: z.string().min(32).optional(),

@@ -8,6 +8,11 @@ import { createServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
+import path from "path";
+
+// Load environment variables explicitly from .env file
+dotenv.config({ path: path.join(process.cwd(), ".env") });
+
 import { connectDB } from "./config/db";
 import { ensureProductionEnv } from "./config/env";
 import apiRoutes from "./routes";
@@ -31,8 +36,8 @@ const PORT = process.env.PORT || 3001;
 
 // Initialize Socket.IO
 const io = initSocketIO(httpServer);
-// Make io available in routes via req.app.get('io') or similar if needed, 
-// or simply use the singleton pattern/export if established. 
+// Make io available in routes via req.app.get('io') or similar if needed,
+// or simply use the singleton pattern/export if established.
 // For now, attaching to app locals is a good pattern.
 app.set("io", io);
 
@@ -51,6 +56,12 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or Postman)
       if (!origin) return callback(null, true);
+
+      // In development, be more permissive to avoid CORS issues
+      if (process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }

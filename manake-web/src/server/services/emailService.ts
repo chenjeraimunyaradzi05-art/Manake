@@ -61,11 +61,21 @@ class EmailService {
       logger.info("Email service initialized with SMTP");
     } else if (isDevelopment) {
       // In development, create a test account with Ethereal
-      this.createTestAccount();
-    } else {
-      logger.warn(
-        "Email service not configured - emails will be logged only",
+      // Set a shorter timeout to prevent server hang if Ethereal is down
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("Ethereal connection timed out")),
+          5000,
+        ),
       );
+
+      Promise.race([this.createTestAccount(), timeoutPromise]).catch((err) =>
+        logger.warn("Failed to create Ethereal test account", {
+          error: err.message,
+        }),
+      );
+    } else {
+      logger.warn("Email service not configured - emails will be logged only");
     }
   }
 
@@ -92,7 +102,9 @@ class EmailService {
   /**
    * Send an email
    */
-  async send(options: EmailOptions): Promise<{ success: boolean; messageId?: string; previewUrl?: string }> {
+  async send(
+    options: EmailOptions,
+  ): Promise<{ success: boolean; messageId?: string; previewUrl?: string }> {
     const { to, subject, html, text } = options;
 
     // If no transporter, log the email instead
@@ -245,10 +257,11 @@ class EmailService {
     template: EmailTemplate,
     data: TemplateData,
   ): { subject: string; html: string } {
-    const templates: Record<EmailTemplate, { subject: string; html: string }> = {
-      welcome: {
-        subject: "Welcome to Manake Rehabilitation Center",
-        html: `
+    const templates: Record<EmailTemplate, { subject: string; html: string }> =
+      {
+        welcome: {
+          subject: "Welcome to Manake Rehabilitation Center",
+          html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -283,10 +296,10 @@ class EmailService {
           </body>
           </html>
         `,
-      },
-      "password-reset": {
-        subject: "Reset Your Manake Password",
-        html: `
+        },
+        "password-reset": {
+          subject: "Reset Your Manake Password",
+          html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -314,10 +327,10 @@ class EmailService {
           </body>
           </html>
         `,
-      },
-      "email-verification": {
-        subject: "Verify Your Email - Manake",
-        html: `
+        },
+        "email-verification": {
+          subject: "Verify Your Email - Manake",
+          html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -340,10 +353,10 @@ class EmailService {
           </body>
           </html>
         `,
-      },
-      "contact-notification": {
-        subject: `New Contact Form Submission: ${data.contactSubject || "General Inquiry"}`,
-        html: `
+        },
+        "contact-notification": {
+          subject: `New Contact Form Submission: ${data.contactSubject || "General Inquiry"}`,
+          html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -381,10 +394,10 @@ class EmailService {
           </body>
           </html>
         `,
-      },
-      "mentorship-request": {
-        subject: "New Mentorship Request - Manake",
-        html: `
+        },
+        "mentorship-request": {
+          subject: "New Mentorship Request - Manake",
+          html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -410,10 +423,10 @@ class EmailService {
           </body>
           </html>
         `,
-      },
-      "connection-request": {
-        subject: "New Connection Request - Manake",
-        html: `
+        },
+        "connection-request": {
+          subject: "New Connection Request - Manake",
+          html: `
           <!DOCTYPE html>
           <html>
           <head>
@@ -436,8 +449,8 @@ class EmailService {
           </body>
           </html>
         `,
-      },
-    };
+        },
+      };
 
     return templates[template];
   }

@@ -1,15 +1,17 @@
 # Manake Platform Launch Checklist
 
 ## Pre-Launch Verification
-
-### ✅ Core Functionality
-- [ ] User authentication (login, signup, logout) works correctly
-- [ ] Social login providers (Google, Facebook) functional
-- [ ] Password reset flow operational
-- [ ] Session management and token refresh working
+- [x] User authentication (Logic implemented, pending DB)
+- [x] Security: Helmet headers configured
+- [x] Security: CORS configured
+- [x] Security: Rate limiting (In-memory implemented)
+- [ ] Database: MongoDB URI configured (Currently using Mock Data)
+- [ ] Email: SMTP credentials configured (Failing locally)
+- [ ] Secrets: JWT_SECRET set in production env
 
 ### ✅ Feature Modules
-- [ ] Stories - create, read, update, delete
+- [x] Mock Data Fallbacks (Stories, Social Feed) verified
+- [ ] Stories - create, read, update, delete (Pending DB)
 - [ ] Social Feed - posts, likes, comments
 - [ ] Community Groups - create, join, post
 - [ ] Network - connections, suggestions, requests

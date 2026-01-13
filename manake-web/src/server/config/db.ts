@@ -13,7 +13,14 @@ export const connectDB = async () => {
   try {
     const mongoUri = env.MONGODB_URI;
 
+    // Debug logging to diagnose why it thinks URI is not set
     if (!mongoUri) {
+      console.log(
+        "DEBUG: env keys:",
+        Object.keys(process.env).filter((k) => k.includes("MONGO")),
+      );
+      console.log("DEBUG: env.MONGODB_URI from zod:", env.MONGODB_URI);
+
       if (isProduction) {
         throw new Error("MONGODB_URI must be set in production");
       }

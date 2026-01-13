@@ -12,6 +12,25 @@ interface FetchStoriesParams {
 // For demo purposes, return mock data when API is not available
 const mockStories: Story[] = [
   {
+    id: "0",
+    title: "A Vision of Hope: The Manake Story",
+    slug: "manake-founder-story",
+    excerpt:
+      "Sibongile Maonde Sokhani founded Manake with a singular vision: to create a sanctuary where youth could find healing and purpose. Her journey of dedication and love has inspired thousands.",
+    content: "",
+    image:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&fit=crop", // Sibongile (Founder) placeholder
+    author: "Sibongile Maonde Sokhani",
+    publishedAt: "2019-01-01",
+    readTime: 10,
+    likes: 1250,
+    comments: 156,
+    tags: ["Founder", "Inspiration", "Vision"],
+    category: "community",
+    featured: true,
+    status: "published",
+  },
+  {
     id: "1",
     title: "From Despair to Hope: Tendai's Journey",
     slug: "tendai-journey",
@@ -134,6 +153,12 @@ export const fetchStories = async (
     const response = await api.get<PaginatedResponse<Story>>("/stories", {
       params,
     });
+
+    // If API returns empty list (no stories in DB yet), fall back to mock data
+    if (!response.data.data || response.data.data.length === 0) {
+      throw new Error("No stories found in API, using mock data");
+    }
+
     return response.data.data;
   } catch (error) {
     console.warn("Using mock stories data");

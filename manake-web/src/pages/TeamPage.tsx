@@ -4,6 +4,14 @@ import { Link } from "react-router-dom";
 export const TeamPage = () => {
   const teamMembers = [
     {
+      id: 0,
+      name: "Sibongile Maonde Sokhani",
+      role: "Founder & Inspiration",
+      image:
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&fit=crop",
+      bio: "As the visionary founder of Manake, Sibongile is the driving force behind our mission. Her unwavering belief in the potential of every young person inspires our entire community.",
+    },
+    {
       id: 1,
       name: "The Manake Team",
       role: "Dedicated Staff & Volunteers",
@@ -150,7 +158,9 @@ export const TeamPage = () => {
               we are that village. Every person who walks through our doors
               becomes part of our family."
             </blockquote>
-            <p className="text-primary-300">— The Manake Team</p>
+            <cite className="text-primary-300 not-italic block font-medium">
+              — Sibongile Maonde Sokhani, Founder
+            </cite>
           </div>
         </div>
       </section>
