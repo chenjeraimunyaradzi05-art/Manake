@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "start": "npm run dev:web",
+    "build": "npm run build:web",
     "dev:web": "npm run dev --workspace=manake-web",
     "build:web": "npm run build --workspace=manake-web",
     "test:web": "npm run test --workspace=manake-web",
