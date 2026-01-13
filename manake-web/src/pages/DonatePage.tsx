@@ -49,7 +49,7 @@ export const DonatePage = () => {
             100% Goes to Programs
           </span>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-xl md:text-2xl font-bold mb-4">
             Transform a Life Today
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl mx-auto">

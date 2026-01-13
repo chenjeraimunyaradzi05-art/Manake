@@ -21,11 +21,45 @@ export interface IUser extends Document {
   emailVerificationToken?: string;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
+  failedLoginAttempts?: number;
+  lockoutUntil?: Date;
   lastLogin?: Date;
   socialProfiles: {
     google?: string;
     facebook?: string;
     apple?: string;
+  };
+  profile?: {
+    bio?: string;
+    headline?: string;
+    bannerImage?: string;
+    location?: string;
+    interests?: string[];
+    skills?: string[];
+  };
+  mentorship?: {
+    isMentor?: boolean;
+    mentorshipStyle?: string;
+    yearsInRecovery?: number;
+    specializations?: string[];
+    availability?: {
+      hoursPerWeek?: number;
+      preferredTimes?: string[];
+    };
+    averageRating?: number;
+  };
+  milestones?: {
+    recoveryDaysCount?: number;
+    lastMilestoneReached?: Date;
+    milestones?: Array<{ date: Date; days: number; title: string }>;
+  };
+  privacy?: {
+    visibility?: "public" | "connections-only" | "private";
+    allowMessages?: "anyone" | "connections" | "none";
+    allowMentorRequests?: boolean;
+    showConnectionList?: boolean;
+    showActivityFeed?: boolean;
+    blockList?: mongoose.Types.ObjectId[];
   };
   preferences: {
     emailNotifications: boolean;
@@ -94,6 +128,15 @@ const userSchema = new Schema<IUser>(
       type: Date,
       select: false,
     },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+      select: false,
+    },
+    lockoutUntil: {
+      type: Date,
+      select: false,
+    },
     lastLogin: {
       type: Date,
     },
@@ -101,6 +144,52 @@ const userSchema = new Schema<IUser>(
       google: String,
       facebook: String,
       apple: String,
+    },
+    profile: {
+      bio: { type: String, maxlength: 500 },
+      headline: { type: String },
+      bannerImage: { type: String },
+      location: { type: String },
+      interests: [{ type: String }],
+      skills: [{ type: String }],
+    },
+    mentorship: {
+      isMentor: { type: Boolean, default: false },
+      mentorshipStyle: { type: String },
+      yearsInRecovery: { type: Number },
+      specializations: [{ type: String }],
+      availability: {
+        hoursPerWeek: { type: Number },
+        preferredTimes: [{ type: String }],
+      },
+      averageRating: { type: Number },
+    },
+    milestones: {
+      recoveryDaysCount: { type: Number },
+      lastMilestoneReached: { type: Date },
+      milestones: [
+        {
+          date: { type: Date },
+          days: { type: Number },
+          title: { type: String },
+        },
+      ],
+    },
+    privacy: {
+      visibility: {
+        type: String,
+        enum: ["public", "connections-only", "private"],
+        default: "public",
+      },
+      allowMessages: {
+        type: String,
+        enum: ["anyone", "connections", "none"],
+        default: "connections",
+      },
+      allowMentorRequests: { type: Boolean, default: true },
+      showConnectionList: { type: Boolean, default: true },
+      showActivityFeed: { type: Boolean, default: true },
+      blockList: [{ type: Schema.Types.ObjectId, ref: "User" }],
     },
     preferences: {
       emailNotifications: {
@@ -121,9 +210,10 @@ const userSchema = new Schema<IUser>(
 );
 
 // Indexes for performance
-userSchema.index({ email: 1 }, { unique: true });
+// email: 1 is already indexed via unique: true in schema
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
+userSchema.index({ name: "text", "profile.bio": "text" });
 
 // Hash password before saving
 userSchema.pre("save", async function () {
@@ -168,4 +258,4 @@ userSchema.statics.findByEmailWithPassword = function (email: string) {
   return this.findOne({ email }).select("+passwordHash");
 };
 
-export const User = mongoose.model<IUser>("User", userSchema);
+export const User = mongoose.models.User || mongoose.model<IUser>("User", userSchema);

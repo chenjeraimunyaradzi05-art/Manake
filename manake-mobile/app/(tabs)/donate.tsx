@@ -12,11 +12,11 @@ import {
   Image,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { theme } from "../../constants";
 import { Button, Card } from "../../components";
 import { donationsApi, mockData } from "../../services/api";
 import { useAuth } from "../../hooks";
-import * as WebBrowser from "expo-web-browser";
 
 const PRESET_AMOUNTS = [10, 25, 50, 100, 250, 500];
 
@@ -106,11 +106,10 @@ export default function DonateScreen() {
       }
 
       if (resp.data.checkoutUrl) {
-        await WebBrowser.openBrowserAsync(resp.data.checkoutUrl);
-        Alert.alert(
-          "Almost there",
-          "Complete your donation in the browser to finish.",
-        );
+        router.push({
+          pathname: "/webview",
+          params: { url: resp.data.checkoutUrl, title: "Complete donation" },
+        });
         return;
       }
 

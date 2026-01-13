@@ -1,4 +1,19 @@
 import { Request, Response, NextFunction } from "express";
+import Redis from "ioredis";
+
+let redisClient: Redis | null = null;
+const getRedisClient = (): Redis | null => {
+  const url = process.env.REDIS_URL;
+  if (!url) return null;
+  if (!redisClient) {
+    redisClient = new Redis(url, {
+      maxRetriesPerRequest: 1,
+      enableReadyCheck: true,
+      lazyConnect: true,
+    });
+  }
+  return redisClient;
+};
 
 /**
  * Simple in-memory rate limiter for serverless environments
@@ -40,9 +55,37 @@ export const rateLimit = (options: RateLimitOptions = {}) => {
       req.ip || req.headers["x-forwarded-for"]?.toString() || "unknown",
   } = options;
 
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     const key = `${keyGenerator(req)}:${req.path}`;
     const now = Date.now();
+
+    const redis = getRedisClient();
+    if (redis) {
+      try {
+        const redisKey = `ratelimit:${key}`;
+        const count = await redis.incr(redisKey);
+        if (count === 1) {
+          await redis.pexpire(redisKey, windowMs);
+        }
+        const ttl = await redis.pttl(redisKey);
+        const resetTime = now + (ttl > 0 ? ttl : windowMs);
+
+        res.setHeader("X-RateLimit-Limit", max.toString());
+        res.setHeader(
+          "X-RateLimit-Remaining",
+          Math.max(0, max - count).toString(),
+        );
+        res.setHeader("X-RateLimit-Reset", resetTime.toString());
+
+        if (count > max) {
+          return res.status(429).json({ message });
+        }
+
+        return next();
+      } catch {
+        // Fall back to in-memory store if Redis is unavailable
+      }
+    }
 
     let entry = rateLimitStore.get(key);
 

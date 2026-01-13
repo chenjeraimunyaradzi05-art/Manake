@@ -227,6 +227,9 @@ export const optionalAuth = (
   next();
 };
 
+// Alias for backward compatibility
+export const optionalAuthenticate = optionalAuth;
+
 /**
  * Role-based authorization middleware
  * Use after authenticate middleware

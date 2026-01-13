@@ -22,7 +22,10 @@ const verifySignature = (
   expectedSecret: string | undefined,
   payload: Record<string, unknown>,
 ): boolean => {
-  if (!expectedSecret) return true; // If no secret configured, accept
+  if (!expectedSecret) {
+    // In production we must not accept unsigned webhooks
+    return process.env.NODE_ENV !== "production";
+  }
   if (!provided) return false;
 
   const computed = crypto

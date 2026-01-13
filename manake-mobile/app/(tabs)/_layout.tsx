@@ -58,6 +58,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="website"
+        options={{
+          title: "Website",
+          tabBarIcon: ({ color }) => (
+            <FontAwesome name="globe" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="donate"
         options={{
           title: "Donate",

@@ -4,6 +4,20 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    // Polyfill for Node.js globals required by simple-peer/randombytes
+    global: 'globalThis',
+  },
+  resolve: {
+    dedupe: ['react', 'react-dom'],
+    alias: {
+      // Polyfill util for simple-peer browser compatibility
+      util: 'util',
+    },
+  },
+  optimizeDeps: {
+    include: ['util'],
+  },
   server: {
     port: 5173,
     proxy: {
@@ -16,5 +30,14 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
+    rollupOptions: {
+      external: [],
+    },
+  },
+  test: {
+    exclude: ['**/node_modules/**', '**/e2e/**'],
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setupTests.ts'],
   },
 })

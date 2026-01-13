@@ -63,7 +63,7 @@ export const GetHelpPage = () => {
           <p className="text-sm uppercase tracking-wide text-red-100 mb-3">
             You are not alone
           </p>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Get Help Now</h1>
+          <h1 className="text-xl md:text-2xl font-bold mb-4">Get Help Now</h1>
           <p className="text-lg text-red-100 max-w-2xl">
             Confidential, judgment-free support for youth in Zimbabwe battling
             drug and alcohol addiction. Contact us anytime—day or night.

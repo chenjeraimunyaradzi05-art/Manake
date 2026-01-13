@@ -1,23 +1,11 @@
 /**
  * Authentication Controller
- * Handles user registration, login, and token management
+ * Thin controller layer that delegates to AuthService
+ * Handles HTTP request/response concerns only
  */
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import {
-  generateTokenPair,
-  verifyRefreshToken,
-  TokenPayload,
-} from "../utils/jwt";
-import {
-  BadRequestError,
-  UnauthorizedError,
-  ConflictError,
-  NotFoundError,
-} from "../errors";
-
-// Note: In production, you'd use a User model from MongoDB
-// For now, we'll create placeholder functions
+import { authService } from "../services/authService";
+import { TokenPayload } from "../utils/jwt";
 
 /**
  * User login
@@ -26,37 +14,18 @@ import {
 export const login = async (req: Request, res: Response): Promise<void> => {
   const { email, password } = req.body;
 
-  // TODO: Replace with actual User model lookup
-  // const user = await User.findOne({ email });
-  const user = await findUserByEmail(email);
-
-  if (!user) {
-    throw new UnauthorizedError("Invalid email or password");
-  }
-
-  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isPasswordValid) {
-    throw new UnauthorizedError("Invalid email or password");
-  }
-
-  const tokens = generateTokenPair({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  });
-
-  // Store refresh token hash
-  // await storeRefreshToken(user.id, hashToken(tokens.refreshToken));
+  const result = await authService.login(
+    { email, password },
+    {
+      userAgent: req.headers["user-agent"],
+      ipAddress: req.ip,
+    },
+  );
 
   res.json({
     message: "Login successful",
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    },
-    ...tokens,
+    user: result.user,
+    ...result.tokens,
   });
 };
 
@@ -67,41 +36,18 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password, name, phone } = req.body;
 
-  // Check if user already exists
-  const existingUser = await findUserByEmail(email);
-  if (existingUser) {
-    throw new ConflictError("Email already registered");
-  }
-
-  // Hash password
-  const passwordHash = await bcrypt.hash(password, 12);
-
-  // TODO: Create user in database
-  // const user = await User.create({ email, passwordHash, name, phone });
-  const user = {
-    id: "new-user-id",
-    email,
-    name,
-    phone,
-    role: "user" as const,
-    passwordHash,
-  };
-
-  const tokens = generateTokenPair({
-    id: user.id,
-    email: user.email,
-    role: user.role,
-  });
+  const result = await authService.register(
+    { email, password, name, phone },
+    {
+      userAgent: req.headers["user-agent"],
+      ipAddress: req.ip,
+    },
+  );
 
   res.status(201).json({
     message: "Registration successful",
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-    },
-    ...tokens,
+    user: result.user,
+    ...result.tokens,
   });
 };
 
@@ -115,40 +61,10 @@ export const refreshToken = async (
 ): Promise<void> => {
   const { refreshToken: token } = req.body;
 
-  if (!token) {
-    throw new BadRequestError("Refresh token is required");
-  }
-
-  // Verify the refresh token
-  const payload = verifyRefreshToken(token);
-
-  // TODO: Verify token exists in database and hasn't been revoked
-  // const storedToken = await RefreshToken.findOne({
-  //   userId: payload.userId,
-  //   tokenHash: hashToken(token),
-  //   revoked: false,
-  // });
-  // if (!storedToken) {
-  //   throw new UnauthorizedError('Invalid refresh token');
-  // }
-
-  // TODO: Get user from database
-  // const user = await User.findById(payload.userId);
-  const user = await findUserById(payload.userId);
-  if (!user) {
-    throw new UnauthorizedError("User not found");
-  }
-
-  // Generate new token pair
-  const tokens = generateTokenPair({
-    id: user.id,
-    email: user.email,
-    role: user.role,
+  const tokens = await authService.refreshToken(token, {
+    userAgent: req.headers["user-agent"],
+    ipAddress: req.ip,
   });
-
-  // Rotate refresh token (revoke old, store new)
-  // await storedToken.updateOne({ revoked: true });
-  // await storeRefreshToken(user.id, hashToken(tokens.refreshToken));
 
   res.json({
     message: "Token refreshed",
@@ -161,15 +77,9 @@ export const refreshToken = async (
  * POST /api/v1/auth/logout
  */
 export const logout = async (req: Request, res: Response): Promise<void> => {
-  // Get user for potential token revocation
-  void (req.user as TokenPayload);
+  const tokenUser = req.user as TokenPayload;
 
-  // TODO: Revoke all refresh tokens for this user
-  // const user = req.user as TokenPayload;
-  // await RefreshToken.updateMany(
-  //   { userId: user.userId },
-  //   { revoked: true }
-  // );
+  await authService.logout(tokenUser.userId);
 
   res.json({ message: "Logged out successfully" });
 };
@@ -184,22 +94,9 @@ export const getProfile = async (
 ): Promise<void> => {
   const tokenUser = req.user as TokenPayload;
 
-  // TODO: Get user from database
-  // const user = await User.findById(tokenUser.userId).select('-passwordHash');
-  const user = await findUserById(tokenUser.userId);
+  const user = await authService.getProfile(tokenUser.userId);
 
-  if (!user) {
-    throw new NotFoundError("User");
-  }
-
-  res.json({
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    phone: user.phone,
-    role: user.role,
-    createdAt: user.createdAt,
-  });
+  res.json(user);
 };
 
 /**
@@ -213,20 +110,7 @@ export const updateProfile = async (
   const tokenUser = req.user as TokenPayload;
   const { name, phone } = req.body;
 
-  // TODO: Update user in database
-  // const user = await User.findByIdAndUpdate(
-  //   tokenUser.userId,
-  //   { name, phone },
-  //   { new: true }
-  // ).select('-passwordHash');
-
-  const user = {
-    id: tokenUser.userId,
-    email: tokenUser.email,
-    name: name || "Updated Name",
-    phone,
-    role: tokenUser.role,
-  };
+  const user = await authService.updateProfile(tokenUser.userId, { name, phone });
 
   res.json({
     message: "Profile updated",
@@ -244,22 +128,7 @@ export const requestPasswordReset = async (
 ): Promise<void> => {
   const { email } = req.body;
 
-  // Always return success to prevent email enumeration
-  const user = await findUserByEmail(email);
-
-  if (user) {
-    // TODO: Generate reset token and send email
-    // const resetToken = crypto.randomBytes(32).toString('hex');
-    // const resetTokenHash = hashToken(resetToken);
-    // const resetExpires = new Date(Date.now() + 3600000); // 1 hour
-    //
-    // await User.findByIdAndUpdate(user.id, {
-    //   passwordResetToken: resetTokenHash,
-    //   passwordResetExpires: resetExpires,
-    // });
-    //
-    // await sendPasswordResetEmail(email, resetToken);
-  }
+  await authService.requestPasswordReset(email);
 
   res.json({
     message:
@@ -277,74 +146,53 @@ export const resetPassword = async (
 ): Promise<void> => {
   const { token, password } = req.body;
 
-  // Token will be validated once reset flow is fully implemented
-  void token;
-
-  // TODO: Find user with valid reset token
-  // const tokenHash = hashToken(_token);
-  // const user = await User.findOne({
-  //   passwordResetToken: tokenHash,
-  //   passwordResetExpires: { $gt: Date.now() },
-  // });
-  //
-  // if (!user) {
-  //   throw new BadRequestError('Invalid or expired reset token');
-  // }
-
-  // Hash new password for future use
-  void (await bcrypt.hash(password, 12));
-
-  // TODO: Update password and clear reset token
-  // const passwordHash = await bcrypt.hash(password, 12);
-  // await user.updateOne({
-  //   passwordHash,
-  //   passwordResetToken: undefined,
-  //   passwordResetExpires: undefined,
-  // });
+  await authService.resetPassword(token, password);
 
   res.json({ message: "Password reset successful" });
 };
 
-// ============================================
-// Placeholder functions - Replace with actual DB queries
-// ============================================
+/**
+ * Verify email
+ * POST /api/v1/auth/verify-email
+ */
+export const verifyEmail = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const { token } = req.body;
 
-interface UserRecord {
-  id: string;
-  email: string;
-  name: string;
-  phone?: string;
-  role: "user" | "admin" | "moderator";
-  passwordHash: string;
-  createdAt: Date;
-}
+  await authService.verifyEmail(token);
 
-async function findUserByEmail(email: string): Promise<UserRecord | null> {
-  // Placeholder - replace with User.findOne({ email })
-  if (email === "admin@manake.org.zw") {
-    return {
-      id: "admin-user-id",
-      email: "admin@manake.org.zw",
-      name: "Admin User",
-      role: "admin",
-      passwordHash: await bcrypt.hash("password123", 12),
-      createdAt: new Date(),
-    };
-  }
-  return null;
-}
+  res.json({ message: "Email verified successfully" });
+};
 
-async function findUserById(id: string): Promise<UserRecord | null> {
-  // Placeholder - replace with User.findById(id)
-  if (id === "admin-user-id") {
-    return {
-      id: "admin-user-id",
-      email: "admin@manake.org.zw",
-      name: "Admin User",
-      role: "admin",
-      passwordHash: "",
-      createdAt: new Date(),
-    };
-  }
-  return null;
-}
+/**
+ * Request email verification
+ * POST /api/v1/auth/request-verification
+ */
+export const requestEmailVerification = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const tokenUser = req.user as TokenPayload;
+
+  await authService.requestEmailVerification(tokenUser.userId);
+
+  res.json({ message: "Verification email sent" });
+};
+
+/**
+ * Change password (authenticated)
+ * POST /api/v1/auth/change-password
+ */
+export const changePassword = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const tokenUser = req.user as TokenPayload;
+  const { currentPassword, newPassword } = req.body;
+
+  await authService.changePassword(tokenUser.userId, currentPassword, newPassword);
+
+  res.json({ message: "Password changed successfully" });
+};

@@ -86,5 +86,10 @@ jest.mock('expo-auth-session', () => {
   };
 });
 
-// Silence the warning: Animated: `useNativeDriver` is not supported
-jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+// Mock react-native-webview
+jest.mock('react-native-webview', () => {
+  const React = require('react');
+  return {
+    WebView: (props) => React.createElement('WebView', props, props.children),
+  };
+});

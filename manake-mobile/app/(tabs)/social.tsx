@@ -14,7 +14,6 @@ import {
   Pressable,
   ActivityIndicator,
   RefreshControl,
-  Linking,
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +21,7 @@ import { theme } from "../../constants";
 import { useAuth, useConnectivity } from "../../hooks";
 import { useToast } from "../../components";
 import api from "../../services/api";
+import { router } from "expo-router";
 import socialFeedService, {
   SocialPost,
   SocialFeedFilters,
@@ -263,30 +263,86 @@ export default function SocialFeedScreen() {
 
   const handleLike = useCallback(
     async (post: SocialPost) => {
+      if (!isAuthenticated) {
+        showToast("Please log in to like posts", "error");
+        return;
+      }
+
       try {
-        await socialFeedService.likeSocialPost(post.id, post.platform);
-        showToast("Post liked!", "success");
+        const shouldUnlike = Boolean(post.isLiked);
+
+        // Optimistic UI update
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== post.id || p.platform !== post.platform) return p;
+            const nextLikes = Math.max(0, (p.likes || 0) + (shouldUnlike ? -1 : 1));
+            return { ...p, likes: nextLikes, isLiked: !shouldUnlike };
+          }),
+        );
+
+        if (shouldUnlike) {
+          await socialFeedService.unlikeSocialPost(post.id, post.platform);
+          showToast("Like removed", "success");
+        } else {
+          await socialFeedService.likeSocialPost(post.id, post.platform);
+          showToast("Post liked!", "success");
+        }
       } catch (error) {
+        // Revert optimistic update on failure
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== post.id || p.platform !== post.platform) return p;
+            return { ...p, likes: post.likes, isLiked: post.isLiked };
+          }),
+        );
         showToast("Failed to like post", "error");
       }
     },
-    [showToast],
+    [isAuthenticated, showToast],
   );
 
   const handleShare = useCallback(
     async (post: SocialPost) => {
+      if (!isAuthenticated) {
+        showToast("Please log in to share posts", "error");
+        return;
+      }
+
       try {
+        // Optimistic UI update
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== post.id || p.platform !== post.platform) return p;
+            return {
+              ...p,
+              shares: (p.shares || 0) + 1,
+              isShared: true,
+            };
+          }),
+        );
+
         await socialFeedService.shareSocialPost(post.id, post.platform);
         showToast("Post shared!", "success");
       } catch (error) {
+        // Revert optimistic update on failure
+        setPosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== post.id || p.platform !== post.platform) return p;
+            return { ...p, shares: post.shares, isShared: post.isShared };
+          }),
+        );
         showToast("Failed to share post", "error");
       }
     },
-    [showToast],
+    [isAuthenticated, showToast],
   );
 
   const handleOpenPost = useCallback((post: SocialPost) => {
-    Linking.openURL(post.permalink);
+    // Keep users inside the app for web content
+    router.push({
+      pathname: "/webview",
+      params: { url: post.permalink, title: "Social post" },
+    });
   }, []);
 
   useEffect(() => {

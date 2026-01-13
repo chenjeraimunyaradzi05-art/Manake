@@ -4,6 +4,15 @@
  */
 import { Request, Response, NextFunction } from "express";
 
+const getOriginFromReferer = (referer: string): string | null => {
+  try {
+    const url = new URL(referer);
+    return url.origin;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * Security headers configuration options
  */
@@ -79,6 +88,43 @@ export const corsPreflightHandler = (maxAge: number = 86400) => {
 };
 
 /**
+ * Origin/Referer protection for state-changing requests.
+ * Useful as a CSRF mitigation when credentials (cookies) might be present.
+ */
+export const csrfOriginCheck = (allowedOrigins: string[]) => {
+  const allowed = new Set(
+    allowedOrigins.filter(Boolean).map((o) => o.toLowerCase()),
+  );
+
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const method = req.method.toUpperCase();
+    if (!(["POST", "PUT", "PATCH", "DELETE"] as const).includes(method as any)) {
+      return next();
+    }
+
+    const originHeader = (req.headers.origin as string | undefined) || "";
+    const refererHeader = (req.headers.referer as string | undefined) || "";
+
+    // If no browser headers present, treat as non-browser client and allow.
+    if (!originHeader && !refererHeader) {
+      return next();
+    }
+
+    const origin = (originHeader || getOriginFromReferer(refererHeader) || "").toLowerCase();
+    if (origin && allowed.has(origin)) {
+      return next();
+    }
+
+    res.status(403).json({
+      error: {
+        code: "CSRF_BLOCKED",
+        message: "Invalid request origin",
+      },
+    });
+  };
+};
+
+/**
  * Request sanitization middleware
  * Removes potentially dangerous characters from request data
  */
@@ -87,6 +133,20 @@ export const sanitizeRequest = (
   _res: Response,
   next: NextFunction,
 ): void => {
+  const replaceObjectContents = (
+    target: unknown,
+    replacement: Record<string, unknown>,
+  ): void => {
+    if (!target || typeof target !== "object" || Array.isArray(target)) {
+      return;
+    }
+
+    for (const key of Object.keys(target as Record<string, unknown>)) {
+      delete (target as Record<string, unknown>)[key];
+    }
+    Object.assign(target as Record<string, unknown>, replacement);
+  };
+
   const sanitize = (obj: Record<string, unknown>): Record<string, unknown> => {
     const sanitized: Record<string, unknown> = {};
 
@@ -121,9 +181,10 @@ export const sanitizeRequest = (
   }
 
   if (req.query && typeof req.query === "object") {
-    req.query = sanitize(
-      req.query as Record<string, unknown>,
-    ) as typeof req.query;
+    const sanitizedQuery = sanitize(req.query as Record<string, unknown>);
+    // Express/router may expose req.query as a getter-only property.
+    // Mutate in place instead of reassigning.
+    replaceObjectContents(req.query, sanitizedQuery);
   }
 
   next();

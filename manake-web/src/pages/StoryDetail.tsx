@@ -181,7 +181,7 @@ export const StoryDetail = () => {
             ))}
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 max-w-3xl">
+          <h1 className="text-xl md:text-2xl font-bold mb-6 max-w-3xl">
             {story.title}
           </h1>
 

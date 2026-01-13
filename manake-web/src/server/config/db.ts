@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+import { env, isProduction } from "./env";
+import { logger } from "../utils/logger";
+
 let isConnected = false;
 
 export const connectDB = async () => {
@@ -8,11 +11,24 @@ export const connectDB = async () => {
   }
 
   try {
-    const db = await mongoose.connect(process.env.MONGODB_URI || "");
+    const mongoUri = env.MONGODB_URI;
+
+    if (!mongoUri) {
+      if (isProduction) {
+        throw new Error("MONGODB_URI must be set in production");
+      }
+
+      logger.warn("MONGODB_URI not set; skipping MongoDB connection", {
+        env: process.env.NODE_ENV,
+      });
+      return;
+    }
+
+    const db = await mongoose.connect(mongoUri);
     isConnected = !!db.connections[0].readyState;
-    console.log("MongoDB Connected");
+    logger.info("MongoDB connected");
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    logger.error("MongoDB connection error", { error });
     // Don't exit process in serverless, just throw or log
     throw error;
   }

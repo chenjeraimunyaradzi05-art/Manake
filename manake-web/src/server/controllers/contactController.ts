@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { Contact } from "../models/Contact";
 import { Message } from "../models/Message";
+import { emailService } from "../services/emailService";
+import { logger } from "../utils/logger";
 
 export const submitContact = async (req: Request, res: Response) => {
   try {
@@ -52,14 +54,24 @@ export const submitContact = async (req: Request, res: Response) => {
       conversationId: sanitizedData.email,
     });
 
-    // TODO: Send email notification via SendGrid/Nodemailer here
+    // Send email notification to admin
+    emailService
+      .sendContactNotification(
+        sanitizedData.email,
+        sanitizedData.name,
+        sanitizedData.message,
+        sanitizedData.subject,
+      )
+      .catch((err) => {
+        logger.error("Failed to send contact notification email", { error: err });
+      });
 
     res.status(201).json({
       message: "Message received successfully",
       contactId: newContact._id,
     });
   } catch (error) {
-    console.error("Contact form error:", error);
+    logger.error("Contact form error", { error });
     res
       .status(500)
       .json({ message: "Error submitting contact form. Please try again." });

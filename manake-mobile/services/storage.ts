@@ -1,5 +1,6 @@
 import * as SecureStore from "expo-secure-store";
-import { Platform } from "react-native";
+
+const isWeb = typeof window !== "undefined" && typeof document !== "undefined";
 
 // Keys for secure storage
 export const STORAGE_KEYS = {
@@ -23,7 +24,7 @@ class SecureStorageService {
    */
   async setItem(key: StorageKey, value: string): Promise<void> {
     try {
-      if (Platform.OS === "web") {
+      if (isWeb) {
         // Web fallback - use localStorage (less secure but functional)
         this.webStorage.set(key, value);
         if (typeof localStorage !== "undefined") {
@@ -43,7 +44,7 @@ class SecureStorageService {
    */
   async getItem(key: StorageKey): Promise<string | null> {
     try {
-      if (Platform.OS === "web") {
+      if (isWeb) {
         // Web fallback
         if (typeof localStorage !== "undefined") {
           return localStorage.getItem(key);
@@ -62,7 +63,7 @@ class SecureStorageService {
    */
   async deleteItem(key: StorageKey): Promise<void> {
     try {
-      if (Platform.OS === "web") {
+      if (isWeb) {
         this.webStorage.delete(key);
         if (typeof localStorage !== "undefined") {
           localStorage.removeItem(key);
@@ -93,9 +94,6 @@ class SecureStorageService {
     try {
       return JSON.parse(jsonValue) as T;
     } catch {
-      if (process.env.NODE_ENV !== "test") {
-        console.error(`Failed to parse ${key} as JSON`);
-      }
       return null;
     }
   }

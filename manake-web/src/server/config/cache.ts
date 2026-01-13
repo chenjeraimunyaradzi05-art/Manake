@@ -4,6 +4,8 @@
  * Falls back to in-memory cache when Redis is not available
  */
 
+import { logger } from "../utils/logger";
+
 /**
  * Cache entry interface
  */
@@ -52,10 +54,9 @@ class CacheService {
     // In a production app, you'd initialize Redis here
     // For now, we use in-memory cache
     if (config.redisUrl) {
-      console.log("📦 Redis URL configured, but using in-memory cache for now");
-      console.log(
-        "   To enable Redis, install ioredis and uncomment the Redis code",
-      );
+      logger.info("Redis URL configured; using in-memory cache fallback", {
+        redisUrlConfigured: true,
+      });
     }
   }
 

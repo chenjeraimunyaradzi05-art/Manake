@@ -12,6 +12,26 @@ import { ValidationError } from "../errors";
  */
 type ValidationTarget = "body" | "query" | "params";
 
+const replaceObjectContents = (
+  target: unknown,
+  replacement: unknown,
+): void => {
+  if (!target || typeof target !== "object" || Array.isArray(target)) {
+    return;
+  }
+  if (!replacement || typeof replacement !== "object" || Array.isArray(replacement)) {
+    return;
+  }
+
+  for (const key of Object.keys(target as Record<string, unknown>)) {
+    delete (target as Record<string, unknown>)[key];
+  }
+  Object.assign(
+    target as Record<string, unknown>,
+    replacement as Record<string, unknown>,
+  );
+};
+
 /**
  * Validation middleware factory
  * Creates middleware that validates request data against a Zod schema
@@ -26,7 +46,13 @@ export const validate = <T extends ZodSchema>(
       const validated = schema.parse(data);
 
       // Replace request data with validated/transformed data
-      req[target] = validated;
+      if (target === "query") {
+        // Express/router may expose req.query as a getter-only property.
+        // Mutate in place instead of reassigning.
+        replaceObjectContents(req.query, validated);
+      } else {
+        req[target] = validated;
+      }
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -74,7 +100,8 @@ export const validateAll = <
 
     try {
       if (schemas.query) {
-        req.query = schemas.query.parse(req.query) as typeof req.query;
+        const validatedQuery = schemas.query.parse(req.query);
+        replaceObjectContents(req.query, validatedQuery);
       }
     } catch (error) {
       if (error instanceof ZodError) {
@@ -250,6 +277,16 @@ export const storyQuerySchema = paginationSchema.extend({
 });
 
 /**
+ * Add comment schema
+ * If the user is authenticated, author will be derived from their profile.
+ * If unauthenticated, author is required (enforced in controller).
+ */
+export const addCommentSchema = z.object({
+  author: z.string().min(2).max(100).optional(),
+  content: z.string().min(5).max(2000),
+});
+
+/**
  * Contact form schema
  */
 export const contactSchema = z.object({
@@ -348,6 +385,13 @@ export const socialAuthorizeQuerySchema = z.object({
 export const socialCallbackQuerySchema = z.object({
   code: z.string().min(5, "Authorization code is required"),
   state: z.string().optional(),
+  redirectUri: urlSchema.optional(),
+  mode: z.enum(["login", "link"]).optional(),
+});
+
+export const appleCodeExchangeSchema = z.object({
+  code: z.string().min(5, "Authorization code is required"),
+  codeVerifier: z.string().min(43).max(128).optional(), // PKCE code verifier (43-128 chars)
   redirectUri: urlSchema.optional(),
   mode: z.enum(["login", "link"]).optional(),
 });

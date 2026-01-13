@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod";
+import { logger } from "../utils/logger";
 
 // Environment schema with validation
 const envSchema = z.object({
@@ -87,12 +88,11 @@ function validateEnv(): Env {
       const missing = error.errors.map(
         (e) => `${e.path.join(".")}: ${e.message}`,
       );
-      console.error("❌ Environment validation failed:");
-      missing.forEach((m) => console.error(`   - ${m}`));
+      logger.error("Environment validation failed", { missing });
 
       // In development, continue with defaults
       if (process.env.NODE_ENV !== "production") {
-        console.warn("⚠️ Running with default values in development mode");
+        logger.warn("Running with default values in development mode");
         return envSchema.parse({});
       }
 

@@ -13,7 +13,8 @@ import { strictRateLimit } from "../../middleware/rateLimit";
 import { authenticate, authorize } from "../../utils/jwt";
 import { Donation } from "../../models/Donation";
 import express from "express";
-import { stripe } from "../../config/stripe";
+import { requireStripe } from "../../config/stripe";
+import { logger } from "../../utils/logger";
 
 const router = Router();
 
@@ -30,6 +31,18 @@ router.post(
   "/webhook",
   express.raw({ type: "application/json" }),
   asyncHandler(async (req: Request, res: Response) => {
+    let stripe;
+    try {
+      stripe = requireStripe();
+    } catch (error) {
+      return res.status(503).json({
+        message:
+          error instanceof Error
+            ? error.message
+            : "Stripe is not configured",
+      });
+    }
+
     const sig = req.headers["stripe-signature"] as string;
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
@@ -66,7 +79,7 @@ router.post(
 
       res.json({ received: true });
     } catch (err) {
-      console.error("Webhook error:", err);
+      logger.error("Webhook error", { error: err });
       res.status(400).json({ message: "Webhook error" });
     }
   }),

@@ -111,7 +111,7 @@ export const ProgramsPage = () => {
     <>
       <section className="bg-gradient-to-r from-primary-700 to-primary-900 text-white py-16">
         <div className="container-custom">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Our Programs</h1>
+          <h1 className="text-xl md:text-2xl font-bold mb-4">Our Programs</h1>
           <p className="text-lg text-primary-100 max-w-2xl">
             Comprehensive care from detox to aftercare, life skills, and
             community reintegration tailored for Zimbabwean youth.
@@ -122,11 +122,12 @@ export const ProgramsPage = () => {
       <section className="py-16 bg-gray-50">
         <div className="container-custom grid lg:grid-cols-3 gap-8">
           {programs.map((program, idx) => (
-            <ProgramCard
-              key={program.id}
-              program={program}
-              variant={idx === 0 ? "featured" : "default"}
-            />
+            <div key={program.id} className={idx === 0 ? "lg:col-span-3" : ""}>
+              <ProgramCard
+                program={program}
+                variant={idx === 0 ? "featured" : "default"}
+              />
+            </div>
           ))}
         </div>
       </section>

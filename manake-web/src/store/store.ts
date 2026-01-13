@@ -1,17 +1,52 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type { ImpactStats } from "../types";
+
+type StorageLike = {
+  getItem: (name: string) => string | null;
+  setItem: (name: string, value: string) => void;
+  removeItem: (name: string) => void;
+};
+
+const memoryStorage = (() => {
+  const store: Record<string, string> = {};
+  return {
+    getItem: (name: string) => (name in store ? store[name] : null),
+    setItem: (name: string, value: string) => {
+      store[name] = value;
+    },
+    removeItem: (name: string) => {
+      delete store[name];
+    },
+  } satisfies StorageLike;
+})();
+
+function getSafeStorage(): StorageLike {
+  try {
+    if (typeof window === "undefined") return memoryStorage;
+    const s = window.localStorage;
+    // Probe in case storage exists but is blocked (can throw).
+    const probeKey = "__manake_storage_probe__";
+    s.setItem(probeKey, "1");
+    s.removeItem(probeKey);
+    return s;
+  } catch {
+    return memoryStorage;
+  }
+}
 
 interface AppState {
   // User
   user: {
     isLoggedIn: boolean;
+    _id: string | null;
     name: string | null;
     email: string | null;
     avatar: string | null;
     role: string | null;
   };
   setUser: (user: {
+    _id?: string;
     name: string;
     email: string | null;
     avatar?: string | null;
@@ -55,6 +90,7 @@ export const useAppStore = create<AppState>()(
       // User
       user: {
         isLoggedIn: false,
+        _id: null,
         name: null,
         email: null,
         avatar: null,
@@ -64,6 +100,7 @@ export const useAppStore = create<AppState>()(
         set({
           user: {
             isLoggedIn: true,
+            _id: userData._id ?? null,
             name: userData.name,
             email: userData.email,
             avatar: userData.avatar ?? null,
@@ -74,6 +111,7 @@ export const useAppStore = create<AppState>()(
         set({
           user: {
             isLoggedIn: false,
+            _id: null,
             name: null,
             email: null,
             avatar: null,
@@ -131,6 +169,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "manake-storage", // localStorage key
+      storage: createJSONStorage(() => getSafeStorage()),
       partialize: (state) => ({
         savedStories: state.savedStories,
         likedStories: state.likedStories,

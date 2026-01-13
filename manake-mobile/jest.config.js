@@ -5,6 +5,6 @@ module.exports = {
   cacheDirectory: '<rootDir>/.jest/cache',
   testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native|@react-native-community|expo(nent)?|@expo(nent)?|expo-router|@expo/vector-icons|react-native-safe-area-context|react-native-screens|@testing-library/react-native)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native|@react-native-community|expo(nent)?|@expo(nent)?|expo-modules-core|expo-router|@expo/vector-icons|react-native-safe-area-context|react-native-screens|@testing-library/react-native)/)',
   ],
 };

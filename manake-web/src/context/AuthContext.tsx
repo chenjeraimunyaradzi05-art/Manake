@@ -17,17 +17,20 @@ import {
 interface AuthContextValue {
   user: {
     isLoggedIn: boolean;
+    _id: string | null;
     name: string | null;
     email: string | null;
     avatar: string | null;
     role: string | null;
   };
+  isAuthenticated: boolean;
   loading: boolean;
   refreshSession: () => Promise<void>;
   handleAuthSuccess: (payload: {
     accessToken: string;
     refreshToken?: string;
     user?: {
+      _id?: string;
       name?: string;
       email?: string | null;
       avatar?: string | null;
@@ -39,16 +42,40 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function safeStorageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeStorageSet(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Ignore (storage may be blocked in some webviews / privacy modes)
+  }
+}
+
+function safeStorageRemove(key: string) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Ignore
+  }
+}
+
 function persistTokens(accessToken: string, refreshToken?: string) {
-  localStorage.setItem("auth_token", accessToken);
+  safeStorageSet("auth_token", accessToken);
   if (refreshToken) {
-    localStorage.setItem("refresh_token", refreshToken);
+    safeStorageSet("refresh_token", refreshToken);
   }
 }
 
 function clearTokens() {
-  localStorage.removeItem("auth_token");
-  localStorage.removeItem("refresh_token");
+  safeStorageRemove("auth_token");
+  safeStorageRemove("refresh_token");
 }
 
 type AuthProviderProps = { children: ReactNode };
@@ -63,6 +90,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const setUserFromProfile = useCallback(
     (profile: UserProfile) => {
       setUser({
+        _id: profile._id,
         name: profile.name || profile.email || "User",
         email: profile.email || null,
         avatar: profile.avatar ?? null,
@@ -73,8 +101,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   );
 
   const bootstrap = useCallback(async () => {
-    const accessToken = localStorage.getItem("auth_token");
-    const refreshToken = localStorage.getItem("refresh_token");
+    const accessToken = safeStorageGet("auth_token");
+    const refreshToken = safeStorageGet("refresh_token");
 
     if (!accessToken && !refreshToken) {
       setLoading(false);
@@ -114,7 +142,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     setupAuthRequestInterceptor();
     setupAuthInterceptors(undefined, {
-      getRefreshToken: () => localStorage.getItem("refresh_token"),
+      getRefreshToken: () => safeStorageGet("refresh_token"),
       onTokens: (tokens) => {
         persistTokens(tokens.accessToken, tokens.refreshToken);
       },
@@ -128,7 +156,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [interceptorsReady, logoutStore]);
 
   const refreshSession = useCallback(async () => {
-    const refreshToken = localStorage.getItem("refresh_token");
+    const refreshToken = safeStorageGet("refresh_token");
     if (!refreshToken) return;
     try {
       const tokens = await refreshTokens(refreshToken);
@@ -147,6 +175,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       accessToken: string;
       refreshToken?: string;
       user?: {
+        _id?: string;
         name?: string;
         email?: string | null;
         avatar?: string | null;
@@ -156,6 +185,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       persistTokens(payload.accessToken, payload.refreshToken);
       if (payload.user) {
         setUser({
+          _id: payload.user._id,
           name: payload.user.name || payload.user.email || "User",
           email: payload.user.email || null,
           avatar: payload.user.avatar ?? null,
@@ -171,9 +201,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logoutStore();
   }, [logoutStore]);
 
+  const isAuthenticated = user.isLoggedIn;
+
   const value = useMemo(
-    () => ({ user, loading, refreshSession, handleAuthSuccess, logout }),
-    [user, loading, refreshSession, handleAuthSuccess, logout],
+    () => ({ user, isAuthenticated, loading, refreshSession, handleAuthSuccess, logout }),
+    [user, isAuthenticated, loading, refreshSession, handleAuthSuccess, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -4,17 +4,21 @@
  * This starts Express on port 3001 which Vite proxies to
  */
 import express from "express";
+import { createServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import { connectDB } from "./config/db";
+import { ensureProductionEnv } from "./config/env";
 import apiRoutes from "./routes";
+import { initSocketIO } from "./socket";
 import {
   errorHandler,
   notFoundHandler,
   requestLogger,
   securityHeaders,
   sanitizeRequest,
+  csrfOriginCheck,
 } from "./middleware";
 import { logger } from "./utils/logger";
 
@@ -22,7 +26,15 @@ import { logger } from "./utils/logger";
 dotenv.config();
 
 const app = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
+
+// Initialize Socket.IO
+const io = initSocketIO(httpServer);
+// Make io available in routes via req.app.get('io') or similar if needed, 
+// or simply use the singleton pattern/export if established. 
+// For now, attaching to app locals is a good pattern.
+app.set("io", io);
 
 // Security middleware
 app.use(helmet());
@@ -47,6 +59,9 @@ app.use(
     credentials: true,
   }),
 );
+
+// CSRF-style origin checks for state-changing requests
+app.use(csrfOriginCheck(allowedOrigins));
 
 // Body parsing
 app.use(express.json({ limit: "10kb" })); // Limit body size
@@ -78,17 +93,21 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
   try {
+    ensureProductionEnv();
+
     // Connect to MongoDB
     await connectDB();
 
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       logger.info("Server started", {
         port: PORT,
         environment: process.env.NODE_ENV || "development",
       });
-      console.log(`🚀 Manake API server running on http://localhost:${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/health`);
-      console.log(`📚 API info: http://localhost:${PORT}/api`);
+      logger.info("Manake API listening", {
+        url: `http://localhost:${PORT}`,
+        health: `http://localhost:${PORT}/health`,
+        api: `http://localhost:${PORT}/api`,
+      });
     });
   } catch (error) {
     logger.error("Failed to start server", { error });

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from "vitest";
 import type { Request, Response } from "express";
-import { socialAuth } from "./socialAuthController";
+import { socialAuth, appleCodeExchange } from "./socialAuthController";
 import { BadRequestError, UnauthorizedError } from "../errors";
 
 vi.mock("../services/socialAuth", () => ({
@@ -11,6 +11,14 @@ vi.mock("../services/socialAuth", () => ({
     name: "Test User",
     picture: "pic.jpg",
     accessToken: "id-token",
+  })),
+  exchangeAppleCode: vi.fn(async () => ({
+    provider: "apple",
+    platformUserId: "apple-123",
+    email: "appleuser@example.com",
+    name: "Apple User",
+    accessToken: "apple-access-token",
+    refreshToken: "apple-refresh-token",
   })),
   generateRandomPassword: vi.fn(() => "randompass"),
 }));
@@ -149,5 +157,69 @@ describe("socialAuth controller", () => {
     await expect(socialAuth(req, res)).rejects.toBeInstanceOf(
       UnauthorizedError,
     );
+  });
+});
+
+describe("appleCodeExchange controller", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("exchanges Apple code and returns user with tokens", async () => {
+    const req = createMockReq({
+      params: {},
+      body: {
+        code: "apple-auth-code",
+        codeVerifier: "pkce-verifier-string-at-least-43-chars-long-for-testing",
+        redirectUri: "https://example.com/callback",
+      },
+    });
+    const res = createMockRes();
+
+    await appleCodeExchange(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalled();
+    const payload = (res as Response & { body: unknown }).body as {
+      user: { email: string };
+      accessToken: string;
+    };
+    expect(payload.accessToken).toBe("access");
+  });
+
+  it("throws BadRequestError when code is missing", async () => {
+    const req = createMockReq({
+      params: {},
+      body: {},
+    });
+    const res = createMockRes();
+
+    await expect(appleCodeExchange(req, res)).rejects.toBeInstanceOf(
+      BadRequestError,
+    );
+  });
+
+  it("supports link mode with authenticated user", async () => {
+    const req = createMockReq({
+      params: {},
+      body: {
+        code: "apple-auth-code",
+        mode: "link",
+      },
+      user: {
+        userId: "existing-user",
+        email: "existing@example.com",
+        role: "user",
+      },
+    });
+    const res = createMockRes();
+
+    await appleCodeExchange(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    const payload = (res as Response & { body: unknown }).body as {
+      message: string;
+    };
+    expect(payload.message).toBe("Account linked");
   });
 });

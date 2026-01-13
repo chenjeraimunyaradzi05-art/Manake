@@ -18,9 +18,11 @@ import {
   idParamsSchema,
   storyQuerySchema,
   createStorySchema,
+  addCommentSchema,
 } from "../../middleware/validation";
 import { likeRateLimit } from "../../middleware/rateLimit";
 import { authenticate, authorize, optionalAuth } from "../../utils/jwt";
+import { requireEmailVerified } from "../../middleware/auth";
 
 const router = Router();
 
@@ -43,18 +45,30 @@ router.post(
   "/:id/like",
   validate(idParamsSchema, "params"),
   likeRateLimit,
+  authenticate,
+  asyncHandler(requireEmailVerified),
   asyncHandler(likeStory),
 );
 router.post(
   "/:id/unlike",
   validate(idParamsSchema, "params"),
   likeRateLimit,
+  authenticate,
+  asyncHandler(requireEmailVerified),
   asyncHandler(unlikeStory),
 );
 router.post(
   "/:id/comments",
   validate(idParamsSchema, "params"),
+  validate(addCommentSchema, "body"),
   optionalAuth,
+  asyncHandler(async (req, res, next) => {
+    // If authenticated, enforce verified email
+    if (req.user?.userId) {
+      return requireEmailVerified(req, res, next);
+    }
+    return next();
+  }),
   asyncHandler(addComment),
 );
 

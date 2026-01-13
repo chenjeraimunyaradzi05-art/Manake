@@ -11,12 +11,20 @@
     "start": "npm run dev:web",
     "dev:web": "npm run dev --workspace=manake-web",
     "build:web": "npm run build --workspace=manake-web",
-    "test": "npm test --workspace=manake-web && npm test --workspace=manake-mobile",
+    "test:web": "npm run test --workspace=manake-web",
+    "test:mobile": "npm run test --workspace=manake-mobile",
+    "test": "npm run test:web && npm run test:mobile",
     "start:mobile": "npm run start --workspace=manake-mobile",
     "android": "npm run android --workspace=manake-mobile",
     "ios": "npm run ios --workspace=manake-mobile",
     "install:all": "npm install",
     "prepare": "husky"
+  },
+  "engines": {
+    "node": ">=20 <21"
+  },
+  "volta": {
+    "node": "20.19.6"
   },
   "keywords": [
     "manake",
@@ -26,7 +34,6 @@
   "author": "GitHub Copilot",
   "license": "ISC",
   "dependencies": {
-    "react-dom": "^18.2.0",
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
@@ -46,6 +53,8 @@
   },
   "overrides": {
     "react-test-renderer": "18.2.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "typescript": "5.3.3"
   }
 }

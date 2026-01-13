@@ -40,6 +40,10 @@ export function useNotifications(options: UseNotificationsOptions = {}) {
       // Navigate based on notification type
       if (data.type === "story" && data.storyId) {
         router.push(`/story/${data.storyId}`);
+      } else if (data.type === "profile" && data.userId) {
+        router.push(`/profile/${data.userId}`);
+      } else if (data.type === "post" && data.postId) {
+        router.push(`/social`);
       } else if (data.type === "message" && data.conversationId) {
         router.push("/messages");
       } else if (data.type === "emergency") {

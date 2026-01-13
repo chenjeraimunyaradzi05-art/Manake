@@ -14,6 +14,7 @@ import {
   generateRandomPassword,
   buildAuthUrl,
   exchangeCodeForProfile,
+  exchangeAppleCode,
 } from "../services/socialAuth";
 
 interface SocialAuthBody {
@@ -149,6 +150,65 @@ export const socialAuth = async (
     scopes,
     pageId,
     pageName,
+  );
+
+  const tokens = generateTokenPair({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  res.status(mode === "link" ? 200 : 201).json({
+    message: mode === "link" ? "Account linked" : "Login successful",
+    user: user.toPublicJSON(),
+    socialAccount: sanitizeAccount(socialAccount),
+    ...tokens,
+  });
+};
+
+/**
+ * Apple PKCE code exchange endpoint for mobile apps.
+ * Mobile apps use PKCE (code_verifier) for enhanced security.
+ * POST /api/v1/social/apple/exchange
+ */
+export const appleCodeExchange = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  const {
+    code,
+    codeVerifier,
+    redirectUri,
+    mode = "login",
+  } = req.body as {
+    code: string;
+    codeVerifier?: string;
+    redirectUri?: string;
+    mode?: "login" | "link";
+  };
+
+  if (!code) {
+    throw new BadRequestError("Authorization code is required");
+  }
+
+  const profile = await exchangeAppleCode(code, redirectUri, codeVerifier);
+
+  let user = await upsertUserFromSocial("apple", profile);
+
+  if (mode === "link") {
+    if (!req.user?.userId) {
+      throw new UnauthorizedError("Authentication required to link accounts");
+    }
+    user = (await User.findById(req.user.userId)) || user;
+  }
+
+  const socialAccount = await upsertSocialAccount(
+    user.id,
+    "apple",
+    profile,
+    undefined,
+    undefined,
+    undefined,
   );
 
   const tokens = generateTokenPair({

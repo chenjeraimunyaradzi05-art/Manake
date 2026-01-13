@@ -56,7 +56,7 @@ const refreshTokenSchema = new Schema<IRefreshToken>(
 
 // Indexes
 refreshTokenSchema.index({ userId: 1 });
-refreshTokenSchema.index({ tokenHash: 1 }, { unique: true });
+// tokenHash: 1 is already indexed via unique: true in schema
 refreshTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index
 
 // Static method to revoke all tokens for a user

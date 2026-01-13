@@ -16,18 +16,12 @@ export function useAuth() {
    */
   const restoreSession = useCallback(async () => {
     try {
-      const token = await secureStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
-
-      if (token) {
-        // Set the token in the API service
-        setAuthToken(token);
-
-        // Try to load the user profile
-        await store.loadUser();
-      }
+      // Token is now stored in SecureStore by the API service.
+      // We still attempt to load the user; if token exists it will be used.
+      await store.loadUser();
     } catch (error) {
-      console.error("Failed to restore session:", error);
       // Clear any invalid stored data
+      await setAuthToken(null);
       await secureStorage.deleteItem(STORAGE_KEYS.AUTH_TOKEN);
     } finally {
       setIsRestoring(false);

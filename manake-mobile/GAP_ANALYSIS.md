@@ -1,8 +1,8 @@
 # Manake Mobile App - Gap Analysis Report
 
 **Generated:** January 9, 2026  
-**Last Updated:** January 9, 2026 (Phase 4 Auth Screens Completed)  
-**Compared:** `IMPLEMENTATION_SUMMARY.md` vs Actual Codebase & 200-Step Roadmap
+**Last Updated:** January 10, 2026 (Reconciled with current repo state)  
+**Compared:** `IMPLEMENTATION_SUMMARY.md` vs Actual Codebase & implementation guide
 
 ---
 
@@ -34,50 +34,21 @@ The following authentication screens have been implemented:
 
 ---
 
-## ✅ PHASE 1 COMPLETED - Backend Enhancements
+## ✅ WEB BACKEND SNAPSHOT (Not in manake-mobile)
 
-Phase 1 (Steps 1-50) has been **implemented**. Here's what was added:
+Backend work referenced in earlier versions of this report lives under `manake-web/src/server/` (there is no `manake-mobile/server/` directory).
 
-### New Backend Files Created
+### What exists in `manake-web/src/server/`
 
-| File | Purpose |
-|------|---------|
-| `server/errors/index.ts` | Custom error classes (ApiError, ValidationError, NotFoundError, etc.) |
-| `server/middleware/errorHandler.ts` | Global error handler with asyncHandler wrapper |
-| `server/middleware/validation.ts` | Zod-based request validation with common schemas |
-| `server/middleware/requestLogger.ts` | Request/response logging middleware |
-| `server/middleware/security.ts` | Security headers, sanitization, API key validation |
-| `server/middleware/index.ts` | Central middleware exports |
-| `server/utils/logger.ts` | Structured logging utility |
-| `server/utils/jwt.ts` | JWT token generation, verification, auth middleware |
-| `server/utils/index.ts` | Central utils exports |
-| `server/config/cache.ts` | Redis/in-memory caching layer |
-| `server/config/index.ts` | Central config exports |
-| `server/models/User.ts` | User authentication model |
-| `server/models/RefreshToken.ts` | Token rotation/revocation model |
-| `server/models/Message.ts` | Multi-channel messaging model |
-| `server/models/WebhookEvent.ts` | Webhook logging model |
-| `server/models/SocialAccount.ts` | Social media account connections |
-| `server/models/index.ts` | Central model exports |
-| `server/routes/v1/index.ts` | API v1 route mounting |
-| `server/routes/v1/stories.ts` | Stories routes with auth |
-| `server/routes/v1/donations.ts` | Donations routes with auth |
-| `server/routes/v1/contact.ts` | Contact routes with auth |
-| `server/routes/v1/auth.ts` | Authentication routes |
-| `server/controllers/authController.ts` | Auth controller (login, register, logout, etc.) |
+- ✅ Middleware: auth, error handling, rate limiting, security headers
+- ✅ JWT utilities: `authenticate`, `optionalAuth`, `authorize`, token helpers
+- ✅ Integrations: WhatsApp / Instagram DM / Facebook Messenger stubs
+- ✅ Services: messaging + social feed scaffolding
 
-### Backend Improvements
+### Key backend gaps that remain (high confidence)
 
-- ✅ Custom error classes with proper HTTP status codes
-- ✅ Global error handler with request ID tracking
-- ✅ Zod-based request validation
-- ✅ API versioning (`/api/v1/`)
-- ✅ JWT authentication with refresh tokens
-- ✅ Role-based authorization (user, admin, moderator)
-- ✅ Request logging and sanitization
-- ✅ Security headers middleware
-- ✅ In-memory cache layer (Redis-ready)
-- ✅ Database models for messaging and social accounts
+- ⚠️ `authController` still contains TODOs for full DB-backed auth flows (refresh token persistence/revocation, password reset implementation)
+- ⚠️ Redis is included as a dependency, but current config uses an in-memory cache fallback (no `redis.ts` config file)
 
 ---
 
@@ -104,61 +75,30 @@ All items listed in `IMPLEMENTATION_SUMMARY.md` have been **verified as present*
 
 ---
 
-## ⚠️ GAPS: Items in Summary NOT IMPLEMENTED
+## ✅ RESOLVED: Previously reported package.json gaps
 
-The following items were mentioned in `IMPLEMENTATION_SUMMARY.md` but are **MISSING** from the codebase:
+Earlier revisions of this report flagged missing dependencies/scripts. Current repo state shows these are now present in `manake-mobile/package.json`:
 
-### 1. Dependencies Missing from package.json
-
-| Dependency | Status | Impact |
-|------------|--------|--------|
-| `expo-haptics` | ❌ **NOT INSTALLED** | Haptic feedback on buttons won't work |
-| `expo-image` | ❌ **NOT INSTALLED** | Optimized image loading not available |
-
-**Current package.json dependencies:**
-- Has: `expo-secure-store`, `@react-native-community/netinfo` ✅
-- Missing: `expo-haptics`, `expo-image` ❌
-
-### 2. Scripts Missing from package.json
-
-| Script | Status | Expected Command |
-|--------|--------|------------------|
-| `test` | ❌ **MISSING** | `jest --watch` |
-| `test:ci` | ❌ **MISSING** | `jest --ci --coverage` |
-| `lint` | ❌ **MISSING** | `eslint .` |
-| `typecheck` | ❌ **MISSING** | `tsc --noEmit` |
-
-**Current scripts:**
-```json
-{
-  "start": "expo start",
-  "android": "expo run:android",
-  "ios": "expo run:ios",
-  "web": "expo start --web"
-}
-```
+- ✅ Dependencies: `expo-haptics`, `expo-image`
+- ✅ Scripts: `test`, `test:watch`, `test:ci`, `lint`, `typecheck`
 
 ---
 
 ## 🔴 MAJOR GAPS: Roadmap Steps NOT STARTED
 
-Based on the **Manake-Roadmap.md** 200-step plan, these major sections remain:
+Based on the implementation guide (`Manake-500-Step-Implementation-Guide.md`), these major sections remain:
 
-### Phase 1: Backend Enhancements (Steps 1-50) - ~15% Complete
+### Phase 1: Backend Enhancements (Web) - Partially Complete
 
-#### ❌ Not Started
-- **Steps 1-10:** Project structure setup (config, middleware, services, integrations directories) - *Partially done*
-- **Step 6:** Redis connection for caching
-- **Steps 11-20:** Database schema enhancements (messaging, social media, webhook events)
-- **Step 21-25:** Global error handling middleware (custom error classes, Joi validation)
-- **Step 26-30:** API versioning (`/api/v1/`, `/api/v2/`), request sanitization
-- **Steps 31-40:** Redis caching layer, cache invalidation, query optimization
-- **Steps 41-50:** OAuth 2.0, JWT token refresh, two-factor auth foundation, CSRF protection
+#### ✅ Implemented / Present
+- Server structure under `manake-web/src/server/` (controllers, routes, middleware, services, integrations)
+- Rate limiting middleware
+- JWT middleware helpers (authenticate/authorize)
 
-#### ✅ Partially Complete
-- Rate limiting: Basic implementation exists in `manake-web/src/server/middleware/rateLimit.ts`
-- Helmet security headers: Present in `manake-web/src/server/index.ts`
-- CORS configuration: Present
+#### ⚠️ Still Needs Work
+- DB-backed auth flows in `authController` (several TODOs remain)
+- Consistent route protection where controllers assume `req.user`
+- Redis connection/config (currently in-memory cache fallback)
 
 ### Phase 2: Social Media Integration (Steps 51-100) - 0% Complete
 
@@ -215,13 +155,13 @@ Based on the **Manake-Roadmap.md** 200-step plan, these major sections remain:
 | 192 | Background sync | ✅ Done (`syncManager.ts`) |
 | 196 | Error boundary | ✅ Done |
 
-#### ❌ Not Started Mobile Steps
+#### ⚠️ Remaining / Partially Complete Mobile Steps
 | Step | Description | Status |
 |------|-------------|--------|
 | 155 | UI component library (react-native-paper) | ❌ Not installed |
 | 156-158 | Expo config (icons, splash screen) | ⚠️ Basic only |
-| 165 | Biometric auth (fingerprint/face) | ❌ Not started |
-| 166 | OAuth social login (Google, Apple) | ❌ Not started |
+| 165 | Biometric auth (fingerprint/face) | ✅ Implemented and wired on login |
+| 166 | OAuth social login (Google, Apple) | ✅ Implemented and wired on login (Apple requires backend code exchange) |
 | 170 | Profile management screen | ⚠️ Partial (view only) |
 | 173 | Like/comment on mobile | ❌ Not functional |
 | 174-176 | Donation screen with Stripe | ⚠️ Partial |
@@ -259,11 +199,10 @@ All dependencies installed and scripts added.
 
 ### Priority 2: Next Steps from Roadmap
 
-1. **Backend (Phase 1):** ✅ COMPLETED
-   - ~~Set up Redis for caching~~ ✅
-   - ~~Implement API versioning~~ ✅
-   - ~~Add Zod request validation~~ ✅
-   - ~~Create custom error classes~~ ✅
+1. **Backend (Web):** ⚠️ PARTIALLY COMPLETE
+   - Ensure routes that require `req.user` are protected with `authenticate`
+   - Finish DB-backed auth flows in `authController` (refresh token persistence/revocation, password reset)
+   - Decide and implement Redis vs in-memory caching strategy
 
 2. **Mobile (Phase 4):** ✅ MOSTLY COMPLETED
    - ~~Build Login/Signup screens~~ ✅ DONE
@@ -281,12 +220,12 @@ All dependencies installed and scripts added.
 
 ### Backend (`manake-web/src/server/`)
 ```
-integrations/          <- EMPTY (should have instagram.js, facebook.js, whatsapp.js)
-services/              <- EMPTY (should have socialMediaService.js, messagingService.js)
+integrations/          ✅ Present (whatsapp / instagramDM / facebookMessenger stubs)
+services/              ✅ Present (messaging + social feed scaffolding)
 config/
 ├── db.ts              ✅ Present
 ├── stripe.ts          ✅ Present
-├── redis.ts           ❌ Missing (in-memory cache implemented as fallback)
+├── cache.ts           ✅ Present (in-memory cache implemented as fallback)
 ```
 
 ### Mobile (`manake-mobile/`)
@@ -308,15 +247,11 @@ hooks/__tests__/
 
 ## 🎯 Next Priority Actions
 
-1. **Biometric Authentication** (Step 165)
-   - Implement fingerprint/face ID login
-   - Add expo-local-authentication
+1. **Backend support for social auth**
+   - Apple OAuth code exchange (PKCE) must happen on backend
+   - Verify/issue JWTs for Google id_token login
 
-2. **OAuth Social Login** (Step 166)
-   - Google Sign-In
-   - Apple Sign-In
-
-3. **Messaging Screens** (Steps 181-189)
+2. **Messaging Screens** (Steps 181-189)
    - Conversation list
    - Chat screen
    - Send/receive messages
@@ -327,5 +262,5 @@ hooks/__tests__/
 
 ---
 
-*Generated from gap analysis comparing IMPLEMENTATION_SUMMARY.md against actual codebase and Manake-Roadmap.md*
-*Last updated: January 9, 2026*
+*Generated from gap analysis comparing IMPLEMENTATION_SUMMARY.md against current codebase and Manake-500-Step-Implementation-Guide.md*
+*Last updated: January 10, 2026*

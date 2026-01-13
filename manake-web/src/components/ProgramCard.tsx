@@ -17,11 +17,33 @@ interface ProgramCardProps {
   variant?: "default" | "featured";
 }
 
+const getProgramColorClasses = (color: string) => {
+  switch (color) {
+    case "secondary":
+      return {
+        badge: "bg-secondary-100 text-secondary-700",
+        overlay: "from-secondary-900/70",
+      };
+    case "accent":
+      return {
+        badge: "bg-accent-100 text-accent-700",
+        overlay: "from-accent-900/70",
+      };
+    case "primary":
+    default:
+      return {
+        badge: "bg-primary-100 text-primary-700",
+        overlay: "from-primary-900/70",
+      };
+  }
+};
+
 export const ProgramCard = ({
   program,
   variant = "default",
 }: ProgramCardProps) => {
   if (variant === "featured") {
+    const colors = getProgramColorClasses(program.color);
     return (
       <div className="bg-white rounded-2xl overflow-hidden shadow-xl">
         <div className="grid md:grid-cols-2 gap-0">
@@ -32,12 +54,12 @@ export const ProgramCard = ({
               className="w-full h-full object-cover"
             />
             <div
-              className={`absolute inset-0 bg-gradient-to-t from-${program.color}-900/70 to-transparent`}
+              className={`absolute inset-0 bg-gradient-to-t ${colors.overlay} to-transparent pointer-events-none`}
             />
           </div>
           <div className="p-8">
             <span
-              className={`inline-block bg-${program.color}-100 text-${program.color}-700 text-sm font-semibold px-3 py-1 rounded-full mb-4`}
+              className={`inline-block ${colors.badge} text-sm font-semibold px-3 py-1 rounded-full mb-4`}
             >
               Featured Program
             </span>
@@ -46,7 +68,7 @@ export const ProgramCard = ({
             </h3>
             <p className="text-gray-600 mb-6">{program.description}</p>
 
-            <div className="flex gap-6 mb-6 text-sm text-gray-600">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
                 <Clock size={18} className="text-primary-600" />
                 <span>{program.duration}</span>

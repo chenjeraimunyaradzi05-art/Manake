@@ -45,7 +45,9 @@ export default function ForgotPasswordScreen() {
 
   const handleSubmit = async () => {
     if (!validateEmail()) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       return;
     }
 
@@ -54,10 +56,14 @@ export default function ForgotPasswordScreen() {
     try {
       await authApi.forgotPassword(email.trim().toLowerCase());
       setScreenState("success");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
     } catch (err) {
       setScreenState("input");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       showToast(
         err instanceof Error
           ? err.message

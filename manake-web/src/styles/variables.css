@@ -1,88 +1,146 @@
 /**
  * CSS Custom Properties (Variables)
- * Design tokens for consistent styling
+ * Royal Precious Stone Design System - Feminine & Celestial Theme
  */
 
 :root {
-  /* Primary Colors - Blue (Trust, Hope) */
-  --color-primary-50: #eff8ff;
-  --color-primary-100: #dbeefe;
-  --color-primary-200: #bee2fe;
-  --color-primary-300: #91d1fd;
-  --color-primary-400: #5db8f9;
-  --color-primary-500: #3899f5;
-  --color-primary-600: #2279ea;
-  --color-primary-700: #1a62d7;
-  --color-primary-800: #1c50ae;
-  --color-primary-900: #1c4589;
-  --color-primary-950: #152b53;
+  /* ===== ROYAL PRECIOUS STONE COLOUR PALETTE ===== */
+  
+  /* Primary - Royal Purple (Nobility, Wisdom) */
+  --color-primary-50: #f5f0fb;
+  --color-primary-100: #ebe0f7;
+  --color-primary-200: #d7c1ef;
+  --color-primary-300: #c3a2e7;
+  --color-primary-400: #9b7ec4;
+  --color-primary-500: #7b5da5;
+  --color-primary-600: #6b4c9a;
+  --color-primary-700: #5a3d82;
+  --color-primary-800: #4a3269;
+  --color-primary-900: #3a2854;
+  --color-primary-950: #1a0f2e;
 
-  /* Secondary Colors - Green (Growth, Recovery) */
-  --color-secondary-50: #f0fdf4;
-  --color-secondary-100: #dcfce7;
-  --color-secondary-200: #bbf7d0;
-  --color-secondary-300: #86efac;
-  --color-secondary-400: #4ade80;
-  --color-secondary-500: #22c55e;
-  --color-secondary-600: #16a34a;
-  --color-secondary-700: #15803d;
-  --color-secondary-800: #166534;
-  --color-secondary-900: #14532d;
-  --color-secondary-950: #052e16;
+  /* Secondary - Scarlet & Rose (Passion, Energy) */
+  --color-secondary-50: #fef2f4;
+  --color-secondary-100: #fde6ea;
+  --color-secondary-200: #fbd0d9;
+  --color-secondary-300: #f7a8b9;
+  --color-secondary-400: #e85b8a;
+  --color-secondary-500: #c41e3a;
+  --color-secondary-600: #a81832;
+  --color-secondary-700: #800020;
+  --color-secondary-800: #6b1a2b;
+  --color-secondary-900: #5c1b2a;
+  --color-secondary-950: #330a13;
 
-  /* Accent Colors - Orange (Warmth, Energy) */
-  --color-accent-50: #fff7ed;
-  --color-accent-100: #ffedd5;
-  --color-accent-200: #fed7aa;
-  --color-accent-300: #fdba74;
-  --color-accent-400: #fb923c;
-  --color-accent-500: #f97316;
-  --color-accent-600: #ea580c;
-  --color-accent-700: #c2410c;
-  --color-accent-800: #9a3412;
-  --color-accent-900: #7c2d12;
-  --color-accent-950: #431407;
+  /* Accent - Rose Pink (Warmth, Compassion) */
+  --color-accent-50: #fef7fb;
+  --color-accent-100: #fdeef6;
+  --color-accent-200: #fcddef;
+  --color-accent-300: #f9c4e3;
+  --color-accent-400: #f4a4d3;
+  --color-accent-500: #e85b8a;
+  --color-accent-600: #d64d7d;
+  --color-accent-700: #b83d67;
+  --color-accent-800: #983554;
+  --color-accent-900: #7f3149;
+  --color-accent-950: #4d1528;
 
-  /* Hope Colors - Yellow/Amber */
+  /* Gold (Success, Achievement) */
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #ffd700;
+  --color-gold-600: #d4a000;
+  --color-gold-700: #a67c00;
+  --color-gold-800: #854d0e;
+  --color-gold-900: #713f12;
+  --color-gold-950: #422006;
+
+  /* Emerald (Growth, Healing) */
+  --color-emerald-50: #e0f7e8;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-300: #6ee7b7;
+  --color-emerald-400: #50c878;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #2d7a5a;
+  --color-emerald-700: #047857;
+  --color-emerald-800: #065f46;
+  --color-emerald-900: #064e3b;
+  --color-emerald-950: #022c22;
+
+  /* Celestial Blue (Trust, Serenity) */
+  --color-celestial-50: #f0f8ff;
+  --color-celestial-100: #e0f0ff;
+  --color-celestial-200: #bae2ff;
+  --color-celestial-300: #87ceeb;
+  --color-celestial-400: #5fb8e8;
+  --color-celestial-500: #4a90e2;
+  --color-celestial-600: #3573c4;
+  --color-celestial-700: #2a5aa0;
+  --color-celestial-800: #264b84;
+  --color-celestial-900: #24406c;
+  --color-celestial-950: #192948;
+
+  /* Rose Gold (Elegance) */
+  --color-rose-gold: #b76e79;
+  --color-rose-gold-light: #d4a5ad;
+  --color-rose-gold-dark: #8b4f57;
+
+  /* Neutral palette - Refined */
+  --color-gray-50: #f9f3fb;
+  --color-gray-100: #f3eef6;
+  --color-gray-200: #e8e0e8;
+  --color-gray-300: #d8d0d8;
+  --color-gray-400: #a8a0a8;
+  --color-gray-500: #787078;
+  --color-gray-600: #4b4548;
+  --color-gray-700: #3d383b;
+  --color-gray-800: #2d1b3d;
+  --color-gray-900: #1a0f2e;
+
+  /* Diamond White */
+  --color-diamond-white: #f8f6ff;
+  --color-diamond-sparkle: #ffffff;
+  --color-diamond-light: #f0f8ff;
+
+  /* Cosmic Deep (Dark backgrounds) */
+  --color-cosmic-deep: #1a0f2e;
+  --color-cosmic-purple: #2d1b69;
+
+  /* Hope Colors - Gold/Amber */
   --color-hope-light: #fef3c7;
-  --color-hope: #f59e0b;
-  --color-hope-dark: #b45309;
-
-  /* Neutral Colors */
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
+  --color-hope: #ffd700;
+  --color-hope-dark: #d4a000;
 
   /* Semantic tokens (RGB triples for Tailwind alpha support) */
-  --semantic-bg: 249 250 251; /* gray-50 */
+  --semantic-bg: 248 246 255; /* diamond-white */
   --semantic-surface: 255 255 255;
-  --semantic-surface-alt: 243 244 246; /* gray-100 */
-  --semantic-text: 17 24 39; /* gray-900 */
-  --semantic-text-muted: 75 85 99; /* gray-600 */
-  --semantic-border: 229 231 235; /* gray-200 */
-  --semantic-ring: 26 98 215; /* primary-700 */
+  --semantic-surface-alt: 245 240 251; /* primary-50 */
+  --semantic-text: 26 15 46; /* cosmic-deep */
+  --semantic-text-muted: 107 76 154; /* primary-600 */
+  --semantic-border: 232 224 232; /* gray-200 */
+  --semantic-ring: 107 76 154; /* primary-600 */
 
-  /* Shadow tokens */
-  --shadow-glow: 0 0 0 4px rgb(var(--semantic-ring) / 0.25);
-  --shadow-primary: 0 10px 25px -10px rgb(26 98 215 / 0.35);
-  --shadow-secondary: 0 10px 25px -10px rgb(34 197 94 / 0.30);
-  --shadow-accent: 0 10px 25px -10px rgb(249 115 22 / 0.30);
+  /* Shadow tokens with precious stone effects */
+  --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.4), 0 0 40px rgba(228, 91, 138, 0.3);
+  --shadow-primary: 0 10px 25px -10px rgba(107, 76, 154, 0.35);
+  --shadow-secondary: 0 10px 25px -10px rgba(196, 30, 58, 0.30);
+  --shadow-accent: 0 10px 25px -10px rgba(232, 91, 138, 0.30);
+  --shadow-gold: 0 8px 25px rgba(255, 215, 0, 0.35);
+  --shadow-emerald: 0 10px 25px -10px rgba(80, 200, 120, 0.30);
+
   /* Status Colors */
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-  --color-info: #3b82f6;
+  --color-success: #50c878;
+  --color-warning: #ffd700;
+  --color-error: #c41e3a;
+  --color-info: #4a90e2;
 
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Poppins', system-ui, sans-serif;
+  --font-display: 'Georgia', serif;
   
   /* Font Sizes */
   --text-xs: 0.75rem;
@@ -111,17 +169,17 @@
 
   /* Border Radius */
   --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-sm: 0 2px 8px rgba(107, 76, 154, 0.12);
+  --shadow-md: 0 4px 16px rgba(107, 76, 154, 0.15);
+  --shadow-lg: 0 12px 32px rgba(107, 76, 154, 0.2);
+  --shadow-xl: 0 20px 40px rgba(107, 76, 154, 0.25);
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -136,30 +194,30 @@
   --z-tooltip: 500;
 }
 
-/* Dark theme overrides */
+/* Dark theme overrides - Cosmic Night */
 [data-theme="dark"] {
-  --semantic-bg: 11 18 32;
-  --semantic-surface: 17 24 39;
-  --semantic-surface-alt: 31 41 55;
-  --semantic-text: 243 244 246;
-  --semantic-text-muted: 156 163 175;
-  --semantic-border: 55 65 81;
-  --semantic-ring: 56 153 245; /* primary-500 */
+  --semantic-bg: 26 15 46; /* cosmic-deep */
+  --semantic-surface: 45 27 105; /* cosmic-purple */
+  --semantic-surface-alt: 58 40 84; /* primary-900 */
+  --semantic-text: 248 246 255; /* diamond-white */
+  --semantic-text-muted: 155 126 196; /* primary-400 */
+  --semantic-border: 74 50 105;
+  --semantic-ring: 155 126 196; /* primary-400 */
 
-  --shadow-glow: 0 0 0 4px rgb(var(--semantic-ring) / 0.22);
-  --shadow-primary: 0 10px 25px -10px rgb(56 153 245 / 0.25);
-  --shadow-secondary: 0 10px 25px -10px rgb(34 197 94 / 0.22);
-  --shadow-accent: 0 10px 25px -10px rgb(249 115 22 / 0.22);
+  --shadow-glow: 0 0 20px rgba(255, 215, 0, 0.3), 0 0 40px rgba(228, 91, 138, 0.2);
+  --shadow-primary: 0 10px 25px -10px rgba(155, 126, 196, 0.3);
+  --shadow-secondary: 0 10px 25px -10px rgba(232, 91, 138, 0.25);
+  --shadow-accent: 0 10px 25px -10px rgba(244, 164, 211, 0.25);
 
-  /* Optional: flip gray scale for dark mode */
-  --color-gray-50: #111827;
-  --color-gray-100: #1f2937;
-  --color-gray-200: #374151;
-  --color-gray-300: #4b5563;
-  --color-gray-400: #6b7280;
-  --color-gray-500: #9ca3af;
-  --color-gray-600: #d1d5db;
-  --color-gray-700: #e5e7eb;
-  --color-gray-800: #f3f4f6;
-  --color-gray-900: #f9fafb;
+  /* Flip gray scale for dark mode */
+  --color-gray-50: #1a0f2e;
+  --color-gray-100: #2d1b3d;
+  --color-gray-200: #3d383b;
+  --color-gray-300: #4b4548;
+  --color-gray-400: #787078;
+  --color-gray-500: #a8a0a8;
+  --color-gray-600: #d8d0d8;
+  --color-gray-700: #e8e0e8;
+  --color-gray-800: #f3eef6;
+  --color-gray-900: #f9f3fb;
 }

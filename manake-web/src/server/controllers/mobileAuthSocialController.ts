@@ -3,7 +3,12 @@ import type { Request, Response } from "express";
 import crypto from "crypto";
 import { User } from "../models/User";
 import { SocialAccount, type SocialPlatform } from "../models/SocialAccount";
-import { generateTokenPair } from "../utils/jwt";
+import { RefreshToken } from "../models/RefreshToken";
+import {
+  generateTokenPair,
+  hashToken,
+  verifyRefreshToken,
+} from "../utils/jwt";
 import { BadRequestError } from "../errors";
 import { exchangeAppleCode, verifyGoogleIdToken } from "../services/socialAuth";
 
@@ -13,6 +18,8 @@ type LegacyFailure = { success: false; data: null; message: string };
 type LegacyAuthData = {
   user: ReturnType<(typeof User)["prototype"]["toPublicJSON"]>;
   token: string;
+  refreshToken?: string;
+  expiresIn?: number;
 };
 
 function ok(res: Response, data: LegacyAuthData, message = "Login successful") {
@@ -143,7 +150,23 @@ export async function legacySocialLoginGoogle(
       role: user.role,
     });
 
-    return ok(res, { user: user.toPublicJSON(), token: tokens.accessToken });
+    // Persist refresh token hash for rotation/revocation (optional for mobile, but enables refresh flow)
+    const refreshPayload = verifyRefreshToken(tokens.refreshToken);
+    await RefreshToken.create({
+      userId: user._id,
+      tokenHash: hashToken(tokens.refreshToken),
+      deviceInfo: req.headers["user-agent"],
+      ipAddress: req.ip,
+      expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
+      revoked: false,
+    });
+
+    return ok(res, {
+      user: user.toPublicJSON(),
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: tokens.expiresIn,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Social login failed";
@@ -195,7 +218,23 @@ export async function legacySocialLoginApple(
       role: user.role,
     });
 
-    return ok(res, { user: user.toPublicJSON(), token: tokens.accessToken });
+    // Persist refresh token hash for rotation/revocation (optional for mobile, but enables refresh flow)
+    const refreshPayload = verifyRefreshToken(tokens.refreshToken);
+    await RefreshToken.create({
+      userId: user._id,
+      tokenHash: hashToken(tokens.refreshToken),
+      deviceInfo: req.headers["user-agent"],
+      ipAddress: req.ip,
+      expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
+      revoked: false,
+    });
+
+    return ok(res, {
+      user: user.toPublicJSON(),
+      token: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresIn: tokens.expiresIn,
+    });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Social login failed";

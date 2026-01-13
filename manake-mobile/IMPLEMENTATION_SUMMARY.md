@@ -2,6 +2,8 @@
 
 ## Date: January 9, 2026
 
+**Updated:** January 10, 2026
+
 This document summarizes the changes made to the `manake-mobile` application.
 
 ---
@@ -236,8 +238,9 @@ npm run lint
 
 1. ~~Implement auth screens (login, signup, password reset)~~ ✅ DONE
 2. ~~Add Input component~~ ✅ DONE
-3. Add biometric authentication (fingerprint/face ID)
-4. Implement OAuth social login (Google, Apple)
-5. Add E2E testing with Detox
-6. Build messaging screens
-7. Deploy to App Store/Play Store
+3. ~~Add biometric authentication (fingerprint/face ID)~~ ✅ DONE (implemented + wired on login)
+4. ~~Implement OAuth social login (Google, Apple)~~ ✅ DONE (implemented + wired on login; Apple requires backend code exchange)
+5. Ensure backend supports social login end-to-end (verify Google id_token, exchange Apple code, issue Manake JWTs)
+6. Add E2E testing with Detox
+7. Build messaging screens
+8. Deploy to App Store/Play Store

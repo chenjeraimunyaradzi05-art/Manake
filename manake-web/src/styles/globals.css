@@ -8,14 +8,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styles */
+/* Base styles - Royal Precious Stone Theme */
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-size: 13px;
+  }
+
+  /* Respect user's reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
   
   body {
-    @apply font-sans text-gray-900 antialiased;
+    @apply font-sans antialiased;
+    background: linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%);
+    color: #1a0f2e;
   }
   
   h1, h2, h3, h4, h5, h6 {
@@ -23,69 +33,224 @@
   }
 }
 
-/* Component styles */
+/* Component styles - Royal Precious Stone Design */
 @layer components {
+  /* Primary Button - Gold accent with purple */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-3 rounded-lg 
-           transition-all duration-200 inline-flex items-center justify-center gap-2
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply text-white font-semibold px-8 py-4 rounded-xl 
+           transition-all duration-300 inline-flex items-center justify-center gap-2
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           disabled:opacity-50 disabled:cursor-not-allowed
+           shadow-lg hover:shadow-xl hover:-translate-y-0.5;
+    background: linear-gradient(135deg, #6b4c9a 0%, #9b7ec4 100%);
+    --tw-ring-color: #ffd700;
   }
   
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #5a3d82 0%, #7b5da5 100%);
+    box-shadow: 0 0 20px rgba(107, 76, 154, 0.4);
+  }
+  
+  /* Secondary Button - Gold with shine effect */
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-primary-600 font-semibold px-6 py-3 rounded-lg 
-           border-2 border-primary-600 transition-all duration-200 inline-flex items-center justify-center gap-2
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    @apply font-semibold px-8 py-4 rounded-xl 
+           transition-all duration-300 inline-flex items-center justify-center gap-2
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           shadow-lg hover:shadow-xl hover:-translate-y-0.5 relative overflow-hidden;
+    background: linear-gradient(135deg, #ffd700 0%, #fef3c7 100%);
+    border: 2px solid #d4a000;
+    color: #1a0f2e;
+    --tw-ring-color: #ffd700;
   }
   
+  .btn-secondary::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: diamond-shine 3s ease-in-out infinite;
+  }
+  
+  .btn-secondary:hover {
+    background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+  }
+  
+  /* Accent Button - Rose/Pink */
   .btn-accent {
-    @apply bg-accent-500 hover:bg-accent-600 text-white font-semibold px-6 py-3 rounded-lg 
-           transition-all duration-200 inline-flex items-center justify-center gap-2
-           focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2;
+    @apply text-white font-semibold px-8 py-4 rounded-xl 
+           transition-all duration-300 inline-flex items-center justify-center gap-2
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           shadow-lg hover:shadow-xl hover:-translate-y-0.5;
+    background: linear-gradient(135deg, #e85b8a 0%, #f4a4d3 100%);
+    --tw-ring-color: #e85b8a;
   }
   
+  .btn-accent:hover {
+    background: linear-gradient(135deg, #d64d7d 0%, #e85b8a 100%);
+    box-shadow: 0 0 20px rgba(232, 91, 138, 0.4);
+  }
+  
+  /* Emerald Button - Green healing */
+  .btn-emerald {
+    @apply text-white font-semibold px-8 py-4 rounded-xl 
+           transition-all duration-300 inline-flex items-center justify-center gap-2
+           focus:outline-none focus:ring-2 focus:ring-offset-2
+           shadow-lg hover:shadow-xl hover:-translate-y-0.5;
+    background: linear-gradient(135deg, #2d7a5a 0%, #50c878 100%);
+    --tw-ring-color: #50c878;
+  }
+  
+  .btn-emerald:hover {
+    background: linear-gradient(135deg, #047857 0%, #2d7a5a 100%);
+    box-shadow: 0 0 20px rgba(80, 200, 120, 0.4);
+  }
+  
+  /* Emergency Button */
   .btn-emergency {
-    @apply bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-3 rounded-lg 
+    @apply text-white font-bold px-8 py-4 rounded-xl 
            transition-all duration-200 inline-flex items-center justify-center gap-2
-           animate-pulse-slow focus:outline-none focus:ring-2 focus:ring-red-500;
+           focus:outline-none focus:ring-2 focus:ring-red-500 shadow-lg;
+    background: linear-gradient(135deg, #c41e3a 0%, #800020 100%);
+    animation: diamond-glow 2s ease-in-out infinite;
   }
   
+  /* Card - Diamond style with subtle glow */
   .card {
-    @apply bg-white rounded-xl shadow-md overflow-hidden transition-shadow duration-200 hover:shadow-lg;
+    @apply rounded-2xl shadow-lg overflow-hidden transition-all duration-300;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 246, 255, 0.9));
+    border: 1px solid rgba(155, 126, 196, 0.2);
+    backdrop-filter: blur(10px);
   }
   
   .card-hover {
-    @apply card transform hover:-translate-y-1 transition-all duration-200;
+    @apply card transform hover:-translate-y-2 hover:shadow-xl;
   }
   
+  .card-hover:hover {
+    box-shadow: 0 20px 40px rgba(107, 76, 154, 0.2), 0 0 30px rgba(255, 215, 0, 0.1);
+    border-color: rgba(255, 215, 0, 0.3);
+  }
+  
+  /* Feature Card - Royal gradient border */
+  .feature-card {
+    @apply rounded-2xl p-8 transition-all duration-300 relative;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 246, 255, 0.9));
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 1rem;
+    padding: 2px;
+    background: linear-gradient(135deg, #6b4c9a, #ffd700, #e85b8a);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+  }
+  
+  .feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(107, 76, 154, 0.25);
+  }
+  
+  /* Input Field - Royal style */
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 rounded-lg 
+    @apply w-full px-5 py-4 rounded-xl 
            focus:ring-2 focus:ring-primary-500 focus:border-transparent
-           placeholder-gray-400 transition-all duration-200;
+           placeholder-gray-400 transition-all duration-300;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(155, 126, 196, 0.3);
+    backdrop-filter: blur(10px);
   }
   
+  .input-field:focus {
+    border-color: #6b4c9a;
+    box-shadow: 0 0 20px rgba(107, 76, 154, 0.2);
+  }
+  
+  /* Section Headings */
   .section-heading {
-    @apply text-3xl md:text-4xl font-bold text-gray-900 mb-4;
+    @apply text-lg md:text-xl lg:text-2xl font-bold mb-4;
+    background: linear-gradient(135deg, #6b4c9a 0%, #e85b8a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   
   .section-subheading {
-    @apply text-lg text-gray-600 max-w-2xl;
+    @apply text-xs md:text-sm text-primary-700 max-w-2xl;
   }
   
   .container-custom {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    @apply max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8;
   }
   
-  .gradient-primary {
-    @apply bg-gradient-to-r from-primary-600 to-primary-800;
+  /* Gradient backgrounds */
+  .gradient-cosmic {
+    background: linear-gradient(135deg, #1a0f2e 0%, #2d1b69 50%, #6b4c9a 100%);
   }
   
-  .gradient-hope {
-    @apply bg-gradient-to-r from-secondary-500 to-primary-600;
+  .gradient-royal {
+    background: linear-gradient(135deg, #6b4c9a 0%, #9b7ec4 50%, #f4a4d3 100%);
   }
   
+  .gradient-rose {
+    background: linear-gradient(135deg, #c41e3a 0%, #e85b8a 50%, #f4a4d3 100%);
+  }
+  
+  .gradient-emerald {
+    background: linear-gradient(135deg, #2d7a5a 0%, #50c878 50%, #6ee7b7 100%);
+  }
+  
+  .gradient-gold {
+    background: linear-gradient(135deg, #a67c00 0%, #ffd700 50%, #fef3c7 100%);
+  }
+  
+  /* Text gradients */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-secondary-500;
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #6b4c9a 0%, #e85b8a 100%);
+  }
+  
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #d4a000 0%, #ffd700 100%);
+  }
+  
+  /* Stats card with glow */
+  .stat-card {
+    @apply rounded-2xl p-6 text-center transition-all duration-300;
+    background: linear-gradient(135deg, rgba(107, 76, 154, 0.1), rgba(248, 246, 255, 0.9));
+    border: 1px solid rgba(155, 126, 196, 0.2);
+  }
+  
+  .stat-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+  }
+  
+  /* Diamond accent */
+  .diamond-accent {
+    position: relative;
+  }
+  
+  .diamond-accent::before {
+    content: '◆';
+    color: #ffd700;
+    margin-right: 0.5rem;
+  }
+  
+  /* Glow text */
+  .glow-text {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 20px rgba(232, 91, 138, 0.3);
   }
 }
 
@@ -108,34 +273,60 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+  
+  .glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar - Royal theme */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-gray-100;
+  background: #f5f0fb;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full;
+  background: linear-gradient(135deg, #9b7ec4, #6b4c9a);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-400;
+  background: linear-gradient(135deg, #7b5da5, #5a3d82);
 }
 
-/* Loading spinner */
+/* Loading spinner - Royal */
 .spinner {
-  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600;
+  @apply animate-spin rounded-full h-8 w-8;
+  border: 3px solid #f5f0fb;
+  border-top-color: #6b4c9a;
 }
 
-/* WhatsApp floating button */
+/* WhatsApp floating button - Enhanced */
 .whatsapp-float {
-  @apply fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg
-         transition-all duration-200 hover:scale-110;
+  @apply fixed bottom-6 right-6 z-50 text-white p-4 rounded-full shadow-lg
+         transition-all duration-300 hover:scale-110;
+  background: linear-gradient(135deg, #50c878 0%, #2d7a5a 100%);
+  box-shadow: 0 8px 25px rgba(80, 200, 120, 0.4);
+}
+
+.whatsapp-float:hover {
+  box-shadow: 0 12px 30px rgba(80, 200, 120, 0.5);
+}
+
+/* Keyframe animations */
+@keyframes diamond-shine {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes diamond-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(196, 30, 58, 0.4), 0 0 40px rgba(128, 0, 32, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(196, 30, 58, 0.6), 0 0 60px rgba(128, 0, 32, 0.3); }
 }
 
 @keyframes flag-wave {

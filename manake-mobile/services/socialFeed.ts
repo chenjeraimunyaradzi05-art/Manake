@@ -51,6 +51,8 @@ export interface SocialPost {
   likes?: number;
   comments?: number;
   shares?: number;
+  isLiked?: boolean;
+  isShared?: boolean;
   author: {
     name: string;
     username: string;

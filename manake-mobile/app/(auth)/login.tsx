@@ -72,17 +72,23 @@ export default function LoginScreen() {
     clearError();
 
     if (!validateForm()) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       return;
     }
 
     try {
       await login({ email: email.trim().toLowerCase(), password });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, "success");
       router.replace("/(tabs)");
     } catch (err) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       showToast(
         err instanceof Error ? err.message : ERROR_MESSAGES.LOGIN_FAILED,
         "error",
@@ -153,7 +159,7 @@ export default function LoginScreen() {
     }
 
     try {
-      setAuthToken(token);
+      await setAuthToken(token);
       await useAuthStore.getState().loadUser();
       showToast(SUCCESS_MESSAGES.LOGIN_SUCCESS, "success");
       router.replace("/(tabs)");

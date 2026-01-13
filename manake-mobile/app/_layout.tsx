@@ -3,12 +3,41 @@ import { useEffect } from "react";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
+import * as Sentry from "@sentry/react-native";
 import { theme } from "../constants";
 import { ErrorBoundary, ToastProvider, NoInternetBanner } from "../components";
 import { useAuth, useNotifications } from "../hooks";
 import { syncManager } from "../services/syncManager";
 
 SplashScreen.preventAutoHideAsync();
+
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN,
+  enabled: Boolean(process.env.EXPO_PUBLIC_SENTRY_DSN),
+  tracesSampleRate: 0.1,
+  profilesSampleRate: 0.1,
+  enableAutoPerformanceTracing: true,
+  environment: process.env.NODE_ENV,
+  beforeSend(event) {
+    if (process.env.NODE_ENV === "development") return null;
+
+    if (event.user) {
+      delete (event.user as any).email;
+      delete (event.user as any).ip_address;
+    }
+
+    if (event.request) {
+      if (event.request.headers) {
+        const { authorization, cookie, ...rest } = event.request.headers;
+        event.request.headers = rest;
+      }
+      delete (event.request as any).cookies;
+      delete (event.request as any).data;
+    }
+
+    return event;
+  },
+});
 
 function RootLayoutContent() {
   const { isRestoring } = useAuth();
@@ -59,6 +88,13 @@ function RootLayoutContent() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="webview"
+          options={{
+            headerShown: true,
+            headerTitle: "Browser",
+          }}
+        />
         <Stack.Screen
           name="profile/edit"
           options={{

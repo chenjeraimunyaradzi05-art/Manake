@@ -1,6 +1,6 @@
 /**
  * Animation Utilities
- * Reusable CSS animations for the Manake platform
+ * Royal Precious Stone Design System - Celestial Animations
  */
 
 /* Fade Animations */
@@ -101,7 +101,128 @@
   }
 }
 
-/* Pulse & Bounce */
+/* ===== ROYAL PRECIOUS STONE ANIMATIONS ===== */
+
+/* Diamond Glow - Pulsating gem effect */
+@keyframes diamondGlow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), 0 0 40px rgba(232, 91, 138, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(232, 91, 138, 0.3);
+  }
+}
+
+/* Celestial Pulse - Ethereal pulsing */
+@keyframes celestialPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Diamond Shine - Sweeping light effect */
+@keyframes diamondShine {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+/* Sparkle - Star twinkling */
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+/* Float - Gentle floating motion */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Royal Pulse - Regal pulsing */
+@keyframes royalPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(107, 76, 154, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(107, 76, 154, 0.5), 0 0 45px rgba(155, 126, 196, 0.3);
+  }
+}
+
+/* Rose Bloom - Expanding rose effect */
+@keyframes roseBloom {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Emerald Shimmer - Green gem effect */
+@keyframes emeraldShimmer {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Gold Gleam - Metallic shine */
+@keyframes goldGleam {
+  0% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.2);
+  }
+  100% {
+    filter: brightness(1);
+  }
+}
+
+/* Cosmic Drift - Slow space-like movement */
+@keyframes cosmicDrift {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(5px) translateY(-5px);
+  }
+  50% {
+    transform: translateX(0) translateY(-10px);
+  }
+  75% {
+    transform: translateX(-5px) translateY(-5px);
+  }
+}
+
+/* Standard Pulse & Bounce */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -141,7 +262,7 @@
   }
 }
 
-/* Skeleton Loading */
+/* Skeleton Loading - Royal shimmer */
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -213,8 +334,58 @@
   animation: spin 1s linear infinite;
 }
 
+/* Royal Precious Stone Animation Classes */
+.animate-diamond-glow {
+  animation: diamondGlow 2s ease-in-out infinite;
+}
+
+.animate-celestial-pulse {
+  animation: celestialPulse 3s ease-in-out infinite;
+}
+
+.animate-diamond-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-diamond-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: diamondShine 3s ease-in-out infinite;
+}
+
+.animate-sparkle {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-royal-pulse {
+  animation: royalPulse 2s ease-in-out infinite;
+}
+
+.animate-rose-bloom {
+  animation: roseBloom 0.6s ease-out forwards;
+}
+
+.animate-gold-gleam {
+  animation: goldGleam 2s ease-in-out infinite;
+}
+
+.animate-cosmic-drift {
+  animation: cosmicDrift 8s ease-in-out infinite;
+}
+
+/* Shimmer with royal colors */
 .animate-shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background: linear-gradient(90deg, #f5f0fb 25%, #d7c1ef 50%, #f5f0fb 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
@@ -229,6 +400,9 @@
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
 .stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+.stagger-7 { animation-delay: 0.7s; }
+.stagger-8 { animation-delay: 0.8s; }
 
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {

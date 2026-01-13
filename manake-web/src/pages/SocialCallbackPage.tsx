@@ -3,6 +3,10 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { completeSocialAuth, SocialProvider } from "../services/socialAuth";
 import { useAuth } from "../context/AuthContext";
+import {
+  safeStorageGetItem,
+  safeStorageRemoveItem,
+} from "../utils/safeStorage";
 
 const isSupportedProvider = (provider?: string): provider is SocialProvider =>
   provider === "google" || provider === "facebook";
@@ -41,7 +45,7 @@ export const SocialCallbackPage = () => {
     }
 
     const stateKey = `social_oauth_state_${provider}`;
-    const storedRaw = localStorage.getItem(stateKey);
+    const storedRaw = safeStorageGetItem(stateKey);
     const stored = storedRaw
       ? (JSON.parse(storedRaw) as { state?: string; redirectUri?: string })
       : null;
@@ -75,7 +79,7 @@ export const SocialCallbackPage = () => {
             null,
         },
       });
-      localStorage.removeItem(stateKey);
+      safeStorageRemoveItem(stateKey);
       setStatus("success");
       setMessage("Signed in successfully. Redirecting...");
       setTimeout(() => navigate("/"), 600);

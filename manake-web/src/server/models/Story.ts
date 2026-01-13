@@ -69,6 +69,10 @@ const storySchema = new mongoose.Schema(
       enum: ["draft", "pending", "published", "rejected"],
       default: "pending",
     },
+    likedBy: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+      default: [],
+    },
     featured: {
       type: Boolean,
       default: false,

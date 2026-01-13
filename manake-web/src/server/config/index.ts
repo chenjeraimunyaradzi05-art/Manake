@@ -4,7 +4,7 @@
  */
 
 export { connectDB } from "./db";
-export { stripe } from "./stripe";
+export { getStripe, requireStripe } from "./stripe";
 export {
   cache,
   CacheService,

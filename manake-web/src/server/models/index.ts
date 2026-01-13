@@ -25,3 +25,15 @@ export type {
 } from "./WebhookEvent";
 export { SocialAccount } from "./SocialAccount";
 export type { ISocialAccount, SocialPlatform } from "./SocialAccount";
+export { SocialPostMetric } from "./SocialPostMetric";
+export type { SocialPlatform as SocialFeedPlatform } from "./SocialPostMetric";
+export { Post } from './Post';
+export type { IPost } from './Post';
+export { Connection } from './Connection';
+export type { IConnection } from './Connection';
+export { Group } from './Group';
+export type { IGroup } from './Group';
+export { Mentorship } from './Mentorship';
+export type { IMentorship } from './Mentorship';
+export { Notification } from './Notification';
+export type { INotification } from './Notification';

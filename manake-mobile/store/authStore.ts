@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const response = await authApi.login(credentials);
       if (response.success) {
-        setAuthToken(response.data.token);
+        await setAuthToken(response.data.token);
         set({
           user: response.data.user,
           token: response.data.token,
@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     try {
       const response = await authApi.register(data);
       if (response.success) {
-        setAuthToken(response.data.token);
+        await setAuthToken(response.data.token);
         set({
           user: response.data.user,
           token: response.data.token,
@@ -86,7 +86,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           : await authApi.socialLoginApple(payload as any);
 
       if (response.success) {
-        setAuthToken((response as any).data.token);
+        await setAuthToken((response as any).data.token);
         set({
           user: (response as any).data.user,
           token: (response as any).data.token,
@@ -112,7 +112,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     } catch {
       // Continue with logout even if API call fails
     } finally {
-      setAuthToken(null);
+      await setAuthToken(null);
       set({
         user: null,
         token: null,
@@ -144,7 +144,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       }
     } catch {
       // Token might be invalid, clear auth state
-      setAuthToken(null);
+      await setAuthToken(null);
       set({
         user: null,
         token: null,

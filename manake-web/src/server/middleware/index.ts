@@ -30,6 +30,7 @@ export {
   loginSchema,
   passwordResetRequestSchema,
   passwordResetSchema,
+  addCommentSchema,
 } from "./validation";
 
 // Rate limiting
@@ -49,4 +50,5 @@ export {
   corsPreflightHandler,
   sanitizeRequest,
   validateApiKey,
+  csrfOriginCheck,
 } from "./security";

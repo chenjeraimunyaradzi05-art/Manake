@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Donation } from "../models/Donation";
-import { stripe } from "../config/stripe";
+import { requireStripe } from "../config/stripe";
+import { logger } from "../utils/logger";
 
 // Validation constants
 const MIN_DONATION_CENTS = 100; // $1 minimum
@@ -54,6 +55,7 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
 
     // Handle different payment methods
     if (paymentMethod === "card") {
+      const stripe = requireStripe();
       // Create a Stripe Checkout Session (cleaner than PaymentIntent for donations)
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
@@ -127,7 +129,7 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("Payment Error:", message, error);
+    logger.error("Payment error", { message, error });
     res
       .status(500)
       .json({ message: "Payment initiation failed. Please try again." });

@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { Story } from "../models/Story";
+import { User } from "../models/User";
+import { logger } from "../utils/logger";
+import { escapeRegex } from "../utils/regex";
 
 export const getStories = async (req: Request, res: Response) => {
   try {
@@ -16,10 +19,12 @@ export const getStories = async (req: Request, res: Response) => {
       filter.featured = true;
     }
     if (search) {
+      const safeSearch = escapeRegex(String(search).trim().slice(0, 64));
+      const safeRegex = new RegExp(safeSearch, "i");
       filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { excerpt: { $regex: search, $options: "i" } },
-        { tags: { $in: [new RegExp(search as string, "i")] } },
+        { title: safeRegex },
+        { excerpt: safeRegex },
+        { tags: safeRegex },
       ];
     }
 
@@ -43,7 +48,7 @@ export const getStories = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching stories:", error);
+    logger.error("Error fetching stories", { error });
     res.status(500).json({ message: "Error fetching stories" });
   }
 };
@@ -54,7 +59,7 @@ export const getStoryById = async (req: Request, res: Response) => {
     if (!story) return res.status(404).json({ message: "Story not found" });
     res.json(story);
   } catch (error) {
-    console.error("Error fetching story:", error);
+    logger.error("Error fetching story", { error });
     res.status(500).json({ message: "Error fetching story" });
   }
 };
@@ -65,37 +70,61 @@ export const getStoryBySlug = async (req: Request, res: Response) => {
     if (!story) return res.status(404).json({ message: "Story not found" });
     res.json(story);
   } catch (error) {
-    console.error("Error fetching story by slug:", error);
+    logger.error("Error fetching story by slug", { error });
     res.status(500).json({ message: "Error fetching story" });
   }
 };
 
 export const likeStory = async (req: Request, res: Response) => {
   try {
-    const story = await Story.findById(req.params.id);
-    if (!story) return res.status(404).json({ message: "Story not found" });
+    if (!req.user?.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
 
-    story.likes += 1;
-    await story.save();
+    const storyId = req.params.id;
 
-    res.json({ likes: story.likes });
+    const updated = await Story.findOneAndUpdate(
+      { _id: storyId, likedBy: { $ne: req.user.userId } },
+      { $addToSet: { likedBy: req.user.userId }, $inc: { likes: 1 } },
+      { new: true }
+    ).select("likes");
+
+    if (!updated) {
+      const exists = await Story.findById(storyId).select("likes");
+      if (!exists) return res.status(404).json({ message: "Story not found" });
+      return res.json({ likes: exists.likes, liked: true });
+    }
+
+    res.json({ likes: updated.likes, liked: true });
   } catch (error) {
-    console.error("Error liking story:", error);
+    logger.error("Error liking story", { error });
     res.status(500).json({ message: "Error liking story" });
   }
 };
 
 export const unlikeStory = async (req: Request, res: Response) => {
   try {
-    const story = await Story.findById(req.params.id);
-    if (!story) return res.status(404).json({ message: "Story not found" });
+    if (!req.user?.userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
 
-    story.likes = Math.max(0, (story.likes || 0) - 1);
-    await story.save();
+    const storyId = req.params.id;
 
-    res.json({ likes: story.likes });
+    const updated = await Story.findOneAndUpdate(
+      { _id: storyId, likedBy: req.user.userId },
+      { $pull: { likedBy: req.user.userId }, $inc: { likes: -1 } },
+      { new: true }
+    ).select("likes");
+
+    if (!updated) {
+      const exists = await Story.findById(storyId).select("likes");
+      if (!exists) return res.status(404).json({ message: "Story not found" });
+      return res.json({ likes: exists.likes, liked: false });
+    }
+
+    res.json({ likes: Math.max(0, updated.likes), liked: false });
   } catch (error) {
-    console.error("Error unliking story:", error);
+    logger.error("Error unliking story", { error });
     res.status(500).json({ message: "Error unliking story" });
   }
 };
@@ -114,7 +143,7 @@ export const createStory = async (req: Request, res: Response) => {
       data: savedStory,
     });
   } catch (error) {
-    console.error("Error creating story:", error);
+    logger.error("Error creating story", { error });
     res.status(400).json({ message: "Error creating story" });
   }
 };
@@ -130,7 +159,7 @@ export const getComments = async (req: Request, res: Response) => {
       count: story.comments?.length || 0,
     });
   } catch (error) {
-    console.error("Error fetching comments:", error);
+    logger.error("Error fetching comments", { error });
     res.status(500).json({ message: "Error fetching comments" });
   }
 };
@@ -138,7 +167,14 @@ export const getComments = async (req: Request, res: Response) => {
 // Add a comment to a story
 export const addComment = async (req: Request, res: Response) => {
   try {
-    const { author, content } = req.body;
+    const { author: authorFromBody, content } = req.body;
+
+    // If authenticated, always derive author from user profile to prevent spoofing
+    let author = authorFromBody;
+    if (req.user?.userId) {
+      const user = await User.findById(req.user.userId).select("name email");
+      author = user?.name || user?.email || "User";
+    }
 
     // Validate input
     if (!author || typeof author !== "string" || author.trim().length < 2) {
@@ -180,7 +216,7 @@ export const addComment = async (req: Request, res: Response) => {
       comment: story.comments[story.comments.length - 1],
     });
   } catch (error) {
-    console.error("Error adding comment:", error);
+    logger.error("Error adding comment", { error });
     res.status(500).json({ message: "Error adding comment" });
   }
 };

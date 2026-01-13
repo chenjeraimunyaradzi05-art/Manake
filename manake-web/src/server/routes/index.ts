@@ -7,6 +7,8 @@ import storyRoutes from "./stories";
 import donationRoutes from "./donations";
 import contactRoutes from "./contact";
 import v1Routes from "./v1";
+import socialRoutes from "./v1/social";
+import internalSocialRoutes from "./v1/internalSocial";
 import { strictRateLimit } from "../middleware/rateLimit";
 import {
   legacySocialLoginApple,
@@ -36,6 +38,10 @@ router.post("/auth/social/apple", strictRateLimit, legacySocialLoginApple);
 router.use("/stories", storyRoutes);
 router.use("/donations", donationRoutes);
 router.use("/contact", contactRoutes);
+// Legacy mobile-compatible social feed endpoints (/api/social/*)
+router.use("/social", socialRoutes);
+// Community routes (Web Social Feed)
+router.use("/community", internalSocialRoutes);
 
 /**
  * API info endpoint

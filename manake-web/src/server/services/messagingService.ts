@@ -20,6 +20,7 @@ import {
   MessengerSendResult,
 } from "../integrations/facebookMessenger";
 import { NotFoundError } from "../errors";
+import { logger } from "../utils/logger";
 
 export type MessagingChannel =
   | "whatsapp"
@@ -163,7 +164,7 @@ export async function sendUnifiedMessage(
         metadata: result.error ? { error: result.error } : undefined,
       });
     } catch (dbErr) {
-      console.error("Failed to persist message", dbErr);
+      logger.error("Failed to persist message", { error: dbErr });
     }
 
     results.push(result);

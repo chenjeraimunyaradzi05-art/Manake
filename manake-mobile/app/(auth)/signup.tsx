@@ -103,12 +103,18 @@ export default function SignupScreen() {
     clearError();
 
     if (!validateForm()) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       return;
     }
 
     if (!acceptedTerms) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(
+          Haptics.NotificationFeedbackType.Warning,
+        );
+      }
       showToast("Please accept the Terms of Service", "warning");
       return;
     }
@@ -120,11 +126,15 @@ export default function SignupScreen() {
         password,
         phone: phone.trim() || undefined,
       });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
       showToast(SUCCESS_MESSAGES.REGISTER_SUCCESS, "success");
       router.replace("/(tabs)");
     } catch (err) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (Platform.OS !== "web") {
+        void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      }
       showToast(
         err instanceof Error ? err.message : ERROR_MESSAGES.REGISTER_FAILED,
         "error",

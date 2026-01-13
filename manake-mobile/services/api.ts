@@ -1,4 +1,9 @@
 import { Platform } from "react-native";
+import {
+  getAccessToken,
+  saveAccessToken,
+  clearAccessToken,
+} from "./secureTokenStorage";
 import type {
   Story,
   StoryComment,
@@ -21,14 +26,23 @@ const API_BASE_URL = __DEV__
     })
   : "https://manake.netlify.app/api";
 
-// Token storage (using a simple in-memory store, can be replaced with SecureStore)
-let authToken: string | null = null;
+// Token storage: SecureStore-backed, with in-memory cache
+let authTokenCache: string | null = null;
 
-export const setAuthToken = (token: string | null) => {
-  authToken = token;
+export const setAuthToken = async (token: string | null) => {
+  authTokenCache = token;
+  if (token) {
+    await saveAccessToken(token);
+  } else {
+    await clearAccessToken();
+  }
 };
 
-export const getAuthToken = () => authToken;
+export const getAuthToken = async () => {
+  if (authTokenCache) return authTokenCache;
+  authTokenCache = await getAccessToken();
+  return authTokenCache;
+};
 
 // Generic fetch wrapper with error handling
 async function fetchApi<T>(
@@ -42,6 +56,7 @@ async function fetchApi<T>(
     ...options.headers,
   };
 
+  const authToken = await getAuthToken();
   if (authToken) {
     (headers as Record<string, string>)["Authorization"] =
       `Bearer ${authToken}`;
@@ -249,7 +264,7 @@ export const authApi = {
     redirectUri?: string;
     clientId?: string;
   }): Promise<ApiResponse<{ user: User; token: string }>> => {
-    const raw = await fetchApi<unknown>("/auth/social/apple", {
+    const raw = await fetchApi<unknown>("/social/apple/exchange", {
       method: "POST",
       body: JSON.stringify(payload),
     });

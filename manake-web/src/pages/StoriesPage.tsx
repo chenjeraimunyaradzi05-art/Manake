@@ -16,7 +16,7 @@ export const StoriesPage = () => {
             Back to Home
           </Link>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <h1 className="text-xl md:text-2xl font-bold mb-4">
             Success Stories
           </h1>
           <p className="text-xl text-primary-100 max-w-2xl">

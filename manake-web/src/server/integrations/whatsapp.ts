@@ -5,6 +5,7 @@
 import crypto from "crypto";
 import axios, { AxiosInstance } from "axios";
 import { BadRequestError } from "../errors";
+import { logger } from "../utils/logger";
 
 export interface WhatsAppSendOptions {
   phoneNumber: string;
@@ -80,7 +81,10 @@ export async function sendWhatsAppMessage(
     };
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error("WhatsApp send error", axiosErr.response?.data || err);
+    logger.error("WhatsApp send error", {
+      error: err,
+      response: axiosErr.response?.data,
+    });
     throw new BadRequestError("Failed to send WhatsApp message");
   }
 }
@@ -107,7 +111,10 @@ export async function sendWhatsAppMedia(
     };
   } catch (err) {
     const axiosErr = err as { response?: { data?: unknown } };
-    console.error("WhatsApp media send error", axiosErr.response?.data || err);
+    logger.error("WhatsApp media send error", {
+      error: err,
+      response: axiosErr.response?.data,
+    });
     throw new BadRequestError("Failed to send WhatsApp media");
   }
 }

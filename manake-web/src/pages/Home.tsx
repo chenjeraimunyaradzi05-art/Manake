@@ -8,6 +8,7 @@ import {
   Calendar,
   Phone,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import { StoriesFeed } from "../components/StoriesFeed";
 import { DonationForm } from "../components/DonationForm";
@@ -69,27 +70,38 @@ export const HomePage = () => {
 
   return (
     <>
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary-700 via-primary-800 to-primary-900 text-white overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 bg-[url('/pattern.svg')] opacity-10" />
+      {/* Hero Section - Cosmic Royal Theme */}
+      <section className="relative overflow-hidden min-h-[90vh] flex items-center" style={{ background: 'linear-gradient(135deg, #1a0f2e 0%, #2d1b69 50%, #6b4c9a 100%)' }}>
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Sparkle effects */}
+          <div className="absolute top-20 left-10 w-2 h-2 bg-gold-500 rounded-full animate-sparkle" style={{ animationDelay: '0s' }} />
+          <div className="absolute top-40 right-20 w-3 h-3 bg-gold-400 rounded-full animate-sparkle" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute bottom-40 left-1/4 w-2 h-2 bg-accent-400 rounded-full animate-sparkle" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-gold-500 rounded-full animate-sparkle" style={{ animationDelay: '1.5s' }} />
+          
+          {/* Gradient orbs */}
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-accent-500/30 to-transparent rounded-full blur-3xl animate-celestial-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-gold-500/20 to-transparent rounded-full blur-3xl animate-celestial-pulse" style={{ animationDelay: '1s' }} />
+        </div>
 
         <div className="container-custom relative z-10 py-20 lg:py-28">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Hero Text */}
             <div className="text-center lg:text-left">
-              <span className="inline-block bg-white/20 text-white text-sm font-medium px-4 py-2 rounded-full mb-6">
+              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-gold-500/20 to-accent-500/20 backdrop-blur-sm text-gold-300 text-sm font-medium px-6 py-3 rounded-full mb-6 border border-gold-500/30">
+                <Sparkles size={16} className="text-gold-400" />
                 Zimbabwe's Premier Youth Rehabilitation Center
               </span>
 
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 leading-tight text-white">
                 Recovery is{" "}
-                <span className="text-secondary-400">Possible.</span>
+                <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">Possible.</span>
                 <br />
-                Hope is <span className="text-hope">Powerful.</span>
+                Hope is <span className="bg-gradient-to-r from-gold-400 to-gold-300 bg-clip-text text-transparent">Powerful.</span>
               </h1>
 
-              <p className="text-xl text-primary-100 mb-8 max-w-xl mx-auto lg:mx-0">
+              <p className="text-xl text-primary-200 mb-8 max-w-xl mx-auto lg:mx-0">
                 Manake Rehabilitation Center empowers youth in Zimbabwe to
                 overcome drug and alcohol addiction through comprehensive
                 recovery programs, life skills training, and unwavering
@@ -99,14 +111,14 @@ export const HomePage = () => {
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
                   to="/donate"
-                  className="btn-primary bg-white text-primary-700 hover:bg-primary-50 text-lg px-8"
+                  className="btn-secondary text-lg px-8"
                 >
                   <Heart size={22} />
                   Donate Now
                 </Link>
                 <Link
                   to="/get-help"
-                  className="btn-secondary bg-transparent border-white text-white hover:bg-white hover:text-primary-700 text-lg px-8"
+                  className="btn-emerald text-lg px-8"
                 >
                   Get Help Today
                   <ArrowRight size={20} />
@@ -114,17 +126,17 @@ export const HomePage = () => {
               </div>
 
               {/* Quick contact */}
-              <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-primary-200">
+              <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-primary-300">
                 <a
                   href="tel:+263775772277"
-                  className="flex items-center gap-2 hover:text-white"
+                  className="flex items-center gap-2 hover:text-gold-400 transition-colors"
                 >
                   <Phone size={16} />
                   +263 77 577 2277
                 </a>
                 <a
                   href="https://wa.me/263775772277"
-                  className="flex items-center gap-2 hover:text-white"
+                  className="flex items-center gap-2 hover:text-gold-400 transition-colors"
                 >
                   <span>💬</span>
                   WhatsApp Support
@@ -132,7 +144,7 @@ export const HomePage = () => {
               </div>
             </div>
 
-            {/* Hero Image/Stats */}
+            {/* Hero Stats - Diamond Cards */}
             <div className="hidden lg:block">
               <div className="grid grid-cols-2 gap-4">
                 {impactStats.map((stat, index) => (
@@ -155,7 +167,7 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* Wave divider */}
+        {/* Wave divider - Diamond inspired */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg
             viewBox="0 0 1440 120"
@@ -164,14 +176,14 @@ export const HomePage = () => {
           >
             <path
               d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-              fill="#f9fafb"
+              fill="#f8f6ff"
             />
           </svg>
         </div>
       </section>
 
-      {/* Mobile Stats - shown on mobile only */}
-      <section className="lg:hidden bg-gray-50 py-12">
+      {/* Mobile Stats - Royal theme */}
+      <section className="lg:hidden py-12" style={{ background: 'linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%)' }}>
         <div className="container-custom">
           <StatsGrid stats={impactStats} variant="white" columns={2} />
         </div>
@@ -181,7 +193,7 @@ export const HomePage = () => {
       <EmergencyWidget variant="card" />
 
       {/* Featured Story Section */}
-      <section className="py-16 bg-white">
+      <section className="py-16" style={{ background: 'linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%)' }}>
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="section-heading">Real Stories of Transformation</h2>
@@ -191,8 +203,8 @@ export const HomePage = () => {
             </p>
           </div>
 
-          {/* Featured Story */}
-          <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-3xl overflow-hidden mb-12">
+          {/* Featured Story - Royal gradient card */}
+          <div className="rounded-3xl overflow-hidden mb-12 shadow-xl" style={{ background: 'linear-gradient(135deg, rgba(107, 76, 154, 0.1) 0%, rgba(244, 164, 211, 0.1) 100%)' }}>
             <div className="grid md:grid-cols-2 gap-0">
               <div className="relative h-64 md:h-auto">
                 <img
@@ -201,31 +213,32 @@ export const HomePage = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-4 left-4">
-                  <span className="bg-accent-500 text-white text-sm font-bold px-4 py-2 rounded-full">
-                    ⭐ Featured Story
+                  <span className="text-white text-sm font-bold px-4 py-2 rounded-full flex items-center gap-2" style={{ background: 'linear-gradient(135deg, #ffd700 0%, #d4a000 100%)' }}>
+                    <Sparkles size={14} />
+                    Featured Story
                   </span>
                 </div>
               </div>
               <div className="p-8 md:p-12 flex flex-col justify-center">
-                <blockquote className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 leading-relaxed">
+                <blockquote className="text-2xl md:text-3xl font-bold text-cosmic-deep mb-6 leading-relaxed">
                   "I thought my life was over at 19. Addicted to crystal meth, I
                   had lost everything. Manake didn't just help me recover—they
                   helped me find my purpose."
                 </blockquote>
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold" style={{ background: 'linear-gradient(135deg, #6b4c9a 0%, #9b7ec4 100%)' }}>
                     T
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">Tendai M., 24</p>
-                    <p className="text-gray-600">
+                    <p className="font-bold text-cosmic-deep">Tendai M., 24</p>
+                    <p className="text-primary-600">
                       Now a certified electrician & business owner
                     </p>
                   </div>
                 </div>
                 <Link
                   to="/stories"
-                  className="text-primary-600 font-semibold hover:text-primary-700 flex items-center gap-2 group"
+                  className="text-primary-600 font-semibold hover:text-accent-500 flex items-center gap-2 group"
                 >
                   Read More Success Stories
                   <ArrowRight
@@ -242,8 +255,8 @@ export const HomePage = () => {
       {/* Stories Feed */}
       <StoriesFeed limit={6} showFilters={false} title="More Success Stories" />
 
-      {/* Programs Section */}
-      <section className="py-16 bg-white">
+      {/* Programs Section - Royal Theme */}
+      <section className="py-16" style={{ background: 'linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%)' }}>
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="section-heading">Our Programs</h2>
@@ -269,7 +282,7 @@ export const HomePage = () => {
                 description:
                   "Practical training in vocational skills, financial literacy, and entrepreneurship.",
                 duration: "3 months",
-                color: "secondary",
+                color: "emerald",
               },
               {
                 icon: "👨‍👩‍👧‍👦",
@@ -293,7 +306,7 @@ export const HomePage = () => {
                 description:
                   "Help returning to school or pursuing GED and further education.",
                 duration: "Flexible",
-                color: "secondary",
+                color: "emerald",
               },
               {
                 icon: "🚀",
@@ -304,22 +317,22 @@ export const HomePage = () => {
                 color: "accent",
               },
             ].map((program, index) => (
-              <div key={index} className="card-hover p-6 flex flex-col">
+              <div key={index} className="feature-card flex flex-col hover:shadow-xl">
                 <span className="text-4xl mb-4">{program.icon}</span>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-xl font-bold text-cosmic-deep mb-2">
                   {program.title}
                 </h3>
-                <p className="text-gray-600 mb-4 flex-grow">
+                <p className="text-primary-700 mb-4 flex-grow">
                   {program.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500 flex items-center gap-1">
+                  <span className="text-sm text-primary-600 flex items-center gap-1">
                     <Calendar size={14} />
                     {program.duration}
                   </span>
                   <Link
                     to="/programs"
-                    className="text-primary-600 font-medium text-sm hover:text-primary-700"
+                    className="text-accent-500 font-medium text-sm hover:text-accent-600"
                   >
                     Learn More →
                   </Link>
@@ -329,7 +342,7 @@ export const HomePage = () => {
           </div>
 
           <div className="text-center mt-12">
-            <Link to="/programs" className="btn-secondary">
+            <Link to="/programs" className="btn-primary">
               <BookOpen size={20} />
               View All Programs
             </Link>
@@ -337,8 +350,8 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* MET + Media Section */}
-      <section className="py-16 bg-gray-50">
+      {/* MET + Media Section - Royal Theme */}
+      <section className="py-16" style={{ background: '#ffffff' }}>
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="section-heading">Community Empowerment: MET</h2>
@@ -351,47 +364,47 @@ export const HomePage = () => {
           </div>
 
           <div className="grid lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                What MET does
+            <div className="feature-card">
+              <h3 className="text-xl font-bold text-cosmic-deep mb-4 flex items-center gap-2">
+                <span className="text-gold-500">◆</span> What MET does
               </h3>
-              <ul className="space-y-3 text-gray-700">
+              <ul className="space-y-3 text-primary-800">
                 <li>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-primary-600">
                     Skills training &amp; livelihoods:
                   </span>{" "}
                   Entrepreneurship and vocational training for income-generating
                   skills.
                 </li>
                 <li>
-                  <span className="font-semibold">Substance abuse reform:</span>{" "}
+                  <span className="font-semibold text-primary-600">Substance abuse reform:</span>{" "}
                   Works with partners supporting rehabilitation and
                   reintegration.
                 </li>
                 <li>
-                  <span className="font-semibold">GBV advocacy:</span> Community
+                  <span className="font-semibold text-primary-600">GBV advocacy:</span> Community
                   action addressing GBV and related social challenges.
                 </li>
               </ul>
               <div className="mt-6">
-                <Link to="/about#met" className="btn-secondary">
+                <Link to="/about#met" className="btn-primary">
                   Learn More About MET
                 </Link>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Videos &amp; Media
+            <div className="feature-card">
+              <h3 className="text-xl font-bold text-cosmic-deep mb-4 flex items-center gap-2">
+                <span className="text-gold-500">◆</span> Videos &amp; Media
               </h3>
-              <p className="text-gray-700 mb-6">
+              <p className="text-primary-700 mb-6">
                 Watch highlights from programs and community events.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/about#videos" className="btn-primary">
+                <Link to="/about#videos" className="btn-secondary">
                   Watch Videos
                 </Link>
-                <Link to="/about" className="btn-secondary">
+                <Link to="/about" className="btn-accent">
                   View All Media Links
                 </Link>
               </div>
@@ -400,8 +413,8 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* Donation CTA Section */}
-      <section className="py-16 bg-gray-50">
+      {/* Donation CTA Section - Royal Theme */}
+      <section className="py-16" style={{ background: 'linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%)' }}>
         <div className="container-custom">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -409,7 +422,7 @@ export const HomePage = () => {
             </div>
             <div className="order-first lg:order-last">
               <h2 className="section-heading">Your Donation Saves Lives</h2>
-              <p className="text-lg text-gray-600 mb-8">
+              <p className="text-lg text-primary-700 mb-8">
                 Every contribution directly supports a young person's journey
                 from addiction to hope. Here's how your donation makes a
                 difference:
@@ -439,17 +452,17 @@ export const HomePage = () => {
                   },
                 ].map((item, index) => (
                   <li key={index} className="flex gap-4 items-start">
-                    <span className="bg-primary-100 text-primary-700 font-bold px-3 py-1 rounded-lg text-sm">
+                    <span className="font-bold px-3 py-1 rounded-lg text-sm text-cosmic-deep" style={{ background: 'linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)' }}>
                       {item.amount}
                     </span>
-                    <span className="text-gray-700">{item.impact}</span>
+                    <span className="text-primary-800">{item.impact}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-8 p-6 bg-green-50 rounded-xl border border-green-200">
-                <p className="text-green-800 font-medium">
-                  💚 100% of your donation goes directly to our programs.
+              <div className="mt-8 p-6 rounded-xl border-2" style={{ background: 'linear-gradient(135deg, rgba(80, 200, 120, 0.1) 0%, rgba(110, 231, 183, 0.1) 100%)', borderColor: 'rgba(80, 200, 120, 0.3)' }}>
+                <p className="text-emerald-700 font-medium flex items-center gap-2">
+                  <span className="text-lg">💎</span> 100% of your donation goes directly to our programs.
                   Administrative costs are covered by our founding sponsors.
                 </p>
               </div>
@@ -458,8 +471,8 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16 bg-white">
+      {/* Testimonials Section - Royal Theme */}
+      <section className="py-16" style={{ background: '#ffffff' }}>
         <div className="container-custom">
           <div className="text-center mb-12">
             <h2 className="section-heading">What People Say</h2>
@@ -476,33 +489,40 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-20 gradient-primary text-white">
-        <div className="container-custom text-center">
+      {/* Final CTA - Cosmic Royal Gradient */}
+      <section className="py-20 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1a0f2e 0%, #2d1b69 50%, #6b4c9a 100%)' }}>
+        {/* Sparkle effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-20 w-2 h-2 bg-gold-400 rounded-full animate-sparkle" />
+          <div className="absolute bottom-20 right-40 w-3 h-3 bg-gold-500 rounded-full animate-sparkle" style={{ animationDelay: '0.7s' }} />
+          <div className="absolute top-1/2 left-1/4 w-2 h-2 bg-accent-400 rounded-full animate-sparkle" style={{ animationDelay: '1.2s' }} />
+        </div>
+        
+        <div className="container-custom text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to Make a Difference?
+            Ready to Make a <span className="bg-gradient-to-r from-gold-400 to-gold-300 bg-clip-text text-transparent">Difference</span>?
           </h2>
-          <p className="text-xl text-primary-100 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-primary-200 mb-8 max-w-2xl mx-auto">
             Whether you want to get help, donate, or volunteer, we'd love to
             hear from you. Together, we can transform lives.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/donate"
-              className="btn-primary bg-white text-primary-700 hover:bg-primary-50 text-lg px-8"
+              className="btn-secondary text-lg px-8"
             >
               <Heart size={22} />
               Donate Now
             </Link>
             <Link
               to="/get-help"
-              className="btn-secondary border-white text-white hover:bg-white/10 text-lg px-8"
+              className="btn-emerald text-lg px-8"
             >
               Get Help Today
             </Link>
             <Link
               to="/contact"
-              className="btn-secondary border-white text-white hover:bg-white/10 text-lg px-8"
+              className="btn-accent text-lg px-8"
             >
               Contact Us
             </Link>
