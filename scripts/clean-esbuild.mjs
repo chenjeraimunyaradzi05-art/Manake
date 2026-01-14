@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 const isNetlify = process.env.NETLIFY === 'true' || process.env.NETLIFY === '1';
@@ -28,3 +29,6 @@ rm(path.join(nodeModules, 'esbuild'));
 
 // Some tooling caches esbuild artifacts here.
 rm(path.join(nodeModules, '.cache', 'esbuild'));
+
+// Netlify also caches esbuild binaries in the user's home directory.
+rm(path.join(os.homedir(), '.cache', 'esbuild'));
