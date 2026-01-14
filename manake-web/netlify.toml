@@ -8,6 +8,7 @@
   NODE_VERSION = "20.19.6"
   NPM_VERSION = "10.8.2"
   NPM_FLAGS = "--legacy-peer-deps"
+  NPM_CONFIG_PACKAGE_LOCK = "true"
   NETLIFY_SKIP_INSTALL = "true"
 
 [functions]
