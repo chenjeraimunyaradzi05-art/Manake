@@ -9,7 +9,6 @@
   NPM_VERSION = "10.8.2"
   NPM_FLAGS = "--legacy-peer-deps"
   NPM_CONFIG_PACKAGE_LOCK = "true"
-  NPM_CONFIG_WORKSPACES = "false"
   NETLIFY_SKIP_INSTALL = "true"
 
 [functions]
