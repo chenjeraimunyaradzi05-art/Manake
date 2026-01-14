@@ -1,7 +1,7 @@
 [build]
   # If you deploy *only* the manake-web folder in Netlify, use a local install.
   # If you deploy the whole repo, Netlify should use the repo-root netlify.toml.
-  command = "npm ci --foreground-scripts --no-audit --no-fund --legacy-peer-deps && npm run build"
+  command = "npm install --foreground-scripts --no-audit --no-fund --legacy-peer-deps && npm run build"
   publish = "dist"
 
 [build.environment]
