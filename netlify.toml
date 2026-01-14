@@ -1,7 +1,18 @@
 [build]
   base = "manake-web"
   publish = "dist"
-  command = "npm run build"
+  # Netlify's default dependency install runs before `command` and can fail due
+  # to cached/hoisted native binaries. We skip it and do a deterministic `npm ci`
+  # from the repo root instead.
+  command = "cd .. && npm ci --foreground-scripts --no-audit --no-fund --legacy-peer-deps && npm run build --workspace=manake-web"
+
+[build.environment]
+  NODE_VERSION = "20.19.6"
+  NPM_VERSION = "10.8.2"
+  # Helps Netlify/npm installs succeed in CI when some packages have overly
+  # strict peer dependency ranges (common in monorepos).
+  NPM_FLAGS = "--legacy-peer-deps"
+  NETLIFY_SKIP_INSTALL = "true"
 
 [functions]
   directory = "netlify/functions"

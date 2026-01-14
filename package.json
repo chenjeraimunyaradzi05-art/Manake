@@ -8,6 +8,7 @@
     "manake-mobile"
   ],
   "scripts": {
+    "preinstall": "node ./scripts/clean-esbuild.mjs",
     "start": "npm run dev:web",
     "build": "npm run build:web",
     "dev:web": "npm run dev --workspace=manake-web",
@@ -19,7 +20,7 @@
     "android": "npm run android --workspace=manake-mobile",
     "ios": "npm run ios --workspace=manake-mobile",
     "install:all": "npm install",
-    "prepare": "husky"
+    "prepare": "node ./scripts/prepare.mjs"
   },
   "engines": {
     "node": ">=20 <21"
@@ -38,6 +39,7 @@
     "react-native-web": "^0.21.2"
   },
   "devDependencies": {
+    "esbuild": "^0.27.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.6.2",

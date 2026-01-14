@@ -40,7 +40,10 @@ export const ingestWebhook = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const provider = req.params.provider || "other";
+  const rawProvider = req.params.provider;
+  const provider = Array.isArray(rawProvider)
+    ? rawProvider[0]
+    : rawProvider || "other";
   const source = resolveSource(provider);
   const started = Date.now();
   const signature = (req.headers["x-webhook-signature"] ||
