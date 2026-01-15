@@ -2,14 +2,7 @@ import { render, RenderOptions } from "@testing-library/react";
 import { MemoryRouter, MemoryRouterProps } from "react-router-dom";
 import React, { ReactElement } from "react";
 
-/**
- * Router future flags matching App.tsx configuration.
- * Centralizing these ensures tests stay in sync with the app router.
- */
-const routerFutureFlags = {
-  v7_startTransition: true,
-  v7_relativeSplatPath: true,
-};
+type CompatibleReactNode = Exclude<React.ReactNode, bigint>;
 
 interface RenderWithRouterOptions extends Omit<RenderOptions, "wrapper"> {
   routerProps?: Omit<MemoryRouterProps, "children">;
@@ -21,12 +14,10 @@ interface RenderWithRouterOptions extends Omit<RenderOptions, "wrapper"> {
  */
 export function renderWithRouter(
   ui: ReactElement,
-  { routerProps, ...renderOptions }: RenderWithRouterOptions = {}
+  { routerProps, ...renderOptions }: RenderWithRouterOptions = {},
 ) {
-  const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <MemoryRouter future={routerFutureFlags} {...routerProps}>
-      {children}
-    </MemoryRouter>
+  const Wrapper = ({ children }: { children: CompatibleReactNode }) => (
+    <MemoryRouter {...routerProps}>{children}</MemoryRouter>
   );
 
   return render(ui, { wrapper: Wrapper, ...renderOptions });

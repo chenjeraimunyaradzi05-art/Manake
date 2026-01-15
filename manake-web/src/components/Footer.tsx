@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   MessageCircle,
@@ -33,14 +34,24 @@ export const Footer = () => {
   ];
 
   return (
-    <footer style={{ background: 'linear-gradient(135deg, #1a0f2e 0%, #2d1b69 100%)' }}>
+    <footer
+      style={{
+        background: "linear-gradient(135deg, #1a0f2e 0%, #2d1b69 100%)",
+      }}
+    >
       {/* Main Footer */}
       <div className="container-custom py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-3 mb-6 group">
-              <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg animate-diamond-glow" style={{ background: 'linear-gradient(135deg, #ffd700 0%, #d4a000 100%)' }}>
+              <div
+                className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg animate-diamond-glow"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #ffd700 0%, #d4a000 100%)",
+                }}
+              >
                 <span className="text-cosmic-deep font-bold text-xl">M</span>
               </div>
               <div>
@@ -62,10 +73,15 @@ export const Footer = () => {
             <div className="flex gap-4">
               <Link
                 to="/social"
-                className="w-10 h-10 rounded-full flex items-center justify-center transition-all text-primary-300 hover:text-cosmic-deep" 
-                style={{ background: 'rgba(107, 76, 154, 0.3)' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(107, 76, 154, 0.3)'}
+                className="w-10 h-10 rounded-full flex items-center justify-center transition-all text-primary-300 hover:text-cosmic-deep"
+                style={{ background: "rgba(107, 76, 154, 0.3)" }}
+                onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)";
+                }}
+                onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
+                  e.currentTarget.style.background = "rgba(107, 76, 154, 0.3)";
+                }}
                 aria-label="Manake Social"
                 title="Manake Social"
               >
@@ -74,9 +90,14 @@ export const Footer = () => {
               <Link
                 to="/messages"
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-all text-primary-300 hover:text-cosmic-deep"
-                style={{ background: 'rgba(107, 76, 154, 0.3)' }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(107, 76, 154, 0.3)'}
+                style={{ background: "rgba(107, 76, 154, 0.3)" }}
+                onMouseEnter={(e: MouseEvent<HTMLAnchorElement>) => {
+                  e.currentTarget.style.background =
+                    "linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)";
+                }}
+                onMouseLeave={(e: MouseEvent<HTMLAnchorElement>) => {
+                  e.currentTarget.style.background = "rgba(107, 76, 154, 0.3)";
+                }}
                 aria-label="Messaging"
                 title="Messaging"
               >
@@ -173,7 +194,9 @@ export const Footer = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 text-white px-4 py-2 rounded-lg transition-all hover:shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #50c878 0%, #2d7a5a 100%)' }}
+              style={{
+                background: "linear-gradient(135deg, #50c878 0%, #2d7a5a 100%)",
+              }}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
@@ -198,7 +221,10 @@ export const Footer = () => {
               >
                 Privacy Policy
               </Link>
-              <Link to="/terms" className="hover:text-gold-400 transition-colors">
+              <Link
+                to="/terms"
+                className="hover:text-gold-400 transition-colors"
+              >
                 Terms of Service
               </Link>
               <a

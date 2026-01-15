@@ -12,7 +12,7 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "production", "test"])
     .default("development"),
-  PORT: z.string().transform(Number).default("5000"),
+  PORT: z.coerce.number().default(5000),
 
   // Database
   MONGODB_URI: z
@@ -50,7 +50,7 @@ const envSchema = z.object({
 
   // Email (optional for Phase 1)
   SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.string().transform(Number).optional(),
+  SMTP_PORT: z.coerce.number().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   FROM_EMAIL: z.string().email().optional(),
@@ -62,12 +62,12 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().default("http://localhost:5173"),
 
   // File uploads
-  MAX_FILE_SIZE: z.string().transform(Number).default("10485760"), // 10MB
+  MAX_FILE_SIZE: z.coerce.number().default(10485760), // 10MB
   ALLOWED_FILE_TYPES: z.string().default("image/jpeg,image/png,image/webp"),
 
   // Rate limiting
-  RATE_LIMIT_WINDOW: z.string().transform(Number).default("900000"), // 15 min
-  RATE_LIMIT_MAX: z.string().transform(Number).default("100"),
+  RATE_LIMIT_WINDOW: z.coerce.number().default(900000), // 15 min
+  RATE_LIMIT_MAX: z.coerce.number().default(100),
 });
 
 // Type for the validated environment
@@ -82,8 +82,8 @@ function validateEnv(): Env {
     return parsed;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const missing = error.errors.map(
-        (e) => `${e.path.join(".")}: ${e.message}`,
+      const missing = error.issues.map(
+        (e: z.ZodIssue) => `${e.path.join(".")}: ${e.message}`,
       );
       logger.error("Environment validation failed", { missing });
 

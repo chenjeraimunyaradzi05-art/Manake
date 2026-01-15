@@ -1,6 +1,5 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { ErrorBoundary } from "react-error-boundary";
 import * as Sentry from "@sentry/react";
 import App from "./App";
 import "./styles/globals.css";
@@ -9,6 +8,7 @@ import { ToastProvider } from "./context/ToastContext";
 import { ToastViewport } from "./components/ui";
 import { QueryProvider } from "./context/QueryProvider";
 import { initWebVitals } from "./utils/webVitals";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 
 // Initialize Web Vitals monitoring
 initWebVitals();
@@ -28,16 +28,20 @@ function scrubPII(event: Sentry.Event): Sentry.Event | null {
   if (event.user) {
     // Remove user-identifying fields
     delete event.user.email;
-    delete (event.user as any).ip_address;
+    const user = event.user as Record<string, unknown>;
+    delete user.ip_address;
   }
 
   if (event.request) {
     if (event.request.headers) {
-      const { authorization, cookie, ...rest } = event.request.headers;
-      event.request.headers = rest;
+      const headers = { ...event.request.headers } as Record<string, unknown>;
+      delete headers.authorization;
+      delete headers.cookie;
+      event.request.headers = headers;
     }
-    delete (event.request as any).cookies;
-    delete (event.request as any).data;
+    const request = event.request as Record<string, unknown>;
+    delete request.cookies;
+    delete request.data;
   }
 
   return event;
@@ -52,23 +56,9 @@ Sentry.init({
   beforeSend: scrubPII,
 });
 
-function ErrorFallback({ error }: { error: Error }) {
-  return (
-    <div style={{ padding: 40, fontFamily: "sans-serif" }}>
-      <h1 style={{ color: "red" }}>Something went wrong</h1>
-      <pre style={{ whiteSpace: "pre-wrap", background: "#f5f5f5", padding: 16 }}>
-        {error.message}
-      </pre>
-      <pre style={{ whiteSpace: "pre-wrap", background: "#f5f5f5", padding: 16, fontSize: 12 }}>
-        {error.stack}
-      </pre>
-    </div>
-  );
-}
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <ErrorBoundary>
       <ThemeProvider>
         <ToastProvider>
           <QueryProvider>

@@ -4,7 +4,7 @@
  * Provides reusable validation schemas and middleware
  */
 import { Request, Response, NextFunction } from "express";
-import { z, ZodError, ZodSchema } from "zod";
+import { z, ZodError, ZodType } from "zod";
 import { ValidationError } from "../errors";
 
 /**
@@ -12,14 +12,15 @@ import { ValidationError } from "../errors";
  */
 type ValidationTarget = "body" | "query" | "params";
 
-const replaceObjectContents = (
-  target: unknown,
-  replacement: unknown,
-): void => {
+const replaceObjectContents = (target: unknown, replacement: unknown): void => {
   if (!target || typeof target !== "object" || Array.isArray(target)) {
     return;
   }
-  if (!replacement || typeof replacement !== "object" || Array.isArray(replacement)) {
+  if (
+    !replacement ||
+    typeof replacement !== "object" ||
+    Array.isArray(replacement)
+  ) {
     return;
   }
 
@@ -36,7 +37,7 @@ const replaceObjectContents = (
  * Validation middleware factory
  * Creates middleware that validates request data against a Zod schema
  */
-export const validate = <T extends ZodSchema>(
+export const validate = <T extends ZodType>(
   schema: T,
   target: ValidationTarget = "body",
 ) => {
@@ -56,7 +57,7 @@ export const validate = <T extends ZodSchema>(
       next();
     } catch (error) {
       if (error instanceof ZodError) {
-        const errors = error.errors.map((err) => ({
+        const errors = error.issues.map((err: z.ZodIssue) => ({
           field: err.path.join("."),
           message: err.message,
         }));
@@ -72,9 +73,9 @@ export const validate = <T extends ZodSchema>(
  * Validate multiple targets at once
  */
 export const validateAll = <
-  TBody extends ZodSchema = ZodSchema,
-  TQuery extends ZodSchema = ZodSchema,
-  TParams extends ZodSchema = ZodSchema,
+  TBody extends ZodType = ZodType,
+  TQuery extends ZodType = ZodType,
+  TParams extends ZodType = ZodType,
 >(schemas: {
   body?: TBody;
   query?: TQuery;
@@ -90,7 +91,7 @@ export const validateAll = <
     } catch (error) {
       if (error instanceof ZodError) {
         errors.push(
-          ...error.errors.map((err) => ({
+          ...error.issues.map((err: z.ZodIssue) => ({
             field: `body.${err.path.join(".")}`,
             message: err.message,
           })),
@@ -106,7 +107,7 @@ export const validateAll = <
     } catch (error) {
       if (error instanceof ZodError) {
         errors.push(
-          ...error.errors.map((err) => ({
+          ...error.issues.map((err: z.ZodIssue) => ({
             field: `query.${err.path.join(".")}`,
             message: err.message,
           })),
@@ -116,12 +117,13 @@ export const validateAll = <
 
     try {
       if (schemas.params) {
-        req.params = schemas.params.parse(req.params);
+        const validatedParams = schemas.params.parse(req.params);
+        replaceObjectContents(req.params, validatedParams);
       }
     } catch (error) {
       if (error instanceof ZodError) {
         errors.push(
-          ...error.errors.map((err) => ({
+          ...error.issues.map((err: z.ZodIssue) => ({
             field: `params.${err.path.join(".")}`,
             message: err.message,
           })),
@@ -415,7 +417,7 @@ export const createMessageSchema = z.object({
     .enum(["text", "image", "video", "audio", "document", "location"])
     .default("text"),
   mediaUrl: urlSchema.optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   conversationId: z.string().optional(),
 });
 
