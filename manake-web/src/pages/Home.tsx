@@ -730,6 +730,13 @@ export const HomePage = () => {
               Contact Us
             </Link>
           </div>
+          <p className="mt-8 text-primary-300 text-sm">
+            Developed with <Heart size={14} className="inline text-red-500" />{" "}
+            by{" "}
+            <span className="text-gold-400 font-medium">
+              Munyaradzi Chenjerai
+            </span>
+          </p>
         </div>
       </section>
 

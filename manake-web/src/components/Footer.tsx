@@ -211,19 +211,9 @@ export const Footer = () => {
       <div className="border-t border-primary-800">
         <div className="container-custom py-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-primary-400">
-              <p>
-                © {currentYear} Manake Rehabilitation Center. All rights
-                reserved.
-              </p>
-              <p className="mt-1">
-                Developed with{" "}
-                <Heart size={12} className="inline text-red-500" /> by{" "}
-                <span className="text-gold-400 font-medium">
-                  Munyaradzi Chenjerai
-                </span>
-              </p>
-            </div>
+            <p className="text-sm text-primary-400">
+              © {currentYear} Manake Rehabilitation Center. All rights reserved.
+            </p>
             <div className="flex gap-6 text-sm text-primary-400">
               <Link
                 to="/privacy"
