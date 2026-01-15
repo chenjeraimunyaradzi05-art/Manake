@@ -32,7 +32,7 @@
     "rehabilitation",
     "platform"
   ],
-  "author": "GitHub Copilot",
+  "author": "Munyaradzi Chenjerai",
   "license": "ISC",
   "dependencies": {
     "react-native-web": "^0.21.2"
