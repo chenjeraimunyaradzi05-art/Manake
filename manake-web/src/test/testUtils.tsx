@@ -2,8 +2,6 @@ import { render, RenderOptions } from "@testing-library/react";
 import { MemoryRouter, MemoryRouterProps } from "react-router-dom";
 import React, { ReactElement } from "react";
 
-type CompatibleReactNode = Exclude<React.ReactNode, bigint>;
-
 interface RenderWithRouterOptions extends Omit<RenderOptions, "wrapper"> {
   routerProps?: Omit<MemoryRouterProps, "children">;
 }
@@ -16,7 +14,7 @@ export function renderWithRouter(
   ui: ReactElement,
   { routerProps, ...renderOptions }: RenderWithRouterOptions = {},
 ) {
-  const Wrapper = ({ children }: { children: CompatibleReactNode }) => (
+  const Wrapper = ({ children }: { children?: React.ReactNode }) => (
     <MemoryRouter {...routerProps}>{children}</MemoryRouter>
   );
 
