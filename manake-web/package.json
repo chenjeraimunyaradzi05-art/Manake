@@ -5,7 +5,6 @@
   "type": "module",
   "description": "Manake Rehabilitation Center - Website for youth drug and alcohol rehabilitation in Zimbabwe",
   "scripts": {
-    "preinstall": "node ../scripts/clean-esbuild.mjs",
     "dev": "vite",
     "dev:server": "npx tsx src/server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",

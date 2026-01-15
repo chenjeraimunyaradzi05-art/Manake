@@ -8,7 +8,6 @@
     "manake-mobile"
   ],
   "scripts": {
-    "preinstall": "node ./scripts/clean-esbuild.mjs",
     "start": "npm run dev:web",
     "build": "npm run build:web",
     "dev:web": "npm run dev --workspace=manake-web",
