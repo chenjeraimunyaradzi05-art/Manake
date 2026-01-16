@@ -51,7 +51,13 @@ export const Navigation = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-md" style={{ background: 'linear-gradient(135deg, rgba(26, 15, 46, 0.95) 0%, rgba(45, 27, 105, 0.95) 100%)' }}>
+    <header
+      className="sticky top-0 z-50 backdrop-blur-md"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(26, 15, 46, 0.95) 0%, rgba(45, 27, 105, 0.95) 100%)",
+      }}
+    >
       {/* Main navigation */}
       <nav className="container-custom">
         <div className="flex items-center justify-between h-16">
@@ -127,7 +133,13 @@ export const Navigation = () => {
                     className="w-9 h-9 rounded-full object-cover border-2 border-gold-500"
                   />
                 ) : (
-                  <div className="w-9 h-9 rounded-full font-semibold flex items-center justify-center text-cosmic-deep" style={{ background: 'linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)' }}>
+                  <div
+                    className="w-9 h-9 rounded-full font-semibold flex items-center justify-center text-cosmic-deep"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)",
+                    }}
+                  >
                     {userInitials}
                   </div>
                 )}
@@ -155,13 +167,21 @@ export const Navigation = () => {
                 </button>
               </div>
             ) : (
-              <Link
-                to="/auth/login"
-                className="text-sm font-medium text-primary-200 hover:text-gold-400 transition-colors"
-              >
-                <User size={16} className="inline mr-2" />
-                Login
-              </Link>
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/auth/login"
+                  className="text-sm font-medium text-primary-200 hover:text-gold-400 transition-colors"
+                >
+                  <User size={16} className="inline mr-2" />
+                  Login
+                </Link>
+                <Link
+                  to="/auth/register"
+                  className="px-4 py-2 bg-gold-400 hover:bg-gold-500 text-primary-950 text-sm font-bold rounded-lg transition-colors shadow-lg shadow-gold-900/20"
+                >
+                  Sign Up
+                </Link>
+              </div>
             )}
           </div>
 
@@ -212,7 +232,13 @@ export const Navigation = () => {
                         className="w-10 h-10 rounded-full object-cover border-2 border-gold-500"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full font-semibold flex items-center justify-center text-cosmic-deep" style={{ background: 'linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)' }}>
+                      <div
+                        className="w-10 h-10 rounded-full font-semibold flex items-center justify-center text-cosmic-deep"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)",
+                        }}
+                      >
                         {userInitials}
                       </div>
                     )}
@@ -241,13 +267,22 @@ export const Navigation = () => {
                   </button>
                 </div>
               ) : (
-                <Link
-                  to="/auth/login"
-                  onClick={() => setIsOpen(false)}
-                  className="mx-4 mt-2 px-4 py-3 rounded-lg font-semibold text-center border border-primary-600 text-primary-200 hover:border-gold-500 hover:text-gold-400 transition-colors"
-                >
-                  Login
-                </Link>
+                <div className="mx-4 mt-2 flex flex-col gap-3">
+                  <Link
+                    to="/auth/login"
+                    onClick={() => setIsOpen(false)}
+                    className="px-4 py-3 rounded-lg font-semibold text-center border border-primary-600 text-primary-200 hover:border-gold-500 hover:text-gold-400 transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/auth/register"
+                    onClick={() => setIsOpen(false)}
+                    className="px-4 py-3 rounded-lg font-semibold text-center bg-gold-400 text-primary-950 hover:bg-gold-500 transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
               )}
             </div>
           </div>
