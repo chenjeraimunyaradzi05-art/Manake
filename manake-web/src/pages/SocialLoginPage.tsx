@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AlertCircle, Loader2, Shield, Facebook } from "lucide-react";
+import { isAxiosError } from "axios";
 import { SocialProvider, startSocialAuth } from "../services/socialAuth";
 import { safeStorageSetItem } from "../utils/safeStorage";
 
@@ -71,7 +72,26 @@ export const SocialLoginPage = () => {
       window.location.href = authUrl;
     } catch (err) {
       console.error("Failed to start social auth", err);
-      setError("Unable to start social login. Please try again.");
+      let errorMessage = "Unable to start social login. Please try again.";
+
+      if (isAxiosError(err)) {
+        const data = err.response?.data as {
+          error?: { message?: string };
+          message?: string;
+        };
+        if (data?.error?.message) {
+          errorMessage = data.error.message;
+        } else if (data?.message) {
+          errorMessage = data.message;
+        } else if (err.code === "ERR_NETWORK") {
+          errorMessage =
+            "Cannot connect to server. Please ensure the backend is running (npm run dev:server).";
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
       setLoadingProvider(null);
     }
   };

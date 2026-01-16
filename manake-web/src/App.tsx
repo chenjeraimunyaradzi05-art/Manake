@@ -42,9 +42,12 @@ const NotFoundPage = lazy(() =>
 const ThankYouPage = lazy(() =>
   import("./pages/ThankYouPage").then((m) => ({ default: m.ThankYouPage })),
 );
-const SocialLoginPage = lazy(() =>
-  import("./pages/SocialLoginPage").then((m) => ({
-    default: m.SocialLoginPage,
+const LoginPage = lazy(() =>
+  import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })),
+);
+const SignUpPage = lazy(() =>
+  import("./pages/SignUpPage").then((m) => ({
+    default: m.SignUpPage,
   })),
 );
 const SocialCallbackPage = lazy(() =>
@@ -138,7 +141,8 @@ function App() {
                     />
                     <Route path="/mentorship" element={<MentorshipPage />} />
                     <Route path="/messages" element={<MessagesPage />} />
-                    <Route path="/auth/login" element={<SocialLoginPage />} />
+                    <Route path="/auth/login" element={<LoginPage />} />
+                    <Route path="/auth/register" element={<SignUpPage />} />
                     <Route
                       path="/auth/:provider/callback"
                       element={<SocialCallbackPage />}

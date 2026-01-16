@@ -26,6 +26,15 @@ You MUST set these in **Site Settings > Environment Variables** for the app to w
 | `JWT_REFRESH_EXPIRATION` | `7d` | |
 | `FRONTEND_URL` | *(Your Netlify Site URL)* | e.g. `https://manake.netlify.app` |
 
+### Social Authentication Variables (REQUIRED for "Continue with Facebook/Google")
+| Key | Value | Note |
+|-----|-------|------|
+| `FACEBOOK_APP_ID` | *(Your Facebook App ID)* | Required for Facebook Login |
+| `FACEBOOK_APP_SECRET` | *(Your Facebook App Secret)* | Required for Facebook Login |
+| `GOOGLE_CLIENT_ID` | *(Your Google Client ID)* | Required for Google Login |
+| `GOOGLE_CLIENT_SECRET` | *(Your Google Client Secret)* | Required for Google Login |
+| `SOCIAL_REDIRECT_URI` | *(Your Netlify URL)/auth/callback* | e.g. `https://manake.netlify.app/auth/callback` (Optional if handled by frontend) |
+
 **Note on FRONTEND_URL:** Since you don't know your URL until you create the site, you can set it to `http://localhost:5173` temporarily, or just create the site, grab the URL, and then update this variable.
 
 ## 4. Troubleshooting

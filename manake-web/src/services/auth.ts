@@ -16,6 +16,32 @@ export type TokenPair = {
   expiresIn?: number;
 };
 
+export type LoginParams = {
+  email: string;
+  password?: string;
+};
+
+export type RegisterParams = {
+  email: string;
+  password?: string;
+  name?: string;
+  phone?: string;
+};
+
+export async function login(
+  params: LoginParams,
+): Promise<TokenPair & { user: UserProfile }> {
+  const { data } = await api.post("/v1/auth/login", params);
+  return data;
+}
+
+export async function register(
+  params: RegisterParams,
+): Promise<TokenPair & { user: UserProfile }> {
+  const { data } = await api.post("/v1/auth/register", params);
+  return data;
+}
+
 export async function fetchProfile(): Promise<UserProfile> {
   const { data } = await api.get("/v1/auth/profile");
   return data as UserProfile;

@@ -1,10 +1,8 @@
 [build]
-  base = "manake-web"
-  publish = "dist"
-  # Netlify's default dependency install runs before `command` and can fail due
-  # to cached/hoisted native binaries. We skip it and do a deterministic `npm ci`
-  # from the repo root instead.
-  command = "cd .. && npm ci --foreground-scripts --no-audit --no-fund --legacy-peer-deps && npm run build --workspace=manake-web"
+  # Build from the repo root so we can use the root package-lock.json, but only
+  # install/build the manake-web workspace (avoids pulling in manake-mobile).
+  publish = "manake-web/dist"
+  command = "npm ci --foreground-scripts --no-audit --no-fund --legacy-peer-deps --workspace=manake-web && npm run build --workspace=manake-web"
 
 [build.environment]
   NODE_VERSION = "20.19.6"
@@ -15,7 +13,7 @@
   NETLIFY_SKIP_INSTALL = "true"
 
 [functions]
-  directory = "netlify/functions"
+  directory = "manake-web/netlify/functions"
   external_node_modules = ["express", "mongoose", "stripe", "jsonwebtoken", "bcryptjs", "helmet", "cors", "dotenv", "express-validator"]
   node_bundler = "esbuild"
 

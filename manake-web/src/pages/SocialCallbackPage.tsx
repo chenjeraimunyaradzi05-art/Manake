@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { isAxiosError } from "axios";
 import { completeSocialAuth, SocialProvider } from "../services/socialAuth";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -86,7 +87,22 @@ export const SocialCallbackPage = () => {
     } catch (err) {
       console.error("Social auth callback failed", err);
       setStatus("error");
-      setMessage("Could not sign you in. Please try again.");
+      let msg = "Could not sign you in. Please try again.";
+
+      if (isAxiosError(err)) {
+        const data = err.response?.data as {
+          error?: { message?: string };
+          message?: string;
+        };
+        if (data?.error?.message) {
+          msg = data.error.message;
+        } else if (data?.message) {
+          msg = data.message;
+        }
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setMessage(msg);
       // Clear any possibly stale tokens/state on failure
       logout();
     }
