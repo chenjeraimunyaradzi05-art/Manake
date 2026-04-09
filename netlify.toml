@@ -11,6 +11,7 @@
   # strict peer dependency ranges (common in monorepos).
   NPM_FLAGS = "--legacy-peer-deps"
   NETLIFY_SKIP_INSTALL = "true"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
 [functions]
   directory = "manake-web/netlify/functions"
