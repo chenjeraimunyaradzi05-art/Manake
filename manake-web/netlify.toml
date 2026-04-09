@@ -10,6 +10,7 @@
   NPM_FLAGS = "--legacy-peer-deps"
   NPM_CONFIG_PACKAGE_LOCK = "true"
   NETLIFY_SKIP_INSTALL = "true"
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
 [functions]
   external_node_modules = ["express", "mongoose", "stripe", "jsonwebtoken", "bcryptjs", "helmet", "cors", "dotenv", "express-validator"]
