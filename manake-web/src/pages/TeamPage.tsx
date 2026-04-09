@@ -15,21 +15,24 @@ export const TeamPage = () => {
       id: 1,
       name: "The Manake Team",
       role: "Dedicated Staff & Volunteers",
-      image: "/images/team/team.jpeg",
+      image:
+        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&fit=crop",
       bio: "Our passionate team of counselors, therapists, and support staff work tirelessly to guide youth through their recovery journey. Together, we create a safe and nurturing environment for healing.",
     },
     {
       id: 2,
       name: "Community Partners",
       role: "The Movement Behind Manake",
-      image: "/images/team/manaketeam.jpeg",
+      image:
+        "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&fit=crop",
       bio: "Manake is more than a rehabilitation center—it's a movement. Our community partners, volunteers, and supporters form the backbone of everything we do.",
     },
     {
       id: 3,
       name: "Youth & Families",
       role: "The Heart of Our Mission",
-      image: "/images/team/manake.jpeg",
+      image:
+        "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&fit=crop",
       bio: "The youth we serve and their families are at the center of our work. Their courage, resilience, and commitment to recovery inspire us every day.",
     },
   ];

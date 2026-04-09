@@ -240,6 +240,16 @@ userSchema.methods.comparePassword = async function (
 
 // Return public user data (without sensitive fields)
 userSchema.methods.toPublicJSON = function (): Record<string, unknown> {
+  const emailNotifications =
+    typeof this.preferences?.emailNotifications === "boolean"
+      ? this.preferences.emailNotifications
+      : true;
+
+  const pushNotifications =
+    typeof this.preferences?.pushNotifications === "boolean"
+      ? this.preferences.pushNotifications
+      : true;
+
   return {
     id: this._id?.toString(),
     email: this.email,
@@ -248,8 +258,23 @@ userSchema.methods.toPublicJSON = function (): Record<string, unknown> {
     role: this.role,
     avatar: this.avatar,
     isEmailVerified: this.isEmailVerified,
-    preferences: this.preferences,
+    bio: this.profile?.bio,
+    preferences: {
+      emailNotifications,
+      pushNotifications,
+      notifications: pushNotifications,
+      emailUpdates: emailNotifications,
+      darkMode: false,
+      language: "en",
+    },
+    stats: {
+      storiesLiked: 0,
+      commentsMade: 0,
+      totalDonated: 0,
+      storiesShared: 0,
+    },
     createdAt: this.createdAt,
+    joinedAt: this.createdAt,
   };
 };
 
@@ -258,4 +283,5 @@ userSchema.statics.findByEmailWithPassword = function (email: string) {
   return this.findOne({ email }).select("+passwordHash");
 };
 
-export const User = mongoose.models.User || mongoose.model<IUser>("User", userSchema);
+export const User =
+  mongoose.models.User || mongoose.model<IUser>("User", userSchema);

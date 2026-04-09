@@ -307,17 +307,19 @@ export const contactSchema = z.object({
  * Donation schema
  */
 export const donationSchema = z.object({
-  amount: z
-    .number()
-    .positive("Amount must be positive")
-    .min(1, "Minimum donation is $1"),
-  currency: z.enum(["USD", "ZWL"]).default("USD"),
+  amount: z.union([z.string(), z.number()]),
+  currency: z.string().optional().default("usd"),
   donorName: z.string().min(2).max(100).optional(),
-  donorEmail: emailSchema.optional(),
+  donorEmail: emailSchema,
   isAnonymous: z.boolean().optional().default(false),
   message: z.string().max(500).optional(),
   recurring: z.boolean().optional().default(false),
   frequency: z.enum(["monthly", "quarterly", "annually"]).optional(),
+  paymentMethod: z
+    .enum(["card", "ecocash", "bank", "bank_transfer"])
+    .optional()
+    .default("card"),
+  purpose: z.string().max(200).optional(),
 });
 
 /**
@@ -327,14 +329,19 @@ export const registerSchema = z
   .object({
     email: emailSchema,
     password: passwordSchema,
-    confirmPassword: z.string(),
+    confirmPassword: z.string().optional(),
     name: z.string().min(2, "Name must be at least 2 characters").max(100),
-    phone: zwPhoneSchema.optional(),
+    phone: zwPhoneSchema.optional().or(z.literal("")),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
+  .refine(
+    (data) =>
+      typeof data.confirmPassword === "undefined" ||
+      data.password === data.confirmPassword,
+    {
+      message: "Passwords do not match",
+      path: ["confirmPassword"],
+    },
+  );
 
 /**
  * User login schema

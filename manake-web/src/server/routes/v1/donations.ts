@@ -37,9 +37,7 @@ router.post(
     } catch (error) {
       return res.status(503).json({
         message:
-          error instanceof Error
-            ? error.message
-            : "Stripe is not configured",
+          error instanceof Error ? error.message : "Stripe is not configured",
       });
     }
 
@@ -51,11 +49,15 @@ router.post(
     }
 
     try {
-      const event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        webhookSecret,
-      );
+      const requestWithRawBody = req as Request & { rawBody?: Buffer };
+      const rawBody = requestWithRawBody.rawBody ?? req.body;
+
+      if (typeof rawBody !== "string" && !Buffer.isBuffer(rawBody)) {
+        logger.error("Webhook error", { error: "Missing raw request body" });
+        return res.status(400).json({ message: "Webhook error" });
+      }
+
+      const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
 
       // Handle the event
       switch (event.type) {
@@ -120,7 +122,7 @@ router.get(
   authorize("admin"),
   asyncHandler(async (_req: Request, res: Response) => {
     const stats = await Donation.aggregate([
-      { $match: { status: "completed" } },
+      { $match: { status: { $in: ["completed", "succeeded"] } } },
       {
         $group: {
           _id: null,

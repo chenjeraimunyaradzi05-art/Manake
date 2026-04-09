@@ -79,6 +79,16 @@ const ProductsPage = lazy(() =>
 const TeamPage = lazy(() =>
   import("./pages/TeamPage").then((m) => ({ default: m.TeamPage })),
 );
+const PrivacyPolicyPage = lazy(() =>
+  import("./pages/PrivacyPolicyPage").then((m) => ({
+    default: m.PrivacyPolicyPage,
+  })),
+);
+const TermsOfServicePage = lazy(() =>
+  import("./pages/TermsOfServicePage").then((m) => ({
+    default: m.TermsOfServicePage,
+  })),
+);
 
 // Initialize Stripe only if key is provided
 const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
@@ -154,6 +164,8 @@ function App() {
                     <Route path="/team" element={<TeamPage />} />
                     <Route path="/about" element={<AboutPage />} />
                     <Route path="/contact" element={<ContactPage />} />
+                    <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                    <Route path="/terms" element={<TermsOfServicePage />} />
                     <Route path="*" element={<NotFoundPage />} />
                   </Routes>
                 </Suspense>

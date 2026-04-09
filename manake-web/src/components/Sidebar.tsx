@@ -1,18 +1,18 @@
 import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  Home, 
-  Compass, 
-  Heart, 
+import {
+  Home,
+  Compass,
+  Heart,
   MessageCircle,
   Share2,
-  Shield, 
-  Info, 
-  Mail, 
-  LogOut, 
+  Shield,
+  Info,
+  Mail,
+  LogOut,
   User,
   PlusSquare,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -63,7 +63,9 @@ export const Sidebar = () => {
                 : "text-cosmic-700 hover:bg-primary-50/50 hover:text-cosmic-900"
             }`}
           >
-            <span className={`transition-transform duration-300 ${isActive(link.path) ? "scale-110 text-gold-500" : "group-hover:scale-110 group-hover:text-gold-500"}`}>
+            <span
+              className={`transition-transform duration-300 ${isActive(link.path) ? "scale-110 text-gold-500" : "group-hover:scale-110 group-hover:text-gold-500"}`}
+            >
               {link.icon}
             </span>
             <span className="text-base">{link.name}</span>
@@ -71,21 +73,24 @@ export const Sidebar = () => {
         ))}
 
         {/* Create/Donate Button */}
-        <Link 
-          to="/story/create" 
+        <Link
+          to="/contact"
           className="mt-2 flex items-center gap-4 p-3 rounded-lg text-cosmic-700 hover:bg-primary-50 hover:text-cosmic-900 transition-colors group"
         >
-           <PlusSquare size={24} className="group-hover:text-gold-500 transition-colors" />
-           <span className="text-base">Create</span>
+          <PlusSquare
+            size={24}
+            className="group-hover:text-gold-500 transition-colors"
+          />
+          <span className="text-base">Share Story</span>
         </Link>
 
         {/* Create/Donate Button */}
-        <Link 
-          to="/donate" 
+        <Link
+          to="/donate"
           className="mt-2 flex items-center gap-4 p-3 rounded-lg text-rose-600 hover:bg-rose-50 transition-all font-semibold"
         >
-           <Heart size={24} className="fill-rose-600 animate-pulse" />
-           <span>Donate Layout</span>
+          <Heart size={24} className="fill-rose-600 animate-pulse" />
+          <span>Donate Now</span>
         </Link>
       </nav>
 
@@ -100,7 +105,13 @@ export const Sidebar = () => {
                 className="w-8 h-8 rounded-full object-cover border-2 border-gold-500"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full font-semibold flex items-center justify-center text-cosmic-deep text-xs" style={{ background: 'linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)' }}>
+              <div
+                className="w-8 h-8 rounded-full font-semibold flex items-center justify-center text-cosmic-deep text-xs"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)",
+                }}
+              >
                 {userInitials}
               </div>
             )}
@@ -112,16 +123,16 @@ export const Sidebar = () => {
                 {user.email}
               </span>
             </div>
-            <button 
-               onClick={() => logout()}
-               className="ml-auto p-1.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-               title="Log out"
+            <button
+              onClick={() => logout()}
+              className="ml-auto p-1.5 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+              title="Log out"
             >
-               <LogOut size={18} />
+              <LogOut size={18} />
             </button>
           </div>
         ) : (
-          <Link 
+          <Link
             to="/auth/login"
             className="flex items-center gap-4 p-3 rounded-lg text-cosmic-700 hover:bg-primary-50 hover:text-cosmic-900 transition-colors"
           >
@@ -130,7 +141,7 @@ export const Sidebar = () => {
           </Link>
         )}
       </div>
-      
+
       {/* Mobile-like More Menu (optional) */}
       <button className="flex items-center gap-4 p-3 rounded-lg text-cosmic-700 hover:bg-primary-50 mt-2">
         <MenuIcon />
@@ -141,7 +152,16 @@ export const Sidebar = () => {
 };
 
 const MenuIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <line x1="3" y1="12" x2="21" y2="12"></line>
     <line x1="3" y1="6" x2="21" y2="6"></line>
     <line x1="3" y1="18" x2="21" y2="18"></line>

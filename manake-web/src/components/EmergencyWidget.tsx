@@ -8,7 +8,7 @@ export const EmergencyWidget = ({
   variant = "banner",
 }: EmergencyWidgetProps) => {
   const phoneNumber = "+263775772277";
-  const whatsappUrl = `https://wa.me/263776123456?text=I%20need%20help%20urgently`;
+  const whatsappUrl = `https://wa.me/263775772277?text=I%20need%20help%20urgently`;
 
   const handleCall = () => {
     window.location.href = `tel:${phoneNumber}`;

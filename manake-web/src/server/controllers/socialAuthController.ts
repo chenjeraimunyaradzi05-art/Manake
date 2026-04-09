@@ -162,6 +162,7 @@ export const socialAuth = async (
     message: mode === "link" ? "Account linked" : "Login successful",
     user: user.toPublicJSON(),
     socialAccount: sanitizeAccount(socialAccount),
+    token: tokens.accessToken,
     ...tokens,
   });
 };
@@ -221,6 +222,7 @@ export const appleCodeExchange = async (
     message: mode === "link" ? "Account linked" : "Login successful",
     user: user.toPublicJSON(),
     socialAccount: sanitizeAccount(socialAccount),
+    token: tokens.accessToken,
     ...tokens,
   });
 };

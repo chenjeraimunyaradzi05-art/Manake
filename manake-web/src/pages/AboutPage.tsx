@@ -192,7 +192,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://www.facebook.com/share/v/1ATpQVCkJw/"
               >
-                Facebook video
+                📘 MET Community Event – Facebook
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -200,7 +200,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://www.tiktok.com/@mr_billz1/video/7540289026524253453?is_from_webapp=1&sender_device=pc"
               >
-                TikTok video
+                🎵 MET Skills Graduation – TikTok
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -208,7 +208,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/AR74TYAqbE90JzUfQ"
               >
-                Google share link 1
+                📸 MET Graduation Ceremony – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -216,7 +216,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/Koefg2aqL0n3SUEbM"
               >
-                Google share link 2
+                📸 MET Graduation Ceremony – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -224,7 +224,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/onxUXvhfx0gvezoIp"
               >
-                Google share link 3
+                📸 Skills Training Workshop – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -232,7 +232,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/4Ei2cO2Oe4ysirwJG"
               >
-                Google share link 4
+                📸 Skills Training Workshop – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -240,7 +240,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/TQseKshHB68OKCFZd"
               >
-                Google share link 5
+                📸 Community Outreach – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -248,7 +248,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/cmRqdhf0bsAwt6PPX"
               >
-                Google share link 6
+                📸 Community Outreach – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -256,7 +256,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/BEElSfdjIE5GXdIf9"
               >
-                Google share link 7
+                📸 Youth Recovery Programme – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -264,7 +264,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/nwGXLPJAEbae0Gt3l"
               >
-                Google share link 8
+                📸 Youth Recovery Programme – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -272,7 +272,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/tslphoFdTnrxAKXNt"
               >
-                Google share link 9
+                📸 GBV Advocacy Campaign – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -280,7 +280,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/OgPG3qSsurg3jso5N"
               >
-                Google share link 10
+                📸 GBV Advocacy Campaign – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -288,7 +288,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/ziAJy54VZryAptsAy"
               >
-                Google share link 11
+                📸 Ministry Partnership Event – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -296,7 +296,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/mtFvFFFoSAcPainA2"
               >
-                Google share link 12
+                📸 Ministry Partnership Event – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -304,7 +304,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/gkC62oVenxzV3lGbN"
               >
-                Google share link 13
+                📸 Norton Community Event – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -312,7 +312,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/8toWZUyFfRLDkx97f"
               >
-                Google share link 14
+                📸 Norton Community Event – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -320,7 +320,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/Jj2yAIaVyf4Md9FES"
               >
-                Google share link 15
+                📸 Product Showcase – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -328,7 +328,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/zPv28U3JnxzOQv31C"
               >
-                Google share link 16
+                📸 Product Showcase – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -336,7 +336,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/ZSrIvvfXw2RRh2NRo"
               >
-                Google share link 17
+                📸 Rehabilitation Centre Activities – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -344,7 +344,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/kWOGG1jRb1jYhY47F"
               >
-                Google share link 18
+                📸 Rehabilitation Centre Activities – Photo 2
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -352,7 +352,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/BiWxBBRuT4SHGyIio"
               >
-                Google share link 19
+                📸 Alumni Success Stories – Photo 1
               </a>
               <a
                 className="hover:text-primary-700 underline"
@@ -360,7 +360,7 @@ export const AboutPage = () => {
                 rel="noreferrer"
                 href="https://share.google/Vaof8s3Xro468kNxa"
               >
-                Google share link 20
+                📸 Alumni Success Stories – Photo 2
               </a>
             </div>
           </div>
@@ -415,7 +415,7 @@ export const AboutPage = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                name: "Ruvimbo Manake",
+                name: "Sibongile Maonde Sokhani",
                 role: "Founder & Director",
                 desc: "Leads strategy, partnerships, and quality of care.",
               },

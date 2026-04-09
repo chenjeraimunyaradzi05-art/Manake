@@ -91,7 +91,7 @@ export const LoginPage = () => {
                 Password
               </label>
               <Link
-                to="/auth/forgot-password"
+                to="/contact"
                 className="text-sm text-primary-600 hover:text-primary-700"
               >
                 Forgot password?

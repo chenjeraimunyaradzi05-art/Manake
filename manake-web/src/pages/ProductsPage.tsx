@@ -8,7 +8,8 @@ export const ProductsPage = () => {
       name: "Handcrafted Canvas Sneakers",
       description:
         "Unique hand-painted canvas sneakers created by youth during their recovery journey. Each pair tells a story of transformation and hope.",
-      image: "/images/products/shoes.jpeg",
+      image:
+        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&fit=crop",
       price: 45,
       category: "Footwear",
       inStock: true,
@@ -18,7 +19,8 @@ export const ProductsPage = () => {
       name: "Artisan Leather Sandals",
       description:
         "Beautiful leather sandals handmade by our residents learning traditional craftsmanship skills as part of their vocational training.",
-      image: "/images/products/shoesmanake.jpeg",
+      image:
+        "https://images.unsplash.com/photo-1515347619252-60a4bf4fff4f?w=800&fit=crop",
       price: 35,
       category: "Footwear",
       inStock: true,
@@ -170,8 +172,8 @@ export const ProductsPage = () => {
                 1. Skills Training
               </h3>
               <p className="text-gray-600 text-sm">
-                Residents learn craftsmanship, including shoemaking, leatherwork,
-                and design as part of their rehabilitation.
+                Residents learn craftsmanship, including shoemaking,
+                leatherwork, and design as part of their rehabilitation.
               </p>
             </div>
             <div className="text-center p-6">

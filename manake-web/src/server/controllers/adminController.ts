@@ -36,17 +36,22 @@ export const getDashboardStats = async (
     Story.countDocuments({}),
     Story.countDocuments({ status: "pending" }),
     Donation.aggregate([
-      { $match: { status: "succeeded" } },
-      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
-    ]),
-    Donation.aggregate([
-      { $match: { status: "succeeded", createdAt: { $gte: startOfMonth } } },
+      { $match: { status: { $in: ["completed", "succeeded"] } } },
       { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
     ]),
     Donation.aggregate([
       {
         $match: {
-          status: "succeeded",
+          status: { $in: ["completed", "succeeded"] },
+          createdAt: { $gte: startOfMonth },
+        },
+      },
+      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
+    ]),
+    Donation.aggregate([
+      {
+        $match: {
+          status: { $in: ["completed", "succeeded"] },
           createdAt: { $gte: startOfLastMonth, $lt: startOfMonth },
         },
       },
@@ -70,14 +75,14 @@ export const getDashboardStats = async (
       pending: pendingStories,
     },
     donations: {
-      totalAmount: donationStats.total / 100, // Convert cents to dollars
+      totalAmount: donationStats.total,
       totalCount: donationStats.count,
       thisMonth: {
-        amount: thisMonthStats.total / 100,
+        amount: thisMonthStats.total,
         count: thisMonthStats.count,
       },
       lastMonth: {
-        amount: lastMonthStats.total / 100,
+        amount: lastMonthStats.total,
         count: lastMonthStats.count,
       },
     },
@@ -99,7 +104,7 @@ export const getRecentActivity = async (
       .sort({ createdAt: -1 })
       .limit(limit)
       .select("title author.name category createdAt"),
-    Donation.find({ status: "succeeded" })
+    Donation.find({ status: { $in: ["completed", "succeeded"] } })
       .sort({ createdAt: -1 })
       .limit(limit)
       .select("donorName amount isAnonymous createdAt"),
@@ -113,7 +118,7 @@ export const getRecentActivity = async (
     stories: recentStories,
     donations: recentDonations.map((d) => ({
       ...d.toObject(),
-      amount: (d.amount || 0) / 100,
+      amount: d.amount || 0,
       donorName: d.isAnonymous ? "Anonymous" : d.donorName,
     })),
     users: recentUsers,

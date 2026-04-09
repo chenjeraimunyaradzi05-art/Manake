@@ -188,7 +188,7 @@ export const DonatePage = () => {
                 description:
                   "Share your skills, mentor youth, or help with administrative tasks.",
                 cta: "Become a Volunteer",
-                link: "/volunteer",
+                link: "/contact",
                 icon: "🤝",
               },
               {
@@ -196,7 +196,7 @@ export const DonatePage = () => {
                 description:
                   "Partner with us for CSR initiatives, employee giving, or sponsorships.",
                 cta: "Partner With Us",
-                link: "/partner",
+                link: "/contact",
                 icon: "🏢",
               },
               {

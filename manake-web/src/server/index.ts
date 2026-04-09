@@ -75,7 +75,15 @@ app.use(
 app.use(csrfOriginCheck(allowedOrigins));
 
 // Body parsing
-app.use(express.json({ limit: "10kb" })); // Limit body size
+app.use(
+  express.json({
+    limit: "10kb",
+    verify: (req, res, buf) => {
+      (req as unknown as { rawBody?: Buffer }).rawBody = buf;
+      void res;
+    },
+  }),
+); // Limit body size
 
 // Request sanitization
 app.use(sanitizeRequest);

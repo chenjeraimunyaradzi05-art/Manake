@@ -23,21 +23,42 @@ const donationSchema = new mongoose.Schema(
       enum: ["one-time", "monthly"],
       default: "one-time",
     },
+    purpose: {
+      type: String,
+      default: "general_donation",
+    },
+    recurring: {
+      type: Boolean,
+      default: false,
+    },
+    frequency: {
+      type: String,
+      enum: ["monthly", "quarterly", "annually"],
+    },
     status: {
       type: String,
-      enum: ["pending", "succeeded", "failed"],
+      enum: ["pending", "completed", "succeeded", "failed", "refunded"],
       default: "pending",
     },
     paymentIntentId: String,
+    reference: {
+      type: String,
+      index: true,
+    },
     paymentMethod: {
       type: String,
-      enum: ["card", "ecocash", "bank_transfer"],
+      enum: ["card", "ecocash", "bank", "bank_transfer"],
       default: "card",
     },
     isAnonymous: {
       type: Boolean,
       default: false,
     },
+    message: {
+      type: String,
+      maxlength: 500,
+    },
+    completedAt: Date,
   },
   {
     timestamps: true,

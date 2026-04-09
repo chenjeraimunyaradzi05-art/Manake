@@ -14,6 +14,15 @@ import {
   legacySocialLoginApple,
   legacySocialLoginGoogle,
 } from "../controllers/mobileAuthSocialController";
+import {
+  legacyAuthenticate,
+  legacyForgotPassword,
+  legacyGetProfile,
+  legacyLogin,
+  legacyLogout,
+  legacyRegister,
+  legacyUpdateProfile,
+} from "../controllers/mobileAuthController";
 
 const router = Router();
 
@@ -29,6 +38,13 @@ router.use("/v1", v1Routes);
  */
 router.post("/auth/social/google", strictRateLimit, legacySocialLoginGoogle);
 router.post("/auth/social/apple", strictRateLimit, legacySocialLoginApple);
+
+router.post("/auth/login", strictRateLimit, legacyLogin);
+router.post("/auth/register", strictRateLimit, legacyRegister);
+router.post("/auth/logout", legacyAuthenticate, legacyLogout);
+router.get("/auth/profile", legacyAuthenticate, legacyGetProfile);
+router.put("/auth/profile", legacyAuthenticate, legacyUpdateProfile);
+router.post("/auth/forgot-password", strictRateLimit, legacyForgotPassword);
 
 /**
  * Legacy routes (backward compatibility)

@@ -23,6 +23,11 @@ export const DonationForm = ({ variant = "default" }: DonationFormProps) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [paymentInstructions, setPaymentInstructions] = useState<{
+    method: string;
+    reference: string;
+    amount: number;
+  } | null>(null);
 
   const presetAmounts = [10, 25, 50, 100, 250];
   const finalAmount = customAmount
@@ -86,24 +91,111 @@ export const DonationForm = ({ variant = "default" }: DonationFormProps) => {
       const data = await response.json();
 
       // Handle different payment methods
-      if (paymentMethod === "card") {
-        // Redirect to Stripe checkout or show card input
+      if (paymentMethod === "card" && data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
-      } else if (paymentMethod === "ecocash") {
-        // Show Ecocash instructions
-        window.location.href = `/donate/ecocash?ref=${data.reference}`;
+      } else if (paymentMethod === "ecocash" || paymentMethod === "bank") {
+        setPaymentInstructions({
+          method: paymentMethod,
+          reference: data.reference as string,
+          amount: finalAmount,
+        });
       } else {
-        // Show bank transfer details
-        window.location.href = `/donate/bank?ref=${data.reference}`;
+        setSuccess(true);
       }
-
-      setSuccess(true);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (paymentInstructions) {
+    const isEcocash = paymentInstructions.method === "ecocash";
+    return (
+      <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-10 h-10 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold mb-2 text-gray-900 text-center">
+          {isEcocash ? "EcoCash Payment" : "Bank Transfer"}
+        </h2>
+        <p className="text-gray-600 mb-6 text-center">
+          Please complete your ${paymentInstructions.amount} donation using the
+          details below.
+        </p>
+        <div className="bg-gray-50 rounded-xl p-5 space-y-3 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-600 font-medium">Reference:</span>
+            <span className="font-mono font-bold text-gray-900">
+              {paymentInstructions.reference}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-600 font-medium">Amount:</span>
+            <span className="font-bold text-gray-900">
+              ${paymentInstructions.amount}
+            </span>
+          </div>
+          {isEcocash ? (
+            <>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">
+                  EcoCash Number:
+                </span>
+                <span className="font-bold text-gray-900">
+                  +263 77 577 2277
+                </span>
+              </div>
+              <p className="text-gray-500 pt-2 border-t">
+                Dial *151# → Send Money → Enter the number above and the
+                reference code.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Bank:</span>
+                <span className="font-bold text-gray-900">
+                  CBZ Bank Zimbabwe
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Account Name:</span>
+                <span className="font-bold text-gray-900">
+                  Manake Rehab Center
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 font-medium">Account No.:</span>
+                <span className="font-mono font-bold text-gray-900">
+                  Contact us
+                </span>
+              </div>
+              <p className="text-gray-500 pt-2 border-t">
+                Use the reference code above as the payment reference. Email{" "}
+                <a
+                  href="mailto:info@manake.org.zw"
+                  className="text-primary-600 underline"
+                >
+                  info@manake.org.zw
+                </a>{" "}
+                after transferring.
+              </p>
+            </>
+          )}
+        </div>
+        <button
+          onClick={() => {
+            setPaymentInstructions(null);
+            setSuccess(false);
+          }}
+          className="mt-6 w-full btn-primary"
+        >
+          Make Another Donation
+        </button>
+      </div>
+    );
+  }
 
   if (success) {
     return (

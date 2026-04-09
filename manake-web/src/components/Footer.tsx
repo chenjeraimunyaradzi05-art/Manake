@@ -28,9 +28,9 @@ export const Footer = () => {
 
   const supportLinks = [
     { name: "Donate", path: "/donate" },
-    { name: "Volunteer", path: "/volunteer" },
-    { name: "Partner With Us", path: "/partner" },
-    { name: "Fundraise", path: "/fundraise" },
+    { name: "Volunteer", path: "/contact" },
+    { name: "Partner With Us", path: "/contact" },
+    { name: "Fundraise", path: "/contact" },
   ];
 
   return (
@@ -190,7 +190,7 @@ export const Footer = () => {
 
             {/* WhatsApp CTA */}
             <a
-              href="https://wa.me/263776123456?text=Hello%20Manake%2C%20I%20need%20help"
+              href="https://wa.me/263775772277?text=Hello%20Manake%2C%20I%20need%20help"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-6 inline-flex items-center gap-2 text-white px-4 py-2 rounded-lg transition-all hover:shadow-lg"

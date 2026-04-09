@@ -1,11 +1,11 @@
 {
-  "name": "Manake - Recovery Support Platform",
+  "name": "Manake Rehabilitation Center",
   "short_name": "Manake",
-  "description": "A comprehensive social networking platform for recovery support, featuring stories, connections, mentorship, and community groups.",
+  "description": "Manake Rehabilitation Center empowers youth in Zimbabwe to overcome drug and alcohol addiction through recovery programs, life skills training, and community support.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#6366f1",
+  "theme_color": "#2d1b69",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [
