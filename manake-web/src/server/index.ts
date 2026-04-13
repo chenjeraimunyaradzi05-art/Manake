@@ -130,9 +130,6 @@ const startServer = async () => {
   try {
     ensureProductionEnv();
 
-    // Connect to MongoDB
-    await connectDB();
-
     httpServer.listen(PORT, () => {
       logger.info("Server started", {
         port: PORT,
@@ -142,6 +139,12 @@ const startServer = async () => {
         url: `http://localhost:${PORT}`,
         health: `http://localhost:${PORT}/health`,
         api: `http://localhost:${PORT}/api`,
+      });
+    });
+
+    void connectDB().catch((error) => {
+      logger.error("Initial database connection failed after server startup", {
+        error,
       });
     });
   } catch (error) {
