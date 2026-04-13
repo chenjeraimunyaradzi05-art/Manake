@@ -21,7 +21,6 @@ const __serverDir = path.dirname(__serverFilename);
 const distPath = path.resolve(__serverDir, "../../dist");
 
 import { connectDB } from "./config/db";
-import { ensureProductionEnv } from "./config/env";
 import apiRoutes from "./routes";
 import { initSocketIO } from "./socket";
 import {
@@ -40,6 +39,37 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
+const productionStartupOptionalEnv = [
+  "JWT_SECRET",
+  "JWT_REFRESH_SECRET",
+  "STRIPE_SECRET_KEY",
+] as const;
+
+const serializeError = (error: unknown): Record<string, unknown> =>
+  error instanceof Error
+    ? {
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        },
+      }
+    : { error };
+
+const logStartupEnvWarnings = (): void => {
+  if (process.env.NODE_ENV !== "production") return;
+
+  const missing = productionStartupOptionalEnv.filter(
+    (key) => !process.env[key],
+  );
+
+  if (missing.length > 0) {
+    logger.warn(
+      "Production environment variables missing; some features may be unavailable until configured",
+      { missing },
+    );
+  }
+};
 
 // Initialize Socket.IO
 const io = initSocketIO(httpServer);
@@ -128,7 +158,7 @@ app.use(errorHandler);
 // Start server
 const startServer = async () => {
   try {
-    ensureProductionEnv();
+    logStartupEnvWarnings();
 
     httpServer.listen(PORT, () => {
       logger.info("Server started", {
@@ -143,12 +173,13 @@ const startServer = async () => {
     });
 
     void connectDB().catch((error) => {
-      logger.error("Initial database connection failed after server startup", {
-        error,
-      });
+      logger.error(
+        "Initial database connection failed after server startup",
+        serializeError(error),
+      );
     });
   } catch (error) {
-    logger.error("Failed to start server", { error });
+    logger.error("Failed to start server", serializeError(error));
     process.exit(1);
   }
 };
