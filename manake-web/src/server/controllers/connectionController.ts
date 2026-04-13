@@ -39,7 +39,7 @@ export const getConnectionRequests = async (req: Request, res: Response) => {
 // Send a connection request
 export const sendConnectionRequest = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { targetUserId } = req.params;
+  const targetUserId = req.params.targetUserId as string;
   const { connectionType } = req.body as {
     connectionType?: ConnectionType;
     message?: string;

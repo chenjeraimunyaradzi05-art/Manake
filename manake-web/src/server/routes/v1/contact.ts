@@ -70,7 +70,7 @@ router.patch(
     "body",
   ),
   asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { status } = req.body;
 
     const contact = await prisma.contact.update({

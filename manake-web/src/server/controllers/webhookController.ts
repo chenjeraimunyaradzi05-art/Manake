@@ -63,7 +63,7 @@ export const ingestWebhook = async (
       eventId,
       status: "received",
       headers: req.headers as Record<string, string>,
-      payload: (req.body as Record<string, unknown>) ?? {},
+      payload: JSON.parse(JSON.stringify(req.body ?? {})),
       signature,
       ipAddress: req.ip,
     },
