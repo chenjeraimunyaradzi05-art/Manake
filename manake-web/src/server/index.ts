@@ -39,6 +39,7 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
+const DB_RETRY_DELAY_MS = 15000;
 const productionStartupOptionalEnv = [
   "JWT_SECRET",
   "JWT_REFRESH_SECRET",
@@ -83,6 +84,41 @@ const normalizeOrigin = (value: string | undefined): string | null => {
     return new URL(normalizedValue).origin.toLowerCase();
   } catch {
     return null;
+  }
+};
+
+let dbRetryTimer: ReturnType<typeof setTimeout> | null = null;
+let dbConnectAttempt = 0;
+
+const scheduleDatabaseReconnect = (): void => {
+  if (dbRetryTimer) {
+    return;
+  }
+
+  dbRetryTimer = setTimeout(() => {
+    dbRetryTimer = null;
+    void connectDatabaseWithRetry();
+  }, DB_RETRY_DELAY_MS);
+
+  logger.warn("Scheduling database reconnect attempt", {
+    retryInMs: DB_RETRY_DELAY_MS,
+  });
+};
+
+const connectDatabaseWithRetry = async (): Promise<void> => {
+  dbConnectAttempt += 1;
+
+  try {
+    await connectDB();
+    dbConnectAttempt = 0;
+  } catch (error) {
+    logger.error(
+      dbConnectAttempt === 1
+        ? "Initial database connection failed after server startup"
+        : "Database reconnect attempt failed",
+      serializeError(error),
+    );
+    scheduleDatabaseReconnect();
   }
 };
 
@@ -201,12 +237,7 @@ const startServer = async () => {
       });
     });
 
-    void connectDB().catch((error) => {
-      logger.error(
-        "Initial database connection failed after server startup",
-        serializeError(error),
-      );
-    });
+    void connectDatabaseWithRetry();
   } catch (error) {
     logger.error("Failed to start server", serializeError(error));
     process.exit(1);
