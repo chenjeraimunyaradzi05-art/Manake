@@ -1,14 +1,20 @@
+import autoprefixer from "autoprefixer";
+import postcssImport from "postcss-import";
+import postcssNesting from "postcss-nesting";
+import postcssPresetEnv from "postcss-preset-env";
+import tailwindcss from "tailwindcss";
+
 export default {
-  plugins: {
-    "postcss-import": {},
-    "tailwindcss/nesting": "postcss-nesting",
-    "postcss-preset-env": {
+  plugins: [
+    postcssImport(),
+    postcssNesting(),
+    postcssPresetEnv({
       stage: 1,
       features: {
-        "nesting-rules": false, // handled by postcss-nesting
+        "nesting-rules": false,
       },
-    },
-    tailwindcss: {},
-    autoprefixer: {},
-  },
+    }),
+    tailwindcss(),
+    autoprefixer(),
+  ],
 };
