@@ -70,12 +70,14 @@ export const HomePage = () => {
 
   return (
     <>
-      {/* Hero Section - Cosmic Royal Theme */}
+      {/* Hero Section - Cosmic Royal Theme with Zimbabwe Landscape */}
       <section
         className="relative overflow-hidden min-h-[90vh] flex items-center"
         style={{
-          background:
-            "linear-gradient(135deg, #1a0f2e 0%, #2d1b69 50%, #6b4c9a 100%)",
+          backgroundImage:
+            "linear-gradient(135deg, rgba(26,15,46,0.91) 0%, rgba(45,27,105,0.87) 50%, rgba(107,76,154,0.82) 100%), url('https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&fit=crop&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         {/* Animated background elements */}
@@ -359,8 +361,8 @@ export const HomePage = () => {
             <div className="grid md:grid-cols-2 gap-0">
               <div className="relative h-64 md:h-auto">
                 <img
-                  src="https://images.unsplash.com/photo-1542300058-b94b8ab7411b?auto=format&fit=crop&q=80&w=800"
-                  alt="Tendai's transformation story"
+                  src="https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&q=80&w=800"
+                  alt="Tendai's transformation story - Zimbabwe youth recovery"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-4 left-4">
@@ -518,6 +520,48 @@ export const HomePage = () => {
               <BookOpen size={20} />
               View All Programs
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Zimbabwe Identity Section */}
+      <section
+        className="relative py-0 overflow-hidden"
+        style={{ minHeight: 320 }}
+      >
+        <img
+          src="https://images.unsplash.com/photo-1489493585363-d2a8c2b0e547?w=1920&fit=crop&q=80"
+          alt="Zimbabwe Victoria Falls — the pride of Zimbabwe"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-transparent" />
+        <div className="relative z-10 container-custom py-20 flex flex-col justify-center">
+          <div className="max-w-2xl">
+            <span className="inline-flex items-center gap-2 text-gold-300 text-xs font-semibold tracking-widest uppercase mb-3">
+              <span className="h-px w-6 bg-gold-400" /> Norton, Mashonaland
+              West, Zimbabwe
+            </span>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
+              Rooted in Zimbabwe,
+              <span className="text-gold-400"> Growing Together</span>
+            </h2>
+            <p className="text-white/85 text-lg mb-6 max-w-xl">
+              From the heart of Norton, Mashonaland West, Manake serves youth
+              and families across Zimbabwe — bringing hope, healing, and a path
+              forward to every community we touch.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {["Norton", "Harare", "Mashonaland West", "All of Zimbabwe"].map(
+                (loc) => (
+                  <span
+                    key={loc}
+                    className="px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-white text-sm font-medium border border-white/20"
+                  >
+                    📍 {loc}
+                  </span>
+                ),
+              )}
+            </div>
           </div>
         </div>
       </section>

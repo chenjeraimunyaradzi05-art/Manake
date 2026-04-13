@@ -42,7 +42,15 @@ export const DonatePage = () => {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-primary-600 to-primary-800 text-white py-16">
+      <section
+        className="relative text-white py-16"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(107,76,154,0.92) 0%, rgba(74,32,105,0.94) 100%), url('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=1920&fit=crop&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <div className="container-custom text-center">
           <span className="inline-block bg-white/20 text-white text-sm font-medium px-4 py-2 rounded-full mb-6">
             <Heart className="inline w-4 h-4 mr-1" />

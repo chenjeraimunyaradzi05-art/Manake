@@ -163,7 +163,7 @@ export const Footer = () => {
                   className="text-gold-500 flex-shrink-0 mt-1"
                 />
                 <span className="text-primary-300">
-                  123 Hope Street, Harare,
+                  Norton, Mashonaland West,
                   <br />
                   Zimbabwe
                 </span>

@@ -9,9 +9,16 @@ import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import path from "path";
+import { fileURLToPath } from "url";
 
 // Load environment variables explicitly from .env file
 dotenv.config({ path: path.join(process.cwd(), ".env") });
+
+// ESM __dirname equivalent
+const __serverFilename = fileURLToPath(import.meta.url);
+const __serverDir = path.dirname(__serverFilename);
+// dist is at ../../dist relative to src/server/index.ts
+const distPath = path.resolve(__serverDir, "../../dist");
 
 import { connectDB } from "./config/db";
 import { ensureProductionEnv } from "./config/env";
@@ -102,6 +109,15 @@ app.get("/health", (_req, res) => {
     version: "1.0.0",
   });
 });
+
+// Serve React frontend in production (after API routes, before 404)
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(distPath));
+  // SPA fallback — serve index.html for all non-API routes (React Router)
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 // 404 handler
 app.use(notFoundHandler);

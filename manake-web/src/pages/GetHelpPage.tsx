@@ -58,7 +58,15 @@ export const GetHelpPage = () => {
   return (
     <>
       {/* Hero */}
-      <section className="bg-gradient-to-r from-red-600 to-primary-800 text-white py-16">
+      <section
+        className="relative text-white py-16"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(185,28,28,0.90) 0%, rgba(74,32,105,0.92) 100%), url('https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=1920&fit=crop&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <div className="container-custom">
           <p className="text-sm uppercase tracking-wide text-red-100 mb-3">
             You are not alone

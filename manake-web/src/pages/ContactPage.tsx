@@ -5,7 +5,15 @@ import { Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
 export const ContactPage = () => {
   return (
     <>
-      <section className="bg-gradient-to-r from-primary-700 to-primary-900 text-white py-16">
+      <section
+        className="relative text-white py-16"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(74,32,105,0.92) 0%, rgba(45,27,105,0.94) 100%), url('https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=1920&fit=crop&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
         <div className="container-custom">
           <h1 className="text-xl md:text-2xl font-bold mb-4">Contact Us</h1>
           <p className="text-lg text-primary-100 max-w-2xl">
@@ -77,9 +85,9 @@ export const ContactPage = () => {
               <div className="flex gap-3 items-start text-gray-700">
                 <MapPin className="text-primary-600 w-5 h-5 mt-1" />
                 <div>
-                  123 Hope Street
+                  Norton, Mashonaland West
                   <br />
-                  Harare, Zimbabwe
+                  Zimbabwe
                 </div>
               </div>
             </div>

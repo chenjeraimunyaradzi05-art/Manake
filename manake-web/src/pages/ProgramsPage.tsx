@@ -17,7 +17,7 @@ export const ProgramsPage = () => {
         "Relapse prevention curriculum",
       ],
       image:
-        "https://images.unsplash.com/photo-1579389083395-4507e98b5e67?w=800", // African doctor/patient
+        "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&fit=crop&q=80", // African healthcare
       color: "primary",
     },
     {
@@ -34,7 +34,7 @@ export const ProgramsPage = () => {
         "Return-to-school/work planning",
       ],
       image:
-        "https://images.unsplash.com/photo-1533090161767-e6ffed986c88?w=800", // Group meeting
+        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&fit=crop&q=80", // Zimbabwe youth group
       color: "secondary",
     },
     {
@@ -51,7 +51,7 @@ export const ProgramsPage = () => {
         "Mentorship by alumni",
       ],
       image:
-        "https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=800", // Learning/working
+        "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&fit=crop&q=80", // African vocational/school
       color: "accent",
     },
     {
@@ -68,7 +68,7 @@ export const ProgramsPage = () => {
         "Sibling inclusion when appropriate",
       ],
       image:
-        "https://images.unsplash.com/photo-1511895426328-dc8714191300?w=800", // Group of people walking (Family) - Kept as it is good but verified context
+        "https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=800&fit=crop&q=80", // African family/group
       color: "primary",
     },
     {
@@ -85,7 +85,7 @@ export const ProgramsPage = () => {
         "Referral pathways",
       ],
       image:
-        "https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?w=800", // Boys outside (Community) - Kept as it is good but verified context
+        "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=800&fit=crop&q=80", // African children community outreach
       color: "secondary",
     },
     {
@@ -102,14 +102,22 @@ export const ProgramsPage = () => {
         "Path to staff roles",
       ],
       image:
-        "https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800", // Group meeting diverse
+        "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=800&fit=crop&q=80", // Zimbabwe alumni peer circle
       color: "accent",
     },
   ];
 
   return (
     <>
-      <section className="bg-gradient-to-r from-primary-700 to-primary-900 text-white py-16">
+      <section
+        className="relative text-white py-16"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(74,32,105,0.92) 0%, rgba(26,15,46,0.95) 100%), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1920&fit=crop&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center top",
+        }}
+      >
         <div className="container-custom">
           <h1 className="text-xl md:text-2xl font-bold mb-4">Our Programs</h1>
           <p className="text-lg text-primary-100 max-w-2xl">
