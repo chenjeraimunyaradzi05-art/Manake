@@ -5,8 +5,12 @@
  */
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import type { User as PrismaUser } from "@prisma/client";
-import { generateTokenPair, hashToken, verifyRefreshToken } from "../utils/jwt";
+import {
+  assertJwtConfig,
+  generateTokenPair,
+  hashToken,
+  verifyRefreshToken,
+} from "../utils/jwt";
 import {
   BadRequestError,
   UnauthorizedError,
@@ -16,6 +20,8 @@ import {
 import { prisma } from "../config/prisma";
 import { emailService } from "./emailService";
 import { logger } from "../utils/logger";
+
+type PrismaUser = NonNullable<Awaited<ReturnType<typeof prisma.user.findUnique>>>;
 
 // Map a Prisma User row to the public-safe shape returned by the API
 function userToPublic(user: PrismaUser): Record<string, unknown> {
@@ -89,6 +95,8 @@ class AuthService {
   ): Promise<AuthResult> {
     const { email, password } = credentials;
 
+    assertJwtConfig();
+
     if (!email || !password) {
       throw new BadRequestError("Email and password are required");
     }
@@ -154,6 +162,8 @@ class AuthService {
     deviceInfo?: DeviceInfo,
   ): Promise<AuthResult> {
     const { email, password, name, phone } = data;
+
+    assertJwtConfig();
 
     if (!email || !password || !name) {
       throw new BadRequestError("Email, password, and name are required");
@@ -461,6 +471,8 @@ class AuthService {
     user: PrismaUser,
     deviceInfo?: DeviceInfo,
   ): Promise<TokenPair> {
+    assertJwtConfig();
+
     const tokens = generateTokenPair({
       id: user.id,
       email: user.email,

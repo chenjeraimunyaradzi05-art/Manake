@@ -53,8 +53,16 @@ export const SignUpPage = () => {
     } catch (err) {
       console.error("Registration failed", err);
       let msg = "Failed to create account. Please try again.";
-      if (isAxiosError(err) && err.response?.data?.message) {
-        msg = err.response.data.message;
+      if (isAxiosError(err)) {
+        const data = err.response?.data as {
+          error?: { message?: string };
+          message?: string;
+        };
+        if (data?.error?.message) {
+          msg = data.error.message;
+        } else if (data?.message) {
+          msg = data.message;
+        }
       }
       setError(msg);
     } finally {

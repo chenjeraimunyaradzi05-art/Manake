@@ -4,7 +4,11 @@
  */
 import jwt, { SignOptions, JwtPayload } from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { UnauthorizedError, ForbiddenError } from "../errors";
+import {
+  UnauthorizedError,
+  ForbiddenError,
+  ServiceUnavailableError,
+} from "../errors";
 import crypto from "crypto";
 
 // Token payload interface
@@ -31,13 +35,25 @@ export interface TokenPair {
   expiresIn: number;
 }
 
+const JWT_CONFIG_ERROR_MESSAGE =
+  "Authentication is temporarily unavailable. Server configuration is incomplete.";
+
+export function assertJwtConfig(): void {
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
+
+  if (!process.env.JWT_SECRET || !process.env.JWT_REFRESH_SECRET) {
+    throw new ServiceUnavailableError(JWT_CONFIG_ERROR_MESSAGE);
+  }
+}
+
 // Get secret from environment with fallback for development
 const getAccessSecret = (): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === "production") {
-      // CRITICAL: Prevent startup in production without secrets
-      throw new Error("FATAL: JWT_SECRET must be set in production");
+      throw new ServiceUnavailableError(JWT_CONFIG_ERROR_MESSAGE);
     }
     return "dev-secret-change-in-production";
   }
@@ -48,8 +64,7 @@ const getRefreshSecret = (): string => {
   const secret = process.env.JWT_REFRESH_SECRET;
   if (!secret) {
     if (process.env.NODE_ENV === "production") {
-      // CRITICAL: Prevent startup in production without secrets
-      throw new Error("FATAL: JWT_REFRESH_SECRET must be set in production");
+      throw new ServiceUnavailableError(JWT_CONFIG_ERROR_MESSAGE);
     }
     return "dev-refresh-secret-change-in-production";
   }

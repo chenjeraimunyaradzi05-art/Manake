@@ -95,10 +95,11 @@ export const csrfOriginCheck = (allowedOrigins: string[]) => {
   const allowed = new Set(
     allowedOrigins.filter(Boolean).map((o) => o.toLowerCase()),
   );
+  const stateChangingMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const method = req.method.toUpperCase();
-    if (!(["POST", "PUT", "PATCH", "DELETE"] as const).includes(method as any)) {
+    if (!stateChangingMethods.has(method)) {
       return next();
     }
 
@@ -110,8 +111,24 @@ export const csrfOriginCheck = (allowedOrigins: string[]) => {
       return next();
     }
 
+    const forwardedProto =
+      ((req.headers["x-forwarded-proto"] as string | undefined) || req.protocol || "")
+        .split(",")[0]
+        .trim()
+        .toLowerCase();
+    const forwardedHost =
+      ((req.headers["x-forwarded-host"] as string | undefined) ||
+        req.headers.host ||
+        "")
+        .split(",")[0]
+        .trim()
+        .toLowerCase();
+    const requestOrigin =
+      forwardedProto && forwardedHost
+        ? `${forwardedProto}://${forwardedHost}`
+        : "";
     const origin = (originHeader || getOriginFromReferer(refererHeader) || "").toLowerCase();
-    if (origin && allowed.has(origin)) {
+    if (origin && (allowed.has(origin) || origin === requestOrigin)) {
       return next();
     }
 

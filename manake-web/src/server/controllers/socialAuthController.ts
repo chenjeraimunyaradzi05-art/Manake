@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
 import { prisma } from "../config/prisma";
-import { generateTokenPair } from "../utils/jwt";
+import { assertJwtConfig, generateTokenPair } from "../utils/jwt";
 import { BadRequestError, UnauthorizedError } from "../errors";
 import {
   verifySocialToken,
@@ -156,6 +156,8 @@ export const socialAuth = async (
     pageName,
   } = req.body as SocialAuthBody;
 
+  assertJwtConfig();
+
   const profile = await verifySocialToken(provider, token);
 
   let user = await upsertUserFromSocial(provider, profile);
@@ -215,6 +217,8 @@ export const appleCodeExchange = async (
     redirectUri?: string;
     mode?: "login" | "link";
   };
+
+  assertJwtConfig();
 
   if (!code) {
     throw new BadRequestError("Authorization code is required");
@@ -286,6 +290,8 @@ export const socialAuthCallback = async (
     redirectUri?: string;
     mode?: "login" | "link";
   };
+
+  assertJwtConfig();
 
   const profile = await exchangeCodeForProfile(provider, code, redirectUri);
 

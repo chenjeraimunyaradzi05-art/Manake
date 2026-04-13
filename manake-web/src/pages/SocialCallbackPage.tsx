@@ -73,6 +73,7 @@ export const SocialCallbackPage = () => {
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
         user: {
+          id: response.user?.id,
           name: response.user?.name,
           email: response.user?.email,
           avatar:

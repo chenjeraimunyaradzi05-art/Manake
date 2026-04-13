@@ -30,6 +30,7 @@ interface AuthContextValue {
     accessToken: string;
     refreshToken?: string;
     user?: {
+      id?: string;
       _id?: string;
       name?: string;
       email?: string | null;
@@ -90,7 +91,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const setUserFromProfile = useCallback(
     (profile: UserProfile) => {
       setUser({
-        _id: profile._id,
+        _id: profile._id || profile.id,
         name: profile.name || profile.email || "User",
         email: profile.email || null,
         avatar: profile.avatar ?? null,
@@ -112,7 +113,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       const profile = await fetchProfile();
       setUserFromProfile(profile);
-    } catch (profileError) {
+    } catch {
       if (refreshToken) {
         try {
           const tokens = await refreshTokens(refreshToken);
@@ -175,6 +176,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       accessToken: string;
       refreshToken?: string;
       user?: {
+        id?: string;
         _id?: string;
         name?: string;
         email?: string | null;
@@ -185,7 +187,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       persistTokens(payload.accessToken, payload.refreshToken);
       if (payload.user) {
         setUser({
-          _id: payload.user._id,
+          _id: payload.user._id || payload.user.id,
           name: payload.user.name || payload.user.email || "User",
           email: payload.user.email || null,
           avatar: payload.user.avatar ?? null,

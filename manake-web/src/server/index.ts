@@ -71,6 +71,21 @@ const logStartupEnvWarnings = (): void => {
   }
 };
 
+const normalizeOrigin = (value: string | undefined): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const normalizedValue = /^https?:\/\//i.test(value)
+      ? value
+      : `https://${value}`;
+    return new URL(normalizedValue).origin.toLowerCase();
+  } catch {
+    return null;
+  }
+};
+
 // Initialize Socket.IO
 const io = initSocketIO(httpServer);
 // Make io available in routes via req.app.get('io') or similar if needed,
@@ -83,9 +98,22 @@ app.use(helmet());
 app.use(securityHeaders());
 
 // CORS configuration - restrict in production
+const productionAllowedOrigins = Array.from(
+  new Set(
+    [
+      process.env.FRONTEND_URL,
+      process.env.RAILWAY_STATIC_URL,
+      process.env.RAILWAY_PUBLIC_DOMAIN,
+      "https://manake.org.zw",
+      "https://www.manake.org.zw",
+    ]
+      .map((value) => normalizeOrigin(value))
+      .filter((value): value is string => Boolean(value)),
+  ),
+);
 const allowedOrigins =
   process.env.NODE_ENV === "production"
-    ? [process.env.FRONTEND_URL || "https://manake.org.zw"]
+    ? productionAllowedOrigins
     : ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(
@@ -99,7 +127,8 @@ app.use(
         return callback(null, true);
       }
 
-      if (allowedOrigins.includes(origin)) {
+      const normalizedOrigin = normalizeOrigin(origin);
+      if (normalizedOrigin && allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"));
