@@ -11,18 +11,14 @@ export const connectDB = async () => {
   }
 
   try {
-    const mongoUri = env.MONGODB_URI;
+    // Accept Railway's auto-injected MONGO_URL as well as the conventional MONGODB_URI
+    const mongoUri = env.MONGODB_URI || env.MONGO_URL || process.env.MONGO_URL;
 
-    // Debug logging to diagnose why it thinks URI is not set
     if (!mongoUri) {
-      console.log(
-        "DEBUG: env keys:",
-        Object.keys(process.env).filter((k) => k.includes("MONGO")),
-      );
-      console.log("DEBUG: env.MONGODB_URI from zod:", env.MONGODB_URI);
-
       if (isProduction) {
-        throw new Error("MONGODB_URI must be set in production");
+        throw new Error(
+          "No MongoDB URI found. Set MONGODB_URI or MONGO_URL (Railway injects MONGO_URL automatically).",
+        );
       }
 
       logger.warn("MONGODB_URI not set; skipping MongoDB connection", {
