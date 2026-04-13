@@ -114,7 +114,7 @@ app.get("/health", (_req, res) => {
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(distPath));
   // SPA fallback — serve index.html for all non-API routes (React Router)
-  app.get("*", (_req, res) => {
+  app.get("/{*path}", (_req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
 }
