@@ -15,15 +15,19 @@ export const getStories = async (req: Request, res: Response) => {
       ? escapeRegex(String(search).trim().slice(0, 64))
       : null;
 
-    const where: Record<string, unknown> = {
-      status: status || "published",
-      ...(category && category !== "all" ? { category } : {}),
+    const storyWhere = {
+      status: (status as string) || "published",
+      ...(category && category !== "all"
+        ? { category: category as string }
+        : {}),
       ...(featured === "true" ? { featured: true } : {}),
       ...(searchStr
         ? {
             OR: [
-              { title: { contains: searchStr, mode: "insensitive" } },
-              { excerpt: { contains: searchStr, mode: "insensitive" } },
+              { title: { contains: searchStr, mode: "insensitive" as const } },
+              {
+                excerpt: { contains: searchStr, mode: "insensitive" as const },
+              },
             ],
           }
         : {}),
@@ -31,13 +35,13 @@ export const getStories = async (req: Request, res: Response) => {
 
     const [stories, total] = await Promise.all([
       prisma.story.findMany({
-        where,
+        where: storyWhere,
         orderBy: { createdAt: "desc" },
         skip,
         take: limitNum,
         include: { comments: true },
       }),
-      prisma.story.count({ where }),
+      prisma.story.count({ where: storyWhere }),
     ]);
 
     // Return paginated shape that frontend expects

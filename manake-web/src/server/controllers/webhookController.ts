@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
-import { WebhookEvent, WebhookSource } from "../models/WebhookEvent";
+import { prisma } from "../config/prisma";
+import { WebhookSource } from "../models/WebhookEvent";
 import { ApiError } from "../errors";
 
 const resolveSource = (provider: string): WebhookSource => {
@@ -55,25 +56,33 @@ export const ingestWebhook = async (
     req.headers["x-message-type"]) as string | undefined;
   const expectedSecret = getSecretForProvider(provider);
 
-  const event = await WebhookEvent.create({
-    source,
-    eventType: eventType || "unknown",
-    eventId,
-    status: "received",
-    headers: req.headers as Record<string, string>,
-    payload: req.body as Record<string, unknown>,
-    signature,
-    ipAddress: req.ip,
+  const event = await prisma.webhookEvent.create({
+    data: {
+      source,
+      eventType: eventType || "unknown",
+      eventId,
+      status: "received",
+      headers: req.headers as Record<string, string>,
+      payload: (req.body as Record<string, unknown>) ?? {},
+      signature,
+      ipAddress: req.ip,
+    },
   });
 
   const isValid = verifySignature(signature, expectedSecret, req.body || {});
   if (!isValid) {
-    await event.markFailed("Signature verification failed");
+    await prisma.webhookEvent.update({
+      where: { id: event.id },
+      data: { status: "failed", errorMessage: "Signature verification failed" },
+    });
     throw new ApiError("Invalid webhook signature", 401, "INVALID_SIGNATURE");
   }
 
   const duration = Date.now() - started;
-  await event.markProcessed(duration);
+  await prisma.webhookEvent.update({
+    where: { id: event.id },
+    data: { status: "processed", processingMs: duration },
+  });
 
   res.json({ status: "ok", processedInMs: duration });
 };

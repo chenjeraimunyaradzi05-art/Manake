@@ -1,48 +1,66 @@
 import { Request, Response } from "express";
-import { User, IUser } from "../models/User";
-import { Connection } from "../models/Connection";
-import { Post } from "../models/Post";
+import { prisma } from "../config/prisma";
 import { NotFoundError, BadRequestError } from "../errors";
+
+const PUBLIC_USER_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  avatar: true,
+  role: true,
+  bio: true,
+  headline: true,
+  bannerImage: true,
+  location: true,
+  interests: true,
+  skills: true,
+  isMentor: true,
+  visibility: true,
+  isActive: true,
+  isEmailVerified: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 // Get a user's public profile
 export const getProfile = async (req: Request, res: Response) => {
   const { userId } = req.params;
   const currentUserId = req.user?.userId;
 
-  const user = await User.findById(userId)
-    .select("-passwordHash -emailVerificationToken -passwordResetToken -passwordResetExpires")
-    .lean();
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: PUBLIC_USER_SELECT,
+  });
 
   if (!user) throw new NotFoundError("User");
 
-  // Check privacy settings
-  const privacy = user.privacy || { visibility: "public" };
   const isOwnProfile = currentUserId === userId;
 
-  if (!isOwnProfile && privacy.visibility === "private") {
+  if (!isOwnProfile && user.visibility === "private") {
     return res.json({
-      _id: user._id,
+      id: user.id,
       name: user.name,
       avatar: user.avatar,
       isPrivate: true,
     });
   }
 
-  // Check if connection-only and not connected
-  if (!isOwnProfile && privacy.visibility === "connections-only") {
-    const connection = await Connection.findOne({
-      $or: [
-        { userId: currentUserId, connectedUserId: userId, status: "accepted" },
-        { userId, connectedUserId: currentUserId, status: "accepted" },
-      ],
+  if (!isOwnProfile && user.visibility === "connections-only") {
+    const connection = await prisma.connection.findFirst({
+      where: {
+        status: "accepted",
+        OR: [
+          { userId: currentUserId, connectedUserId: userId },
+          { userId, connectedUserId: currentUserId },
+        ],
+      },
     });
-
     if (!connection) {
       return res.json({
-        _id: user._id,
+        id: user.id,
         name: user.name,
         avatar: user.avatar,
-        profile: { headline: user.profile?.headline },
+        headline: user.headline,
         isConnectionsOnly: true,
       });
     }
@@ -56,10 +74,11 @@ export const getUserActivity = async (req: Request, res: Response) => {
   const { userId } = req.params;
   const limit = parseInt(req.query.limit as string) || 10;
 
-  const activity = await Post.find({ author: userId, isPublic: true })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean();
+  const activity = await prisma.post.findMany({
+    where: { authorId: userId, scope: "public" },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
 
   res.json(activity);
 };
@@ -69,46 +88,63 @@ export const getUserStats = async (req: Request, res: Response) => {
   const { userId } = req.params;
 
   const [connectionsCount, postsCount] = await Promise.all([
-    Connection.countDocuments({
-      $or: [{ userId }, { connectedUserId: userId }],
-      status: "accepted",
+    prisma.connection.count({
+      where: {
+        status: "accepted",
+        OR: [{ userId }, { connectedUserId: userId }],
+      },
     }),
-    Post.countDocuments({ author: userId, isPublic: true }),
+    prisma.post.count({ where: { authorId: userId, scope: "public" } }),
   ]);
 
-  res.json({
-    connections: connectionsCount,
-    posts: postsCount,
-  });
+  res.json({ connections: connectionsCount, posts: postsCount });
 };
 
 // Update own profile
 export const updateProfile = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const updates = req.body as Partial<IUser>;
+  const body = req.body as Record<string, unknown>;
 
-  // Only allow certain fields to be updated
-  const allowedUpdates = {
-    name: updates.name,
-    avatar: updates.avatar,
-    profile: updates.profile,
-    mentorship: updates.mentorship,
-    privacy: updates.privacy,
-    preferences: updates.preferences,
-  };
+  // Map nested API fields to flat Prisma columns
+  const profile = (body.profile as Record<string, unknown>) || {};
+  const privacy = (body.privacy as Record<string, unknown>) || {};
+  const prefs = (body.preferences as Record<string, unknown>) || {};
+  const mentorship = (body.mentorship as Record<string, unknown>) || {};
 
-  // Validate bio length
-  if (allowedUpdates.profile?.bio && allowedUpdates.profile.bio.length > 500) {
-    throw new BadRequestError("Bio cannot exceed 500 characters");
+  const data: Record<string, unknown> = {};
+  if (body.name !== undefined) data.name = body.name;
+  if (body.avatar !== undefined) data.avatar = body.avatar;
+  if (profile.bio !== undefined) {
+    if (typeof profile.bio === "string" && profile.bio.length > 500) {
+      throw new BadRequestError("Bio cannot exceed 500 characters");
+    }
+    data.bio = profile.bio;
   }
+  if (profile.headline !== undefined) data.headline = profile.headline;
+  if (profile.location !== undefined) data.location = profile.location;
+  if (profile.interests !== undefined) data.interests = profile.interests;
+  if (profile.skills !== undefined) data.skills = profile.skills;
+  if (privacy.visibility !== undefined) data.visibility = privacy.visibility;
+  if (privacy.allowMessages !== undefined)
+    data.allowMessages = privacy.allowMessages;
+  if (privacy.allowMentorRequests !== undefined)
+    data.allowMentorRequests = privacy.allowMentorRequests;
+  if (prefs.emailNotifications !== undefined)
+    data.emailNotifications = prefs.emailNotifications;
+  if (prefs.pushNotifications !== undefined)
+    data.pushNotifications = prefs.pushNotifications;
+  if (mentorship.isMentor !== undefined) data.isMentor = mentorship.isMentor;
+  if (mentorship.specializations !== undefined)
+    data.specializations = mentorship.specializations;
 
-  const user = await User.findByIdAndUpdate(
-    userId,
-    { $set: allowedUpdates },
-    { new: true, runValidators: true }
-  ).select("-passwordHash -emailVerificationToken -passwordResetToken -passwordResetExpires");
+  const existing = await prisma.user.findUnique({ where: { id: userId } });
+  if (!existing) throw new NotFoundError("User");
 
-  if (!user) throw new NotFoundError("User");
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data,
+    select: PUBLIC_USER_SELECT,
+  });
 
   res.json(user);
 };
@@ -119,38 +155,40 @@ export const getMutualConnections = async (req: Request, res: Response) => {
   const currentUserId = req.user!.userId;
   const limit = parseInt(req.query.limit as string) || 5;
 
-  // Get current user's connections
-  const myConnections = await Connection.find({
-    $or: [{ userId: currentUserId }, { connectedUserId: currentUserId }],
-    status: "accepted",
-  }).lean();
+  const [myConnections, theirConnections] = await Promise.all([
+    prisma.connection.findMany({
+      where: {
+        status: "accepted",
+        OR: [{ userId: currentUserId }, { connectedUserId: currentUserId }],
+      },
+      select: { userId: true, connectedUserId: true },
+    }),
+    prisma.connection.findMany({
+      where: {
+        status: "accepted",
+        OR: [{ userId }, { connectedUserId: userId }],
+      },
+      select: { userId: true, connectedUserId: true },
+    }),
+  ]);
 
   const myConnectionIds = new Set<string>();
   for (const c of myConnections) {
-    if (c.userId.toString() !== currentUserId) myConnectionIds.add(c.userId.toString());
-    if (c.connectedUserId.toString() !== currentUserId) myConnectionIds.add(c.connectedUserId.toString());
+    if (c.userId !== currentUserId) myConnectionIds.add(c.userId);
+    if (c.connectedUserId !== currentUserId)
+      myConnectionIds.add(c.connectedUserId);
   }
-
-  // Get target user's connections
-  const theirConnections = await Connection.find({
-    $or: [{ userId }, { connectedUserId: userId }],
-    status: "accepted",
-  }).lean();
 
   const mutualIds: string[] = [];
   for (const c of theirConnections) {
-    const otherId = c.userId.toString() === userId ? c.connectedUserId.toString() : c.userId.toString();
-    if (myConnectionIds.has(otherId)) {
-      mutualIds.push(otherId);
-    }
+    const otherId = c.userId === userId ? c.connectedUserId : c.userId;
+    if (myConnectionIds.has(otherId)) mutualIds.push(otherId);
   }
 
-  const mutuals = await User.find({ _id: { $in: mutualIds.slice(0, limit) } })
-    .select("name avatar profile.headline")
-    .lean();
-
-  res.json({
-    mutuals,
-    totalCount: mutualIds.length,
+  const mutuals = await prisma.user.findMany({
+    where: { id: { in: mutualIds.slice(0, limit) } },
+    select: { id: true, name: true, avatar: true, headline: true },
   });
+
+  res.json({ mutuals, totalCount: mutualIds.length });
 };

@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { Conversation } from "../models/Conversation";
-import { Message } from "../models/Message";
+import { prisma } from "../config/prisma";
 import { NotFoundError } from "../errors";
 
 // Create or get existing direct conversation
@@ -11,53 +10,72 @@ export const getOrCreateDirectConversation = async (
   const userId = req.user!.userId;
   const { recipientId } = req.body;
 
-  let conversation = await Conversation.findOne({
-    type: "direct",
-    participants: { $all: [userId, recipientId] },
+  let conversation = await prisma.conversation.findFirst({
+    where: {
+      type: "direct",
+      AND: [
+        { participants: { has: userId } },
+        { participants: { has: recipientId } },
+      ],
+    },
   });
 
   if (!conversation) {
-    conversation = await Conversation.create({
-      type: "direct",
-      participants: [userId, recipientId],
+    conversation = await prisma.conversation.create({
+      data: {
+        type: "direct",
+        participants: [userId, recipientId],
+        admins: [],
+      },
     });
   }
 
-  // Populate participants details
-  await conversation.populate("participants", "name avatar email");
-  
-  res.json(conversation);
+  // Fetch participant details
+  const participantUsers = await prisma.user.findMany({
+    where: { id: { in: conversation.participants } },
+    select: { id: true, name: true, avatar: true, email: true },
+  });
+
+  res.json({ ...conversation, participantDetails: participantUsers });
 };
 
 // Create group conversation
 export const createGroupConversation = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { name, participants, avatar } = req.body; // participants is array of IDs
+  const { name, participants, avatar } = req.body;
 
-  const allParticipants = [...new Set([userId, ...(participants || [])])];
+  const allParticipants = [
+    ...new Set([userId, ...((participants as string[]) || [])]),
+  ];
 
-  const conversation = await Conversation.create({
-    type: "group",
-    groupName: name,
-    groupAvatar: avatar,
-    participants: allParticipants,
-    admins: [userId],
+  const conversation = await prisma.conversation.create({
+    data: {
+      type: "group",
+      groupName: name,
+      groupAvatar: avatar,
+      participants: allParticipants,
+      admins: [userId],
+    },
   });
 
-  await conversation.populate("participants", "name avatar");
-  res.status(201).json(conversation);
+  const participantUsers = await prisma.user.findMany({
+    where: { id: { in: conversation.participants } },
+    select: { id: true, name: true, avatar: true },
+  });
+
+  res
+    .status(201)
+    .json({ ...conversation, participantDetails: participantUsers });
 };
 
 // List my conversations
 export const listConversations = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
-  const conversations = await Conversation.find({
-    participants: userId,
-  })
-    .sort({ lastMessageAt: -1 })
-    .populate("participants", "name avatar email")
-    .lean();
+  const conversations = await prisma.conversation.findMany({
+    where: { participants: { has: userId } },
+    orderBy: { lastMessageAt: "desc" },
+  });
 
   res.json({ data: conversations });
 };
@@ -67,23 +85,17 @@ export const getConversationHistory = async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = req.user!.userId;
 
-  const conversation = await Conversation.findOne({
-    _id: id,
-    participants: userId
-  }).populate("participants", "name avatar");
+  const conversation = await prisma.conversation.findFirst({
+    where: { id, participants: { has: userId } },
+  });
 
   if (!conversation) throw new NotFoundError("Conversation");
 
-  // Get messages for this conversation
-  // Note: We need to ensure Message model supports conversationId linking to Conversation model
-  // We reused the existing Message model which had 'conversationId' as a string.
-  // Ideally, existing Message model should be adapted or we use the field loosely.
-  
-  const messages = await Message.find({
-    conversationId: id
-  })
-  .sort({ createdAt: 1 })
-  .limit(100);
+  const messages = await prisma.message.findMany({
+    where: { conversationId: id },
+    orderBy: { createdAt: "asc" },
+    take: 100,
+  });
 
   res.json({ conversation, messages });
 };

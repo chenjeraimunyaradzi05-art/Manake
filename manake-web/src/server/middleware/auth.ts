@@ -6,7 +6,7 @@
 import { Request, Response, NextFunction } from "express";
 import { authenticate, authorize, optionalAuth } from "../utils/jwt";
 import { ForbiddenError, UnauthorizedError } from "../errors";
-import { User } from "../models/User";
+import { prisma } from "../config/prisma";
 
 // Re-export JWT auth utilities
 export { authenticate, authorize, optionalAuth };
@@ -61,7 +61,10 @@ export const requireEmailVerified = async (
     return next();
   }
 
-  const user = await User.findById(req.user.userId).select("isEmailVerified");
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { isEmailVerified: true },
+  });
   if (!user?.isEmailVerified) {
     throw new ForbiddenError("Email verification required");
   }

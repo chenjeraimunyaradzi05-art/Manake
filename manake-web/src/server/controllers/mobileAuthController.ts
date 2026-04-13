@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 
-import { User } from "../models/User";
+import { prisma } from "../config/prisma";
 import { authService } from "../services/authService";
 import {
   extractBearerToken,
@@ -239,7 +239,9 @@ export async function legacyLogin(req: Request, res: Response): Promise<void> {
     );
 
     const userId = extractUserId(result.user);
-    const fullUser = userId ? await User.findById(userId).lean() : null;
+    const fullUser = userId
+      ? await prisma.user.findUnique({ where: { id: userId } })
+      : null;
     const mobileUser = toMobileUser(fullUser || result.user);
 
     const data: LegacyAuthData = {
@@ -301,7 +303,9 @@ export async function legacyRegister(
     );
 
     const userId = extractUserId(result.user);
-    const fullUser = userId ? await User.findById(userId).lean() : null;
+    const fullUser = userId
+      ? await prisma.user.findUnique({ where: { id: userId } })
+      : null;
     const mobileUser = toMobileUser(fullUser || result.user);
 
     const data: LegacyAuthData = {
@@ -337,7 +341,9 @@ export async function legacyGetProfile(
   try {
     const tokenUser = req.user as TokenPayload;
 
-    const user = await User.findById(tokenUser.userId).lean();
+    const user = await prisma.user.findUnique({
+      where: { id: tokenUser.userId },
+    });
     if (!user) {
       fail(res, "User not found");
       return;
@@ -402,7 +408,7 @@ export async function legacyUpdateProfile(
         return;
       }
       if (trimmed) {
-        setData["profile.bio"] = trimmed;
+        setData.bio = trimmed;
       }
     }
 
@@ -424,36 +430,27 @@ export async function legacyUpdateProfile(
             ? prefs.emailNotifications
             : undefined;
 
-      if (typeof notifications === "boolean") {
-        setData["preferences.pushNotifications"] = notifications;
-      }
+      if (typeof notifications === "boolean")
+        setData.pushNotifications = notifications;
+      if (typeof emailUpdates === "boolean")
+        setData.emailNotifications = emailUpdates;
+    }
 
-      if (typeof emailUpdates === "boolean") {
-        setData["preferences.emailNotifications"] = emailUpdates;
-      }
-
-      if (typeof prefs.darkMode === "boolean") {
-        setData["preferences.darkMode"] = prefs.darkMode;
-      }
-
-      if (typeof prefs.language === "string" && prefs.language.trim()) {
-        setData["preferences.language"] = prefs.language.trim();
-      }
+    const existing = await prisma.user.findUnique({
+      where: { id: tokenUser.userId },
+    });
+    if (!existing) {
+      fail(res, "User not found");
+      return;
     }
 
     const user =
       Object.keys(setData).length > 0
-        ? await User.findByIdAndUpdate(
-            tokenUser.userId,
-            { $set: setData },
-            { new: true, runValidators: true },
-          ).lean()
-        : await User.findById(tokenUser.userId).lean();
-
-    if (!user) {
-      fail(res, "User not found");
-      return;
-    }
+        ? await prisma.user.update({
+            where: { id: tokenUser.userId },
+            data: setData,
+          })
+        : existing;
 
     ok(res, toMobileUser(user), "Profile updated");
   } catch (error) {

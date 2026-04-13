@@ -1,13 +1,10 @@
-import { Story } from "../models/Story";
-import { User } from "../models/User";
-import { Post } from "../models/Post";
-import { connectDB } from "../config/db";
+import { prisma } from "../config/prisma";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 
 dotenv.config();
 
-const users = [
+const seedUsers = [
   {
     name: "Farai Moyo",
     email: "farai@example.com",
@@ -42,149 +39,115 @@ const users = [
   },
 ];
 
-const stories = [
+const seedStories = [
   {
     title: "From Despair to Hope: Tendai's Journey",
     excerpt:
       "At 19, Tendai thought his life was over. Addicted to crystal meth since 15, he had dropped out of school, lost his family's trust, and was living on the streets of Harare. Today, he's a certified electrician running his own business.",
     content: "Full story content here...",
-    author: {
-      name: "Tendai M.",
-      role: "Alumni",
-      image: "https://images.unsplash.com/photo-1542300058-b94b8ab7411b?w=128",
-    },
+    authorName: "Tendai M.",
     image: "https://images.unsplash.com/photo-1542300058-b94b8ab7411b?w=800",
     category: "Recovery",
     tags: ["Recovery", "Employment", "Youth"],
-    likes: 234,
+    status: "published",
   },
   {
     title: "Finding Purpose: Chipo's Story",
     excerpt:
       "After completing the 6-month recovery program, Chipo discovered a passion for cooking during life skills training. She now runs a catering business and mentors other young women.",
     content: "Full story content here...",
-    author: {
-      name: "Chipo N.",
-      role: "Alumni",
-      image:
-        "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=128",
-    },
+    authorName: "Chipo N.",
     image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=800",
     category: "Recovery",
     tags: ["Skills", "Women", "Business"],
-    likes: 189,
+    status: "published",
   },
   {
     title: "Back to School at 20",
     excerpt:
       "Nyasha had to drop out of Form 4 due to drug addiction. After 8 months at Manake, she returned to school and just passed her O-Levels. She dreams of becoming a nurse.",
     content: "Full story content here...",
-    author: {
-      name: "Nyasha R.",
-      role: "Student",
-      image:
-        "https://images.unsplash.com/photo-1589156191108-c762ff4b96ab?w=128",
-    },
+    authorName: "Nyasha R.",
     image: "https://images.unsplash.com/photo-1589156191108-c762ff4b96ab?w=800",
     category: "Recovery",
     tags: ["Education", "Second Chance"],
-    likes: 456,
+    status: "published",
   },
 ];
 
 const seedDB = async () => {
   try {
-    await connectDB();
+    console.log("Clearing existing seed data...");
 
-    // Clear existing data
-    await Story.deleteMany({});
-    await User.deleteMany({ email: { $in: users.map((u) => u.email) } });
-    await Post.deleteMany({});
+    await prisma.post.deleteMany({});
+    await prisma.story.deleteMany({});
+    await prisma.user.deleteMany({
+      where: { email: { in: seedUsers.map((u) => u.email) } },
+    });
 
     console.log("Cleared existing stories and posts");
 
-    // Create Users
     const hashedPassword = await bcrypt.hash("password123", 10);
-    const createdUsers = await User.insertMany(
-      users.map((u) => ({
-        ...u,
-        passwordHash: hashedPassword,
-        isActive: true,
-        isEmailVerified: true,
-      })),
+
+    const createdUsers = await Promise.all(
+      seedUsers.map((u) =>
+        prisma.user.create({
+          data: {
+            ...u,
+            passwordHash: hashedPassword,
+            isActive: true,
+            isEmailVerified: true,
+          },
+        }),
+      ),
     );
     console.log("Seeded users successfully");
 
-    // Map users for posts
     const Farai = createdUsers.find((u) => u.name === "Farai Moyo");
     const Rudo = createdUsers.find((u) => u.name === "Rudo Ndlovu");
     const Tinashe = createdUsers.find((u) => u.name === "Tinashe Chikara");
 
-    // Create Posts
-    const posts = [
-      {
-        author: Farai?._id,
-        content:
-          "Just finished my first week at the Manake vocational training centre. Learning carpentry has given me something to focus on besides the cravings. Grateful for this second chance. #Recovery #Zimbabwe #Skills",
-        media: [
-          {
-            url: "https://images.unsplash.com/photo-1581092921461-eab62e97a785?w=600&fit=crop",
-            type: "image",
-            alt: "Carpentry workshop",
-          },
-        ],
-        scope: "public",
-        likes: [],
-        comments: [],
-      },
-      {
-        author: Rudo?._id,
-        content:
-          "Attended the family support group in Bulawayo today. It's comforting to know I'm not alone in this journey of supporting a child through rehab. To all mothers out there, keep the faith! 🇿🇼❤️",
-        media: [],
-        scope: "public",
-        likes: [],
-        comments: [],
-      },
-      {
-        author: Tinashe?._id,
-        content:
-          "Beautiful sunset over Harare today. Reminds me that after every dark night, there's a brighter day. 3 years clean and counting!",
-        media: [
-          {
-            url: "https://images.unsplash.com/photo-1576487248805-cf45f6bcc67f?w=600&fit=crop",
-            type: "image",
-            alt: "Harare sunset",
-          },
-        ],
-        scope: "public",
-        likes: [],
-        comments: [],
-      },
-      {
-        author: Farai?._id,
-        content:
-          "Who is coming for the soccer match this Saturday? The 'Sober Strikers' are ready to win! ⚽",
-        media: [],
-        scope: "public",
-        likes: [],
-        comments: [],
-      },
-    ];
-
     if (Farai && Rudo && Tinashe) {
-      await Post.insertMany(posts);
+      await prisma.post.createMany({
+        data: [
+          {
+            authorId: Farai.id,
+            content:
+              "Just finished my first week at the Manake vocational training centre. Learning carpentry has given me something to focus on besides the cravings. Grateful for this second chance. #Recovery #Zimbabwe #Skills",
+            scope: "public",
+          },
+          {
+            authorId: Rudo.id,
+            content:
+              "Attended the family support group in Bulawayo today. It's comforting to know I'm not alone in this journey of supporting a child through rehab. To all mothers out there, keep the faith! 🇿🇼❤️",
+            scope: "public",
+          },
+          {
+            authorId: Tinashe.id,
+            content:
+              "Beautiful sunset over Harare today. Reminds me that after every dark night, there's a brighter day. 3 years clean and counting!",
+            scope: "public",
+          },
+          {
+            authorId: Farai.id,
+            content:
+              "Who is coming for the soccer match this Saturday? The 'Sober Strikers' are ready to win! ⚽",
+            scope: "public",
+          },
+        ],
+      });
       console.log("Seeded posts successfully");
     }
 
-    // Insert stories
-    await Story.insertMany(stories);
+    await prisma.story.createMany({ data: seedStories });
     console.log("Seeded stories successfully");
 
     process.exit(0);
   } catch (error) {
     console.error("Error seeding database:", error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
   }
 };
 

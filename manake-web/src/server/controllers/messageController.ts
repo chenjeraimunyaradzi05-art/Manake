@@ -1,35 +1,12 @@
 import { Request, Response } from "express";
-import { Message } from "../models/Message";
+import { prisma } from "../config/prisma";
 import { ApiError, NotFoundError, UnauthorizedError } from "../errors";
 import { sendUnifiedMessage } from "../services/messagingService";
 
 const isPrivilegedRole = (role: unknown): boolean =>
   role === "admin" || role === "moderator";
 
-interface MongooseDocument {
-  toObject: () => Record<string, unknown>;
-  _id?: { toString(): string };
-}
-
-const toMessageDto = (message: unknown): Record<string, unknown> => {
-  const isMongooseDoc = (obj: unknown): obj is MongooseDocument =>
-    obj !== null && typeof obj === "object" && "toObject" in obj;
-
-  const raw: Record<string, unknown> = isMongooseDoc(message)
-    ? message.toObject()
-    : (message as Record<string, unknown>) || {};
-
-  const rawId = raw._id as { toString(): string } | string | undefined;
-  const id =
-    (raw.id as string) ??
-    (typeof rawId === "object" ? rawId?.toString() : rawId);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { _id, __v, ...rest } = raw;
-  return {
-    ...rest,
-    ...(id ? { id } : {}),
-  };
-};
+const toMessageDto = (message: unknown): unknown => message;
 
 export const createMessage = async (
   req: Request,
@@ -51,21 +28,23 @@ export const createMessage = async (
     conversationId,
   } = req.body;
 
-  const message = await Message.create({
-    channel,
-    direction,
-    status: status || "pending",
-    senderPhone,
-    senderEmail,
-    senderName,
-    recipientPhone,
-    recipientEmail,
-    content,
-    contentType,
-    mediaUrl,
-    metadata: metadata || {},
-    conversationId: conversationId || senderEmail || senderPhone,
-    sentAt: direction === "outbound" ? new Date() : undefined,
+  const message = await prisma.message.create({
+    data: {
+      channel,
+      direction,
+      status: status || "pending",
+      senderPhone,
+      senderEmail,
+      senderName,
+      recipientPhone,
+      recipientEmail,
+      content,
+      contentType,
+      mediaUrl,
+      metadata: metadata || {},
+      conversationId: conversationId || senderEmail || senderPhone,
+      sentAt: direction === "outbound" ? new Date() : undefined,
+    },
   });
 
   res.status(201).json({
@@ -87,19 +66,25 @@ export const listMessages = async (
   const targetUserId = actor?.userId;
   const allowGlobal = actor ? isPrivilegedRole(actor.role) : true;
 
-  const filter: Record<string, unknown> = {};
-  if (status) filter.status = status;
-  if (channel) filter.channel = channel;
-  if (!allowGlobal && targetUserId) filter.userId = targetUserId;
   if (!allowGlobal && !targetUserId) {
     throw new UnauthorizedError("Authentication required");
   }
 
   const skip = (page - 1) * limit;
+  const where = {
+    ...(status ? { status } : {}),
+    ...(channel ? { channel } : {}),
+    ...(!allowGlobal && targetUserId ? { userId: targetUserId } : {}),
+  };
 
   const [messages, total] = await Promise.all([
-    Message.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
-    Message.countDocuments(filter),
+    prisma.message.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.message.count({ where }),
   ]);
 
   res.json({
@@ -118,13 +103,13 @@ export const getMessage = async (
   res: Response,
 ): Promise<void> => {
   const { id } = req.params;
-  const message = await Message.findById(id);
+  const message = await prisma.message.findUnique({ where: { id } });
 
-  if (!message) {
-    throw new NotFoundError("Message");
-  }
+  if (!message) throw new NotFoundError("Message");
 
-  res.json({ data: toMessageDto(message) });
+  res.json({
+    data: toMessageDto(message as unknown as Record<string, unknown>),
+  });
 };
 
 export const updateMessageStatus = async (
@@ -134,21 +119,19 @@ export const updateMessageStatus = async (
   const { id } = req.params;
   const { status, failureReason } = req.body;
 
-  const message = await Message.findByIdAndUpdate(
-    id,
-    {
+  const exists = await prisma.message.findUnique({ where: { id } });
+  if (!exists) throw new NotFoundError("Message");
+
+  const message = await prisma.message.update({
+    where: { id },
+    data: {
       status,
       failureReason,
       failedAt: status === "failed" ? new Date() : undefined,
       deliveredAt: status === "delivered" ? new Date() : undefined,
       readAt: status === "read" ? new Date() : undefined,
     },
-    { new: true },
-  );
-
-  if (!message) {
-    throw new NotFoundError("Message");
-  }
+  });
 
   res.json({
     message: "Message updated",
@@ -161,11 +144,9 @@ export const deleteMessage = async (
   res: Response,
 ): Promise<void> => {
   const { id } = req.params;
-  const deleted = await Message.findByIdAndDelete(id);
-
-  if (!deleted) {
-    throw new ApiError("Message not found", 404, "NOT_FOUND");
-  }
+  const exists = await prisma.message.findUnique({ where: { id } });
+  if (!exists) throw new ApiError("Message not found", 404, "NOT_FOUND");
+  await prisma.message.delete({ where: { id } });
 
   res.json({ message: "Message deleted" });
 };
@@ -213,15 +194,14 @@ export const markMessageRead = async (
   const actor = req.user;
   const privileged = isPrivilegedRole(actor.role);
 
-  const updated = await Message.findOneAndUpdate(
-    privileged ? { _id: id } : { _id: id, userId: actor.userId },
-    { status: "read", readAt: new Date() },
-    { new: true },
-  );
+  const where = privileged ? { id } : { id, userId: actor.userId };
+  const exists = await prisma.message.findFirst({ where });
+  if (!exists) throw new NotFoundError("Message");
 
-  if (!updated) {
-    throw new NotFoundError("Message");
-  }
+  const updated = await prisma.message.update({
+    where: { id },
+    data: { status: "read", readAt: new Date() },
+  });
 
   res.json({ message: "Message marked as read", data: toMessageDto(updated) });
 };
@@ -238,15 +218,15 @@ export const searchMessages = async (
   const limit = Number(req.query.limit || 50);
   const channel = req.query.channel as string | undefined;
 
-  const filter: Record<string, unknown> = {
-    userId: req.user.userId,
-    content: { $regex: q, $options: "i" },
-  };
-  if (channel) filter.channel = channel;
-
-  const messages = await Message.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(limit);
+  const messages = await prisma.message.findMany({
+    where: {
+      userId: req.user.userId,
+      content: { contains: q, mode: "insensitive" },
+      ...(channel ? { channel } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
 
   res.json({ data: Array.isArray(messages) ? messages.map(toMessageDto) : [] });
 };

@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
-import { Group } from "../models/Group";
-import { Post } from "../models/Post";
-import { User } from "../models/User";
+import { prisma } from "../config/prisma";
 import { BadRequestError, NotFoundError, ForbiddenError } from "../errors";
-
-// Helper type for ObjectId comparisons
-type ObjectIdLike = Types.ObjectId | string;
 
 // Get all groups (with optional filters)
 export const getGroups = async (req: Request, res: Response) => {
@@ -14,43 +9,37 @@ export const getGroups = async (req: Request, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 20;
   const page = parseInt(req.query.page as string) || 1;
 
-  const query: Record<string, unknown> = {};
-
-  if (category) query.category = category;
-  if (search) query.name = { $regex: search, $options: "i" };
-  if (my === "true" && userId) {
-    query.members = userId;
-  }
+  const groupWhere = {
+    ...(category ? { category: category as string } : {}),
+    ...(search
+      ? { name: { contains: search as string, mode: "insensitive" as const } }
+      : {}),
+    ...(my === "true" && userId ? { members: { some: { userId } } } : {}),
+  };
 
   const [groups, total] = await Promise.all([
-    Group.find(query)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
-    Group.countDocuments(query),
+    prisma.group.findMany({
+      where: groupWhere,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: { members: { select: { userId: true, role: true } } },
+    }),
+    prisma.group.count({ where: groupWhere }),
   ]);
 
-  // Add member count
-  const groupsWithCount = groups.map((g) => ({
+  const result = groups.map(({ members, ...g }) => ({
     ...g,
-    memberCount: g.members?.length || 0,
-    isMember: userId
-      ? g.members?.some((m: ObjectIdLike) => m.toString() === userId)
-      : false,
+    memberCount: members.length,
+    isMember: userId ? members.some((m) => m.userId === userId) : false,
     isAdmin: userId
-      ? g.admins?.some((a: ObjectIdLike) => a.toString() === userId)
+      ? members.some((m) => m.userId === userId && m.role === "admin")
       : false,
   }));
 
   res.json({
-    groups: groupsWithCount,
-    pagination: {
-      page,
-      limit,
-      total,
-      pages: Math.ceil(total / limit),
-    },
+    groups: result,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
 };
 
@@ -59,29 +48,36 @@ export const getGroup = async (req: Request, res: Response) => {
   const { groupId } = req.params;
   const userId = req.user?.userId;
 
-  const group = await Group.findById(groupId)
-    .populate("admins", "name avatar")
-    .populate("moderators", "name avatar")
-    .lean();
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: {
+      members: {
+        include: { user: { select: { id: true, name: true, avatar: true } } },
+      },
+    },
+  });
 
   if (!group) throw new NotFoundError("Group");
 
+  const admins = group.members
+    .filter((m) => m.role === "admin")
+    .map((m) => m.user);
+  const moderators = group.members
+    .filter((m) => m.role === "moderator")
+    .map((m) => m.user);
+
   res.json({
     ...group,
-    memberCount: group.members?.length || 0,
-    isMember: userId
-      ? group.members?.some((m: ObjectIdLike) => m.toString() === userId)
-      : false,
+    memberCount: group.members.length,
+    isMember: userId ? group.members.some((m) => m.userId === userId) : false,
     isAdmin: userId
-      ? group.admins?.some(
-          (a: { _id?: ObjectIdLike }) => a._id?.toString() === userId,
-        )
+      ? group.members.some((m) => m.userId === userId && m.role === "admin")
       : false,
     isModerator: userId
-      ? group.moderators?.some(
-          (m: { _id?: ObjectIdLike }) => m._id?.toString() === userId,
-        )
+      ? group.members.some((m) => m.userId === userId && m.role === "moderator")
       : false,
+    admins,
+    moderators,
   });
 };
 
@@ -92,15 +88,16 @@ export const createGroup = async (req: Request, res: Response) => {
 
   if (!name?.trim()) throw new BadRequestError("Group name is required");
 
-  const group = await Group.create({
-    name: name.trim(),
-    description: description?.trim(),
-    category,
-    icon,
-    isPrivate: isPrivate || false,
-    members: [userId],
-    admins: [userId],
-    moderators: [],
+  const group = await prisma.group.create({
+    data: {
+      name: name.trim(),
+      description: description?.trim(),
+      category,
+      icon,
+      isPrivate: isPrivate || false,
+      members: { create: { userId, role: "admin" } },
+    },
+    include: { members: true },
   });
 
   res.status(201).json(group);
@@ -110,32 +107,25 @@ export const createGroup = async (req: Request, res: Response) => {
 export const updateGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { groupId } = req.params;
-  const updates = req.body;
+  const updates = req.body as Record<string, unknown>;
 
-  const group = await Group.findById(groupId);
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: { select: { userId: true, role: true } } },
+  });
   if (!group) throw new NotFoundError("Group");
 
-  const isAdmin = group.admins.some(
-    (a: ObjectIdLike) => a.toString() === userId,
-  );
-  if (!isAdmin) throw new ForbiddenError("Only admins can update this group");
-
-  const allowedUpdates = [
-    "name",
-    "description",
-    "category",
-    "icon",
-    "isPrivate",
-  ];
-  for (const key of allowedUpdates) {
-    if (updates[key] !== undefined) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (group as unknown as Record<string, unknown>)[key] = updates[key];
-    }
+  if (!group.members.some((m) => m.userId === userId && m.role === "admin")) {
+    throw new ForbiddenError("Only admins can update this group");
   }
 
-  await group.save();
-  res.json(group);
+  const data: Record<string, unknown> = {};
+  for (const key of ["name", "description", "category", "icon", "isPrivate"]) {
+    if (updates[key] !== undefined) data[key] = updates[key];
+  }
+
+  const updated = await prisma.group.update({ where: { id: groupId }, data });
+  res.json(updated);
 };
 
 // Join a group
@@ -143,25 +133,25 @@ export const joinGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { groupId } = req.params;
 
-  const group = await Group.findById(groupId);
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: { select: { userId: true } } },
+  });
   if (!group) throw new NotFoundError("Group");
 
-  if (group.members.some((m: ObjectIdLike) => m.toString() === userId)) {
+  if (group.members.some((m) => m.userId === userId)) {
     throw new BadRequestError("Already a member of this group");
   }
-
-  if (group.isPrivate) {
-    // For private groups, could implement a request system
+  if (group.isPrivate)
     throw new BadRequestError("This is a private group. Request to join.");
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (group.members as unknown[]).push(userId);
-  await group.save();
+  await prisma.groupMember.create({
+    data: { userId, groupId, role: "member" },
+  });
 
   res.json({
     message: "Joined group successfully",
-    memberCount: group.members.length,
+    memberCount: group.members.length + 1,
   });
 };
 
@@ -170,32 +160,28 @@ export const leaveGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { groupId } = req.params;
 
-  const group = await Group.findById(groupId);
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: { select: { userId: true, role: true } } },
+  });
   if (!group) throw new NotFoundError("Group");
 
-  const memberIndex = group.members.findIndex(
-    (m: ObjectIdLike) => m.toString() === userId,
-  );
-  if (memberIndex === -1) {
+  if (!group.members.some((m) => m.userId === userId)) {
     throw new BadRequestError("Not a member of this group");
   }
 
-  // Can't leave if you're the only admin
-  const isOnlyAdmin =
-    group.admins.length === 1 && group.admins[0].toString() === userId;
-  if (isOnlyAdmin && group.members.length > 1) {
+  const admins = group.members.filter((m) => m.role === "admin");
+  if (
+    admins.length === 1 &&
+    admins[0].userId === userId &&
+    group.members.length > 1
+  ) {
     throw new BadRequestError("Transfer admin role before leaving");
   }
 
-  group.members.splice(memberIndex, 1);
-  group.admins = group.admins.filter(
-    (a: ObjectIdLike) => a.toString() !== userId,
-  ) as typeof group.admins;
-  group.moderators = group.moderators.filter(
-    (m: ObjectIdLike) => m.toString() !== userId,
-  ) as typeof group.moderators;
-  await group.save();
-
+  await prisma.groupMember.delete({
+    where: { userId_groupId: { userId, groupId } },
+  });
   res.json({ message: "Left group successfully" });
 };
 
@@ -205,89 +191,37 @@ export const getGroupMembers = async (req: Request, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 20;
   const page = parseInt(req.query.page as string) || 1;
 
-  const group = await Group.findById(groupId).lean();
-  if (!group) throw new NotFoundError("Group");
-
-  const memberIds = group.members.slice((page - 1) * limit, page * limit);
-
-  const members = await User.find({ _id: { $in: memberIds } })
-    .select("name avatar profile.headline")
-    .lean();
-
-  // Add role info
-  const membersWithRoles = members.map((m) => ({
-    ...m,
-    role: group.admins.some(
-      (a: ObjectIdLike) => a.toString() === m._id.toString(),
-    )
-      ? "admin"
-      : group.moderators.some(
-            (mod: ObjectIdLike) => mod.toString() === m._id.toString(),
-          )
-        ? "moderator"
-        : "member",
-  }));
-
-  res.json({
-    members: membersWithRoles,
-    pagination: {
-      page,
-      limit,
-      total: group.members.length,
-      pages: Math.ceil(group.members.length / limit),
-    },
-  });
-};
-
-// Get group feed (posts in this group)
-export const getGroupFeed = async (req: Request, res: Response) => {
-  const { groupId } = req.params;
-  const limit = parseInt(req.query.limit as string) || 10;
-  const page = parseInt(req.query.page as string) || 1;
-
-  const group = await Group.findById(groupId);
-  if (!group) throw new NotFoundError("Group");
-
-  const [posts, total] = await Promise.all([
-    Post.find({ group: groupId })
-      .populate("author", "name avatar")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
-    Post.countDocuments({ group: groupId }),
+  const [members, total] = await Promise.all([
+    prisma.groupMember.findMany({
+      where: { groupId },
+      skip: (page - 1) * limit,
+      take: limit,
+      include: {
+        user: {
+          select: { id: true, name: true, avatar: true, headline: true },
+        },
+      },
+    }),
+    prisma.groupMember.count({ where: { groupId } }),
   ]);
 
   res.json({
-    posts,
+    members: members.map((m) => ({ ...m.user, role: m.role })),
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   });
 };
 
-// Create a post in a group
-export const createGroupPost = async (req: Request, res: Response) => {
-  const userId = req.user!.userId;
-  const { groupId } = req.params;
-  const { content, mediaUrl } = req.body;
-
-  const group = await Group.findById(groupId);
-  if (!group) throw new NotFoundError("Group");
-
-  const isMember = group.members.some(
-    (m: ObjectIdLike) => m.toString() === userId,
-  );
-  if (!isMember) throw new ForbiddenError("Must be a member to post");
-
-  const post = await Post.create({
-    author: userId,
-    content: content?.trim(),
-    mediaUrl,
-    group: groupId,
-    isPublic: !group.isPrivate,
+// Get group feed — Post model has no group relation; returns empty until schema updated
+export const getGroupFeed = async (_req: Request, res: Response) => {
+  res.json({
+    posts: [],
+    pagination: { page: 1, limit: 10, total: 0, pages: 0 },
   });
+};
 
-  const populated = await post.populate("author", "name avatar");
-  res.status(201).json(populated);
+// Create a post in a group — stubbed until Post model gains group relation
+export const createGroupPost = async (_req: Request, res: Response) => {
+  res.status(501).json({ message: "Group posts not yet supported" });
 };
 
 // Delete a group (admin only)
@@ -295,16 +229,16 @@ export const deleteGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { groupId } = req.params;
 
-  const group = await Group.findById(groupId);
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: { select: { userId: true, role: true } } },
+  });
   if (!group) throw new NotFoundError("Group");
 
-  const isAdmin = group.admins.some(
-    (a: ObjectIdLike) => a.toString() === userId,
-  );
-  if (!isAdmin) throw new ForbiddenError("Only admins can delete this group");
+  if (!group.members.some((m) => m.userId === userId && m.role === "admin")) {
+    throw new ForbiddenError("Only admins can delete this group");
+  }
 
-  await Post.deleteMany({ group: groupId });
-  await group.deleteOne();
-
+  await prisma.group.delete({ where: { id: groupId } });
   res.json({ message: "Group deleted successfully" });
 };

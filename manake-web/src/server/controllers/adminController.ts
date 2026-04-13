@@ -4,10 +4,7 @@
  */
 
 import { Request, Response } from "express";
-import { Story } from "../models/Story";
-import { User } from "../models/User";
-import { Donation } from "../models/Donation";
-import { Message } from "../models/Message";
+import { prisma } from "../config/prisma";
 import { NotFoundError, ForbiddenError } from "../errors";
 
 // ============ Analytics ============
@@ -25,71 +22,59 @@ export const getDashboardStats = async (
     newUsersThisMonth,
     totalStories,
     pendingStories,
-    totalDonations,
+    donationStats,
     donationsThisMonth,
     donationsLastMonth,
     totalMessages,
     unreadMessages,
   ] = await Promise.all([
-    User.countDocuments({ isActive: true }),
-    User.countDocuments({ createdAt: { $gte: startOfMonth } }),
-    Story.countDocuments({}),
-    Story.countDocuments({ status: "pending" }),
-    Donation.aggregate([
-      { $match: { status: { $in: ["completed", "succeeded"] } } },
-      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
-    ]),
-    Donation.aggregate([
-      {
-        $match: {
-          status: { $in: ["completed", "succeeded"] },
-          createdAt: { $gte: startOfMonth },
-        },
+    prisma.user.count({ where: { isActive: true } }),
+    prisma.user.count({ where: { createdAt: { gte: startOfMonth } } }),
+    prisma.story.count(),
+    prisma.story.count({ where: { status: "pending" } }),
+    prisma.donation.aggregate({
+      where: { status: { in: ["completed", "succeeded"] } },
+      _sum: { amount: true },
+      _count: { id: true },
+    }),
+    prisma.donation.aggregate({
+      where: {
+        status: { in: ["completed", "succeeded"] },
+        createdAt: { gte: startOfMonth },
       },
-      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
-    ]),
-    Donation.aggregate([
-      {
-        $match: {
-          status: { $in: ["completed", "succeeded"] },
-          createdAt: { $gte: startOfLastMonth, $lt: startOfMonth },
-        },
+      _sum: { amount: true },
+      _count: { id: true },
+    }),
+    prisma.donation.aggregate({
+      where: {
+        status: { in: ["completed", "succeeded"] },
+        createdAt: { gte: startOfLastMonth, lt: startOfMonth },
       },
-      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } },
-    ]),
-    Message.countDocuments({}),
-    Message.countDocuments({ status: { $ne: "read" }, direction: "inbound" }),
+      _sum: { amount: true },
+      _count: { id: true },
+    }),
+    prisma.message.count(),
+    prisma.message.count({
+      where: { NOT: { status: "read" }, direction: "inbound" },
+    }),
   ]);
 
-  const donationStats = totalDonations[0] || { total: 0, count: 0 };
-  const thisMonthStats = donationsThisMonth[0] || { total: 0, count: 0 };
-  const lastMonthStats = donationsLastMonth[0] || { total: 0, count: 0 };
-
   res.json({
-    users: {
-      total: totalUsers,
-      newThisMonth: newUsersThisMonth,
-    },
-    stories: {
-      total: totalStories,
-      pending: pendingStories,
-    },
+    users: { total: totalUsers, newThisMonth: newUsersThisMonth },
+    stories: { total: totalStories, pending: pendingStories },
     donations: {
-      totalAmount: donationStats.total,
-      totalCount: donationStats.count,
+      totalAmount: donationStats._sum.amount ?? 0,
+      totalCount: donationStats._count.id,
       thisMonth: {
-        amount: thisMonthStats.total,
-        count: thisMonthStats.count,
+        amount: donationsThisMonth._sum.amount ?? 0,
+        count: donationsThisMonth._count.id,
       },
       lastMonth: {
-        amount: lastMonthStats.total,
-        count: lastMonthStats.count,
+        amount: donationsLastMonth._sum.amount ?? 0,
+        count: donationsLastMonth._count.id,
       },
     },
-    messages: {
-      total: totalMessages,
-      unread: unreadMessages,
-    },
+    messages: { total: totalMessages, unread: unreadMessages },
   });
 };
 
@@ -100,24 +85,40 @@ export const getRecentActivity = async (
   const limit = Number(req.query.limit) || 20;
 
   const [recentStories, recentDonations, recentUsers] = await Promise.all([
-    Story.find({})
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .select("title author.name category createdAt"),
-    Donation.find({ status: { $in: ["completed", "succeeded"] } })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .select("donorName amount isAnonymous createdAt"),
-    User.find({})
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .select("name email createdAt"),
+    prisma.story.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        authorName: true,
+        category: true,
+        createdAt: true,
+      },
+    }),
+    prisma.donation.findMany({
+      where: { status: { in: ["completed", "succeeded"] } },
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        donorName: true,
+        amount: true,
+        isAnonymous: true,
+        createdAt: true,
+      },
+    }),
+    prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      take: limit,
+      select: { id: true, name: true, email: true, createdAt: true },
+    }),
   ]);
 
   res.json({
     stories: recentStories,
     donations: recentDonations.map((d) => ({
-      ...d.toObject(),
+      ...d,
       amount: d.amount || 0,
       donorName: d.isAnonymous ? "Anonymous" : d.donorName,
     })),
@@ -136,11 +137,13 @@ export const getPendingStories = async (
   const skip = (page - 1) * limit;
 
   const [stories, total] = await Promise.all([
-    Story.find({ status: "pending" })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit),
-    Story.countDocuments({ status: "pending" }),
+    prisma.story.findMany({
+      where: { status: "pending" },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.story.count({ where: { status: "pending" } }),
   ]);
 
   res.json({
@@ -154,15 +157,13 @@ export const approveStory = async (
   res: Response,
 ): Promise<void> => {
   const { id } = req.params;
-  const story = await Story.findByIdAndUpdate(
-    id,
-    { status: "published", publishedAt: new Date() },
-    { new: true },
-  );
-
+  const story = await prisma.story.findUnique({ where: { id } });
   if (!story) throw new NotFoundError("Story");
-
-  res.json({ message: "Story approved", data: story });
+  const updated = await prisma.story.update({
+    where: { id },
+    data: { status: "published", publishedAt: new Date() },
+  });
+  res.json({ message: "Story approved", data: updated });
 };
 
 export const rejectStory = async (
@@ -172,15 +173,13 @@ export const rejectStory = async (
   const { id } = req.params;
   const { reason } = req.body as { reason?: string };
 
-  const story = await Story.findByIdAndUpdate(
-    id,
-    { status: "rejected", rejectionReason: reason },
-    { new: true },
-  );
-
+  const story = await prisma.story.findUnique({ where: { id } });
   if (!story) throw new NotFoundError("Story");
-
-  res.json({ message: "Story rejected", data: story });
+  const updated = await prisma.story.update({
+    where: { id },
+    data: { status: "rejected", rejectionReason: reason },
+  });
+  res.json({ message: "Story rejected", data: updated });
 };
 
 export const featureStory = async (
@@ -190,13 +189,15 @@ export const featureStory = async (
   const { id } = req.params;
   const { featured } = req.body as { featured: boolean };
 
-  const story = await Story.findByIdAndUpdate(id, { featured }, { new: true });
-
+  const story = await prisma.story.findUnique({ where: { id } });
   if (!story) throw new NotFoundError("Story");
-
+  const updated = await prisma.story.update({
+    where: { id },
+    data: { featured },
+  });
   res.json({
     message: featured ? "Story featured" : "Story unfeatured",
-    data: story,
+    data: updated,
   });
 };
 
@@ -205,10 +206,9 @@ export const deleteStory = async (
   res: Response,
 ): Promise<void> => {
   const { id } = req.params;
-  const story = await Story.findByIdAndDelete(id);
-
+  const story = await prisma.story.findUnique({ where: { id } });
   if (!story) throw new NotFoundError("Story");
-
+  await prisma.story.delete({ where: { id } });
   res.json({ message: "Story deleted" });
 };
 
@@ -221,22 +221,33 @@ export const getUsers = async (req: Request, res: Response): Promise<void> => {
   const search = req.query.search as string | undefined;
   const skip = (page - 1) * limit;
 
-  const filter: Record<string, unknown> = {};
-  if (role) filter.role = role;
+  const where: Record<string, unknown> = {};
+  if (role) where.role = role;
   if (search) {
-    filter.$or = [
-      { name: { $regex: search, $options: "i" } },
-      { email: { $regex: search, $options: "i" } },
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { email: { contains: search, mode: "insensitive" } },
     ];
   }
 
   const [users, total] = await Promise.all([
-    User.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .select("name email role isActive isEmailVerified createdAt lastLogin"),
-    User.countDocuments(filter),
+    prisma.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        isEmailVerified: true,
+        createdAt: true,
+        lastLogin: true,
+      },
+    }),
+    prisma.user.count({ where }),
   ]);
 
   res.json({
@@ -249,10 +260,12 @@ export const getUserById = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const user = await User.findById(req.params.id).select("-passwordHash");
+  const user = await prisma.user.findUnique({
+    where: { id: req.params.id },
+    omit: { passwordHash: true },
+  } as Parameters<typeof prisma.user.findUnique>[0]);
 
   if (!user) throw new NotFoundError("User");
-
   res.json({ data: user });
 };
 
@@ -269,12 +282,20 @@ export const updateUserRole = async (
     throw new ForbiddenError("Only admins can assign admin role");
   }
 
-  const user = await User.findByIdAndUpdate(id, { role }, { new: true }).select(
-    "-passwordHash",
-  );
-
-  if (!user) throw new NotFoundError("User");
-
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) throw new NotFoundError("User");
+  const user = await prisma.user.update({
+    where: { id },
+    data: { role },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      isEmailVerified: true,
+    },
+  });
   res.json({ message: "User role updated", data: user });
 };
 
@@ -283,16 +304,16 @@ export const toggleUserActive = async (
   res: Response,
 ): Promise<void> => {
   const { id } = req.params;
-  const user = await User.findById(id);
-
-  if (!user) throw new NotFoundError("User");
-
-  user.isActive = !user.isActive;
-  await user.save();
-
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) throw new NotFoundError("User");
+  const user = await prisma.user.update({
+    where: { id },
+    data: { isActive: !existing.isActive },
+    select: { id: true, isActive: true },
+  });
   res.json({
     message: user.isActive ? "User activated" : "User deactivated",
-    data: { id: user._id, isActive: user.isActive },
+    data: user,
   });
 };
 
@@ -307,9 +328,8 @@ export const deleteUser = async (
     throw new ForbiddenError("Cannot delete your own account via admin panel");
   }
 
-  const user = await User.findByIdAndDelete(id);
-
+  const user = await prisma.user.findUnique({ where: { id } });
   if (!user) throw new NotFoundError("User");
-
+  await prisma.user.delete({ where: { id } });
   res.json({ message: "User deleted" });
 };

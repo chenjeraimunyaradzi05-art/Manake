@@ -2,8 +2,7 @@
  * Unified Messaging Service
  * Abstraction layer for WhatsApp, Instagram DM, and Facebook Messenger
  */
-import { Message, IMessage } from "../models/Message";
-import { SocialAccount, ISocialAccount } from "../models/SocialAccount";
+import { prisma } from "../config/prisma";
 import {
   sendWhatsAppMessage,
   WhatsAppSendOptions,
@@ -21,6 +20,12 @@ import {
 } from "../integrations/facebookMessenger";
 import { NotFoundError } from "../errors";
 import { logger } from "../utils/logger";
+
+type ISocialAccount = {
+  accessToken: string;
+  pageId: string | null;
+  [k: string]: unknown;
+};
 
 export type MessagingChannel =
   | "whatsapp"
@@ -50,11 +55,9 @@ async function getSocialAccount(
   userId: string,
   platform: "instagram" | "facebook",
 ): Promise<ISocialAccount | null> {
-  return SocialAccount.findOne({
-    userId,
-    platform,
-    isActive: true,
-  });
+  return prisma.socialAccount.findFirst({
+    where: { userId, platform, isActive: true },
+  }) as Promise<ISocialAccount | null>;
 }
 
 export async function sendUnifiedMessage(
@@ -148,20 +151,22 @@ export async function sendUnifiedMessage(
 
     // Persist message to DB
     try {
-      await Message.create({
-        userId,
-        channel,
-        direction: "outbound",
-        status: result.success ? "sent" : "failed",
-        recipientPhone:
-          channel === "whatsapp" || channel === "sms"
-            ? recipientPhone
-            : undefined,
-        content: message,
-        contentType: mediaUrl ? "image" : "text",
-        mediaUrl,
-        externalId: result.messageId,
-        metadata: result.error ? { error: result.error } : undefined,
+      await prisma.message.create({
+        data: {
+          userId,
+          channel,
+          direction: "outbound",
+          status: result.success ? "sent" : "failed",
+          recipientPhone:
+            channel === "whatsapp" || channel === "sms"
+              ? recipientPhone
+              : undefined,
+          content: message,
+          contentType: mediaUrl ? "image" : "text",
+          mediaUrl,
+          externalId: result.messageId,
+          metadata: result.error ? { error: result.error } : undefined,
+        },
       });
     } catch (dbErr) {
       logger.error("Failed to persist message", { error: dbErr });
@@ -178,48 +183,44 @@ export async function getMessageHistory(
   channel?: MessagingChannel,
   limit = 50,
   skip = 0,
-): Promise<IMessage[]> {
-  const query: Record<string, unknown> = { userId };
-  if (channel) query.channel = channel;
-
-  return Message.find(query)
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit)
-    .lean();
+) {
+  return prisma.message.findMany({
+    where: { userId, ...(channel ? { channel } : {}) },
+    orderBy: { createdAt: "desc" },
+    skip,
+    take: limit,
+  });
 }
 
 export async function getConversation(
   userId: string,
   conversationId: string,
   limit = 100,
-): Promise<IMessage[]> {
-  return Message.find({ userId, conversationId })
-    .sort({ createdAt: 1 })
-    .limit(limit)
-    .lean();
+) {
+  return prisma.message.findMany({
+    where: { userId, conversationId },
+    orderBy: { createdAt: "asc" },
+    take: limit,
+  });
 }
 
-export async function markMessageRead(messageId: string): Promise<IMessage> {
-  const message = await Message.findByIdAndUpdate(
-    messageId,
-    { status: "read", readAt: new Date() },
-    { new: true },
-  );
+export async function markMessageRead(messageId: string) {
+  const message = await prisma.message.findUnique({ where: { id: messageId } });
   if (!message) throw new NotFoundError("Message");
-  return message;
+  return prisma.message.update({
+    where: { id: messageId },
+    data: { status: "read", readAt: new Date() },
+  });
 }
 
 export async function searchMessages(
   userId: string,
   query: string,
   limit = 50,
-): Promise<IMessage[]> {
-  return Message.find({
-    userId,
-    content: { $regex: query, $options: "i" },
-  })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean();
+) {
+  return prisma.message.findMany({
+    where: { userId, content: { contains: query, mode: "insensitive" } },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+  });
 }

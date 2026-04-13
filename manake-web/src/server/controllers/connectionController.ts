@@ -1,19 +1,23 @@
 import { Request, Response } from "express";
-import { Connection, ConnectionType } from "../models/Connection";
-import { User } from "../models/User";
+import { prisma } from "../config/prisma";
 import { BadRequestError, NotFoundError } from "../errors";
+
+type ConnectionType = "peer" | "mentor" | "sponsor";
 
 // Get all connections for the logged-in user
 export const getConnections = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
-  const connections = await Connection.find({
-    $or: [{ userId }, { connectedUserId: userId }],
-    status: "accepted",
-  })
-    .populate("userId", "name avatar")
-    .populate("connectedUserId", "name avatar")
-    .lean();
+  const connections = await prisma.connection.findMany({
+    where: {
+      status: "accepted",
+      OR: [{ userId }, { connectedUserId: userId }],
+    },
+    include: {
+      user: { select: { id: true, name: true, avatar: true } },
+      connectedUser: { select: { id: true, name: true, avatar: true } },
+    },
+  });
 
   res.json(connections);
 };
@@ -22,12 +26,12 @@ export const getConnections = async (req: Request, res: Response) => {
 export const getConnectionRequests = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
-  const requests = await Connection.find({
-    connectedUserId: userId,
-    status: "pending",
-  })
-    .populate("userId", "name avatar profile.headline")
-    .lean();
+  const requests = await prisma.connection.findMany({
+    where: { connectedUserId: userId, status: "pending" },
+    include: {
+      user: { select: { id: true, name: true, avatar: true, headline: true } },
+    },
+  });
 
   res.json(requests);
 };
@@ -36,7 +40,7 @@ export const getConnectionRequests = async (req: Request, res: Response) => {
 export const sendConnectionRequest = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { targetUserId } = req.params;
-  const { connectionType, message: _message } = req.body as {
+  const { connectionType } = req.body as {
     connectionType?: ConnectionType;
     message?: string;
   };
@@ -45,25 +49,31 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
     throw new BadRequestError("Cannot connect with yourself");
   }
 
-  const targetUser = await User.findById(targetUserId);
+  const targetUser = await prisma.user.findUnique({
+    where: { id: targetUserId },
+  });
   if (!targetUser) throw new NotFoundError("User");
 
-  const existing = await Connection.findOne({
-    $or: [
-      { userId, connectedUserId: targetUserId },
-      { userId: targetUserId, connectedUserId: userId },
-    ],
+  const existing = await prisma.connection.findFirst({
+    where: {
+      OR: [
+        { userId, connectedUserId: targetUserId },
+        { userId: targetUserId, connectedUserId: userId },
+      ],
+    },
   });
 
   if (existing) {
     throw new BadRequestError("Connection already exists or pending");
   }
 
-  const connection = await Connection.create({
-    userId,
-    connectedUserId: targetUserId,
-    connectionType: connectionType || "peer",
-    status: "pending",
+  const connection = await prisma.connection.create({
+    data: {
+      userId,
+      connectedUserId: targetUserId,
+      connectionType: connectionType || "peer",
+      status: "pending",
+    },
   });
 
   res.status(201).json(connection);
@@ -79,21 +89,21 @@ export const respondToRequest = async (req: Request, res: Response) => {
     throw new BadRequestError("Invalid action");
   }
 
-  const connection = await Connection.findOne({
-    _id: requestId,
-    connectedUserId: userId,
-    status: "pending",
+  const connection = await prisma.connection.findFirst({
+    where: { id: requestId, connectedUserId: userId, status: "pending" },
   });
 
   if (!connection) throw new NotFoundError("Connection request");
 
-  connection.status = action === "accept" ? "accepted" : "rejected";
-  if (action === "accept") {
-    connection.acceptedAt = new Date();
-  }
-  await connection.save();
+  const updated = await prisma.connection.update({
+    where: { id: requestId },
+    data: {
+      status: action === "accept" ? "accepted" : "rejected",
+      ...(action === "accept" ? { acceptedAt: new Date() } : {}),
+    },
+  });
 
-  res.json(connection);
+  res.json(updated);
 };
 
 // Remove a connection
@@ -101,12 +111,14 @@ export const removeConnection = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { connectionId } = req.params;
 
-  const result = await Connection.deleteOne({
-    _id: connectionId,
-    $or: [{ userId }, { connectedUserId: userId }],
+  const result = await prisma.connection.deleteMany({
+    where: {
+      id: connectionId,
+      OR: [{ userId }, { connectedUserId: userId }],
+    },
   });
 
-  if (result.deletedCount === 0) throw new NotFoundError("Connection");
+  if (result.count === 0) throw new NotFoundError("Connection");
   res.json({ message: "Connection removed" });
 };
 
@@ -115,25 +127,22 @@ export const getSuggestions = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const limit = parseInt(req.query.limit as string) || 10;
 
-  // Get existing connections
-  const connections = await Connection.find({
-    $or: [{ userId }, { connectedUserId: userId }],
-  }).lean();
+  const connections = await prisma.connection.findMany({
+    where: { OR: [{ userId }, { connectedUserId: userId }] },
+    select: { userId: true, connectedUserId: true },
+  });
 
-  const connectedIds = new Set<string>();
-  connectedIds.add(userId);
+  const connectedIds = new Set<string>([userId]);
   for (const c of connections) {
-    connectedIds.add(c.userId.toString());
-    connectedIds.add(c.connectedUserId.toString());
+    connectedIds.add(c.userId);
+    connectedIds.add(c.connectedUserId);
   }
 
-  const suggestions = await User.find({
-    _id: { $nin: Array.from(connectedIds) },
-    isActive: true,
-  })
-    .select("name avatar profile.headline profile.bio")
-    .limit(limit)
-    .lean();
+  const suggestions = await prisma.user.findMany({
+    where: { id: { notIn: Array.from(connectedIds) }, isActive: true },
+    select: { id: true, name: true, avatar: true, headline: true, bio: true },
+    take: limit,
+  });
 
   res.json(suggestions);
 };

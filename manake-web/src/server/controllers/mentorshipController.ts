@@ -1,9 +1,22 @@
 import { Request, Response } from "express";
-import { Mentorship } from "../models/Mentorship";
-import { User } from "../models/User";
 import { prisma } from "../config/prisma";
 import { logger } from "../utils/logger";
 import { escapeRegex } from "../utils/regex";
+
+const MENTOR_USER_SELECT = {
+  id: true,
+  name: true,
+  avatar: true,
+  bio: true,
+  headline: true,
+  isMentor: true,
+  mentorshipStyle: true,
+  yearsInRecovery: true,
+  specializations: true,
+  mentorHoursPerWeek: true,
+  mentorPreferredTimes: true,
+  mentorAverageRating: true,
+} as const;
 
 // Get available mentors with filters
 export const getMentors = async (req: Request, res: Response) => {
@@ -17,43 +30,35 @@ export const getMentors = async (req: Request, res: Response) => {
       limit = 12,
     } = req.query;
 
-    const filter: Record<string, unknown> = {
-      "mentorship.isMentor": true,
-      "privacy.allowMentorRequests": { $ne: false },
+    const safe = search
+      ? escapeRegex(String(search).trim().slice(0, 64))
+      : null;
+    const mentorWhere = {
+      isMentor: true,
+      allowMentorRequests: true,
+      ...(specialization && specialization !== "all"
+        ? { specializations: { has: specialization as string } }
+        : {}),
+      ...(availability
+        ? { mentorHoursPerWeek: { gte: Number(availability) } }
+        : {}),
+      ...(minRating ? { mentorAverageRating: { gte: Number(minRating) } } : {}),
+      ...(safe
+        ? { name: { contains: safe, mode: "insensitive" as const } }
+        : {}),
     };
-
-    // Filter by specialization
-    if (specialization && specialization !== "all") {
-      filter["mentorship.specializations"] = specialization;
-    }
-
-    // Filter by availability
-    if (availability) {
-      filter["mentorship.availability.hoursPerWeek"] = {
-        $gte: Number(availability),
-      };
-    }
-
-    // Filter by minimum rating
-    if (minRating) {
-      filter["mentorship.averageRating"] = { $gte: Number(minRating) };
-    }
-
-    // Search by name
-    if (search) {
-      const safeSearch = escapeRegex(String(search).trim().slice(0, 64));
-      filter.name = { $regex: safeSearch, $options: "i" };
-    }
 
     const skip = (Number(page) - 1) * Number(limit);
 
     const [mentors, total] = await Promise.all([
-      User.find(filter)
-        .select("name avatar profile mentorship")
-        .sort({ "mentorship.averageRating": -1 })
-        .skip(skip)
-        .limit(Number(limit)),
-      User.countDocuments(filter),
+      prisma.user.findMany({
+        where: mentorWhere,
+        select: MENTOR_USER_SELECT,
+        orderBy: { mentorAverageRating: "desc" },
+        skip,
+        take: Number(limit),
+      }),
+      prisma.user.count({ where: mentorWhere }),
     ]);
 
     res.json({
@@ -74,14 +79,12 @@ export const getMentors = async (req: Request, res: Response) => {
 // Get featured mentors
 export const getFeaturedMentors = async (_req: Request, res: Response) => {
   try {
-    const mentors = await User.find({
-      "mentorship.isMentor": true,
-      "mentorship.averageRating": { $gte: 4.5 },
-    })
-      .select("name avatar profile mentorship")
-      .sort({ "mentorship.averageRating": -1 })
-      .limit(6);
-
+    const mentors = await prisma.user.findMany({
+      where: { isMentor: true, mentorAverageRating: { gte: 4.5 } },
+      select: MENTOR_USER_SELECT,
+      orderBy: { mentorAverageRating: "desc" },
+      take: 6,
+    });
     res.json({ mentors });
   } catch (error) {
     logger.error("Get featured mentors error", { error });
@@ -94,37 +97,30 @@ export const getMentor = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    const mentor = await User.findOne({
-      _id: id,
-      "mentorship.isMentor": true,
-    }).select("name avatar profile mentorship");
-
-    if (!mentor) {
-      return res.status(404).json({ error: "Mentor not found" });
-    }
-
-    // Get mentor's reviews from completed mentorships
-    const reviews = await Mentorship.find({
-      mentor: id,
-      status: "completed",
-      rating: { $exists: true },
-    })
-      .populate("mentee", "name avatar")
-      .select("rating review endDate")
-      .sort({ endDate: -1 })
-      .limit(10);
-
-    // Get active mentee count
-    const activeMenteeCount = await Mentorship.countDocuments({
-      mentor: id,
-      status: "active",
+    const mentor = await prisma.user.findFirst({
+      where: { id, isMentor: true },
+      select: MENTOR_USER_SELECT,
     });
 
-    res.json({
-      mentor,
-      reviews,
-      activeMenteeCount,
-    });
+    if (!mentor) return res.status(404).json({ error: "Mentor not found" });
+
+    const [reviews, activeMenteeCount] = await Promise.all([
+      prisma.mentorship.findMany({
+        where: { mentorId: id, status: "completed", NOT: { rating: null } },
+        select: {
+          id: true,
+          rating: true,
+          review: true,
+          endDate: true,
+          mentee: { select: { id: true, name: true, avatar: true } },
+        },
+        orderBy: { endDate: "desc" },
+        take: 10,
+      }),
+      prisma.mentorship.count({ where: { mentorId: id, status: "active" } }),
+    ]);
+
+    res.json({ mentor, reviews, activeMenteeCount });
   } catch (error) {
     logger.error("Get mentor error", { error });
     res.status(500).json({ error: "Failed to fetch mentor details" });
@@ -137,43 +133,37 @@ export const requestMentorship = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const { mentorId, goals } = req.body;
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    // Check if mentor exists and accepts requests
-    const mentor = await User.findOne({
-      _id: mentorId,
-      "mentorship.isMentor": true,
-      "privacy.allowMentorRequests": { $ne: false },
+    const mentor = await prisma.user.findFirst({
+      where: { id: mentorId, isMentor: true, allowMentorRequests: true },
     });
-
-    if (!mentor) {
+    if (!mentor)
       return res
         .status(404)
         .json({ error: "Mentor not found or not accepting requests" });
-    }
 
-    // Check for existing pending/active mentorship
-    const existing = await Mentorship.findOne({
-      mentor: mentorId,
-      mentee: userId,
-      status: { $in: ["pending", "active"] },
+    const existing = await prisma.mentorship.findFirst({
+      where: {
+        mentorId,
+        menteeId: userId,
+        status: { in: ["pending", "active"] },
+      },
     });
-
-    if (existing) {
+    if (existing)
       return res
         .status(400)
         .json({
           error: "You already have a mentorship request with this mentor",
         });
-    }
 
-    const mentorship = await Mentorship.create({
-      mentor: mentorId,
-      mentee: userId,
-      status: "pending",
-      goals: goals || [],
+    const mentorship = await prisma.mentorship.create({
+      data: {
+        mentorId,
+        menteeId: userId,
+        status: "pending",
+        goals: goals || [],
+      },
     });
 
     res
@@ -191,28 +181,33 @@ export const getMyMentorships = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const { role, status } = req.query;
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    const filter: Record<string, unknown> = {};
+    const mentorshipWhere = {
+      ...(role === "mentor"
+        ? { mentorId: userId }
+        : role === "mentee"
+          ? { menteeId: userId }
+          : { OR: [{ mentorId: userId }, { menteeId: userId }] }),
+      ...(status && status !== "all" ? { status: status as string } : {}),
+    };
 
-    if (role === "mentor") {
-      filter.mentor = userId;
-    } else if (role === "mentee") {
-      filter.mentee = userId;
-    } else {
-      filter.$or = [{ mentor: userId }, { mentee: userId }];
-    }
-
-    if (status && status !== "all") {
-      filter.status = status;
-    }
-
-    const mentorships = await Mentorship.find(filter)
-      .populate("mentor", "name avatar profile mentorship")
-      .populate("mentee", "name avatar profile")
-      .sort({ updatedAt: -1 });
+    const mentorships = await prisma.mentorship.findMany({
+      where: mentorshipWhere,
+      include: {
+        mentor: { select: MENTOR_USER_SELECT },
+        mentee: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            bio: true,
+            headline: true,
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
 
     res.json({ mentorships });
   } catch (error) {
@@ -225,17 +220,23 @@ export const getMyMentorships = async (req: Request, res: Response) => {
 export const getPendingRequests = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const requests = await Mentorship.find({
-      mentor: userId,
-      status: "pending",
-    })
-      .populate("mentee", "name avatar profile")
-      .sort({ createdAt: -1 });
+    const requests = await prisma.mentorship.findMany({
+      where: { mentorId: userId, status: "pending" },
+      include: {
+        mentee: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            bio: true,
+            headline: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
 
     res.json({ requests });
   } catch (error) {
@@ -249,22 +250,22 @@ export const acceptMentorship = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const mentorship = await Mentorship.findOneAndUpdate(
-      { _id: id, mentor: userId, status: "pending" },
-      { status: "active", startDate: new Date() },
-      { new: true },
-    )
-      .populate("mentor", "name avatar")
-      .populate("mentee", "name avatar");
-
-    if (!mentorship) {
+    const existing = await prisma.mentorship.findFirst({
+      where: { id, mentorId: userId, status: "pending" },
+    });
+    if (!existing)
       return res.status(404).json({ error: "Mentorship request not found" });
-    }
+
+    const mentorship = await prisma.mentorship.update({
+      where: { id },
+      data: { status: "active", startDate: new Date() },
+      include: {
+        mentor: { select: { id: true, name: true, avatar: true } },
+        mentee: { select: { id: true, name: true, avatar: true } },
+      },
+    });
 
     res.json({ mentorship, message: "Mentorship request accepted" });
   } catch (error) {
@@ -278,21 +279,15 @@ export const declineMentorship = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const mentorship = await Mentorship.findOneAndDelete({
-      _id: id,
-      mentor: userId,
-      status: "pending",
+    const existing = await prisma.mentorship.findFirst({
+      where: { id, mentorId: userId, status: "pending" },
     });
-
-    if (!mentorship) {
+    if (!existing)
       return res.status(404).json({ error: "Mentorship request not found" });
-    }
 
+    await prisma.mentorship.delete({ where: { id } });
     res.json({ message: "Mentorship request declined" });
   } catch (error) {
     logger.error("Decline mentorship error", { error });
@@ -305,51 +300,47 @@ export const endMentorship = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
     const { id } = req.params;
-    const { rating, review } = req.body;
+    const { rating, review } = req.body as { rating?: number; review?: string };
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const mentorship = await Mentorship.findOne({
-      _id: id,
-      status: "active",
-      $or: [{ mentor: userId }, { mentee: userId }],
+    const existing = await prisma.mentorship.findFirst({
+      where: {
+        id,
+        status: "active",
+        OR: [{ mentorId: userId }, { menteeId: userId }],
+      },
     });
-
-    if (!mentorship) {
+    if (!existing)
       return res.status(404).json({ error: "Active mentorship not found" });
-    }
 
-    mentorship.status = "completed";
-    mentorship.endDate = new Date();
+    const data: Record<string, unknown> = {
+      status: "completed",
+      endDate: new Date(),
+    };
 
-    // Only mentee can rate
-    if (mentorship.mentee.toString() === userId) {
-      if (rating) mentorship.rating = rating;
-      if (review) mentorship.review = review;
+    if (existing.menteeId === userId && rating) {
+      data.rating = rating;
+      if (review) data.review = review;
 
-      // Update mentor's average rating
-      const mentorMentorships = await Mentorship.find({
-        mentor: mentorship.mentor,
-        status: "completed",
-        rating: { $exists: true },
+      // Recalculate mentor's average rating
+      const completed = await prisma.mentorship.findMany({
+        where: {
+          mentorId: existing.mentorId,
+          status: "completed",
+          NOT: { rating: null },
+        },
+        select: { rating: true },
       });
-
+      const allRatings = [...completed.map((m) => m.rating ?? 0), rating];
       const avgRating =
-        mentorMentorships.reduce(
-          (sum, m) => sum + (m.rating || 0),
-          rating || 0,
-        ) /
-        (mentorMentorships.length + (rating ? 1 : 0));
-
-      await User.findByIdAndUpdate(mentorship.mentor, {
-        "mentorship.averageRating": avgRating,
+        allRatings.reduce((s, r) => s + r, 0) / allRatings.length;
+      await prisma.user.update({
+        where: { id: existing.mentorId },
+        data: { mentorAverageRating: avgRating },
       });
     }
 
-    await mentorship.save();
-
+    const mentorship = await prisma.mentorship.update({ where: { id }, data });
     res.json({ mentorship, message: "Mentorship ended successfully" });
   } catch (error) {
     logger.error("End mentorship error", { error });
@@ -363,28 +354,27 @@ export const addMeeting = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const { id } = req.params;
     const { date, duration, notes } = req.body;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const mentorship = await Mentorship.findOneAndUpdate(
-      {
-        _id: id,
+    const existing = await prisma.mentorship.findFirst({
+      where: {
+        id,
         status: "active",
-        $or: [{ mentor: userId }, { mentee: userId }],
+        OR: [{ mentorId: userId }, { menteeId: userId }],
       },
-      {
-        $push: {
-          meetings: { date, duration, notes },
-        },
-      },
-      { new: true },
-    );
-
-    if (!mentorship) {
+    });
+    if (!existing)
       return res.status(404).json({ error: "Active mentorship not found" });
-    }
+
+    const meetings = (
+      Array.isArray(existing.meetings) ? existing.meetings : []
+    ) as Record<string, unknown>[];
+    meetings.push({ id: `${Date.now()}`, date, duration, notes });
+
+    const mentorship = await prisma.mentorship.update({
+      where: { id },
+      data: { meetings },
+    });
 
     res.json({ mentorship, message: "Meeting added" });
   } catch (error) {
@@ -399,27 +389,25 @@ export const rateMeeting = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const { id, meetingId } = req.params;
     const { rating } = req.body;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const existing = await prisma.mentorship.findFirst({
+      where: { id, menteeId: userId, status: "active" },
+    });
+    if (!existing)
+      return res.status(404).json({ error: "Mentorship not found" });
 
-    const mentorship = await Mentorship.findOneAndUpdate(
-      {
-        _id: id,
-        mentee: userId,
-        status: "active",
-        "meetings._id": meetingId,
-      },
-      {
-        $set: { "meetings.$.rating": rating },
-      },
-      { new: true },
-    );
+    const meetings = (
+      Array.isArray(existing.meetings) ? existing.meetings : []
+    ) as Record<string, unknown>[];
+    const idx = meetings.findIndex((m) => m.id === meetingId);
+    if (idx === -1) return res.status(404).json({ error: "Meeting not found" });
 
-    if (!mentorship) {
-      return res.status(404).json({ error: "Meeting not found" });
-    }
+    meetings[idx] = { ...meetings[idx], rating };
+    const mentorship = await prisma.mentorship.update({
+      where: { id },
+      data: { meetings },
+    });
 
     res.json({ mentorship, message: "Meeting rated" });
   } catch (error) {
@@ -439,29 +427,25 @@ export const becomeMentor = async (req: Request, res: Response) => {
       availability,
       bio,
     } = req.body;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    const existing = await prisma.user.findUnique({ where: { id: userId } });
+    if (!existing) return res.status(404).json({ error: "User not found" });
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      {
-        $set: {
-          "mentorship.isMentor": true,
-          "mentorship.mentorshipStyle": mentorshipStyle,
-          "mentorship.yearsInRecovery": yearsInRecovery,
-          "mentorship.specializations": specializations,
-          "mentorship.availability": availability,
-          "profile.bio": bio || undefined,
-        },
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        isMentor: true,
+        mentorshipStyle,
+        yearsInRecovery: yearsInRecovery ? Number(yearsInRecovery) : undefined,
+        specializations: specializations || [],
+        mentorHoursPerWeek: availability?.hoursPerWeek
+          ? Number(availability.hoursPerWeek)
+          : undefined,
+        ...(bio ? { bio } : {}),
       },
-      { new: true },
-    ).select("name avatar profile mentorship");
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+      select: MENTOR_USER_SELECT,
+    });
 
     res.json({ user, message: "You are now a mentor!" });
   } catch (error) {
@@ -474,32 +458,25 @@ export const becomeMentor = async (req: Request, res: Response) => {
 export const updateMentorSettings = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const updates = req.body;
+    const updates = req.body as Record<string, unknown>;
+    if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
-    const updateFields: Record<string, unknown> = {};
-
-    if (updates.mentorshipStyle)
-      updateFields["mentorship.mentorshipStyle"] = updates.mentorshipStyle;
-    if (updates.specializations)
-      updateFields["mentorship.specializations"] = updates.specializations;
-    if (updates.availability)
-      updateFields["mentorship.availability"] = updates.availability;
+    const data: Record<string, unknown> = {};
+    if (updates.mentorshipStyle) data.mentorshipStyle = updates.mentorshipStyle;
+    if (updates.specializations) data.specializations = updates.specializations;
     if (updates.allowMentorRequests !== undefined)
-      updateFields["privacy.allowMentorRequests"] = updates.allowMentorRequests;
+      data.allowMentorRequests = updates.allowMentorRequests;
+    if (updates.hoursPerWeek)
+      data.mentorHoursPerWeek = Number(updates.hoursPerWeek);
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: updateFields },
-      { new: true },
-    ).select("name avatar profile mentorship privacy");
+    const existing = await prisma.user.findUnique({ where: { id: userId } });
+    if (!existing) return res.status(404).json({ error: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data,
+      select: MENTOR_USER_SELECT,
+    });
 
     res.json({ user, message: "Mentor settings updated" });
   } catch (error) {

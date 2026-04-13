@@ -4,7 +4,7 @@
  */
 
 import { Request, Response } from "express";
-import { PushToken } from "../models/PushToken";
+import { prisma } from "../config/prisma";
 import { UnauthorizedError } from "../errors";
 
 export const registerPushToken = async (
@@ -19,18 +19,11 @@ export const registerPushToken = async (
 
   const userId = req.user?.userId;
 
-  // Upsert token
-  await PushToken.findOneAndUpdate(
-    { token },
-    {
-      userId,
-      token,
-      platform,
-      deviceId,
-      isActive: true,
-    },
-    { upsert: true, new: true },
-  );
+  await prisma.pushToken.upsert({
+    where: { token },
+    update: { userId, platform, deviceId, isActive: true },
+    create: { token, userId, platform, deviceId, isActive: true },
+  });
 
   res.json({ message: "Push token registered" });
 };
@@ -41,7 +34,10 @@ export const removePushToken = async (
 ): Promise<void> => {
   const { token } = req.body as { token: string };
 
-  await PushToken.findOneAndUpdate({ token }, { isActive: false });
+  await prisma.pushToken.updateMany({
+    where: { token },
+    data: { isActive: false },
+  });
 
   res.json({ message: "Push token removed" });
 };
@@ -54,10 +50,10 @@ export const getUserTokens = async (
     throw new UnauthorizedError("Authentication required");
   }
 
-  const tokens = await PushToken.find({
-    userId: req.user.userId,
-    isActive: true,
-  }).select("token platform deviceId createdAt");
+  const tokens = await prisma.pushToken.findMany({
+    where: { userId: req.user.userId, isActive: true },
+    select: { token: true, platform: true, deviceId: true, createdAt: true },
+  });
 
   res.json({ data: tokens });
 };

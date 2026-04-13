@@ -1,14 +1,9 @@
 import type { Request, Response } from "express";
 
 import crypto from "crypto";
-import { User } from "../models/User";
-import { SocialAccount, type SocialPlatform } from "../models/SocialAccount";
-import { RefreshToken } from "../models/RefreshToken";
-import {
-  generateTokenPair,
-  hashToken,
-  verifyRefreshToken,
-} from "../utils/jwt";
+import { prisma } from "../config/prisma";
+import { type SocialPlatform } from "../models/SocialAccount";
+import { generateTokenPair, hashToken, verifyRefreshToken } from "../utils/jwt";
 import { BadRequestError } from "../errors";
 import { exchangeAppleCode, verifyGoogleIdToken } from "../services/socialAuth";
 
@@ -16,7 +11,7 @@ type LegacySuccess<T> = { success: true; data: T; message?: string };
 type LegacyFailure = { success: false; data: null; message: string };
 
 type LegacyAuthData = {
-  user: ReturnType<(typeof User)["prototype"]["toPublicJSON"]>;
+  user: Record<string, unknown>;
   token: string;
   refreshToken?: string;
   expiresIn?: number;
@@ -43,18 +38,24 @@ async function upsertUserFromSocial(profile: {
   name?: string;
   picture?: string;
 }) {
-  const existingAccount = await SocialAccount.findOne({
-    platform: profile.provider,
-    platformUserId: profile.platformUserId,
+  const existingAccount = await prisma.socialAccount.findFirst({
+    where: {
+      platform: profile.provider,
+      platformUserId: profile.platformUserId,
+    },
   });
 
   if (existingAccount) {
-    const user = await User.findById(existingAccount.userId);
+    const user = await prisma.user.findUnique({
+      where: { id: existingAccount.userId },
+    });
     if (user) return user;
   }
 
   if (profile.email) {
-    const existingUser = await User.findOne({ email: profile.email });
+    const existingUser = await prisma.user.findUnique({
+      where: { email: profile.email },
+    });
     if (existingUser) return existingUser;
   }
 
@@ -67,14 +68,13 @@ async function upsertUserFromSocial(profile: {
     .update(crypto.randomBytes(16))
     .digest("hex");
 
-  return User.create({
-    email: profile.email,
-    name: profile.name || profile.email.split("@")[0],
-    passwordHash,
-    role: "user",
-    avatar: profile.picture,
-    socialProfiles: {
-      [profile.provider]: profile.platformUserId,
+  return prisma.user.create({
+    data: {
+      email: profile.email,
+      name: profile.name || profile.email.split("@")[0],
+      passwordHash,
+      role: "user",
+      avatar: profile.picture,
     },
   });
 }
@@ -90,13 +90,15 @@ async function upsertSocialAccount(args: {
   refreshToken?: string;
   expiresAt?: Date;
 }) {
-  return SocialAccount.findOneAndUpdate(
-    {
-      userId: args.userId,
-      platform: args.provider,
-      platformUserId: args.platformUserId,
+  return prisma.socialAccount.upsert({
+    where: {
+      userId_platform_platformUserId: {
+        userId: args.userId,
+        platform: args.provider,
+        platformUserId: args.platformUserId,
+      },
     },
-    {
+    update: {
       platformUsername: args.email,
       displayName: args.name,
       profilePictureUrl: args.picture,
@@ -108,8 +110,20 @@ async function upsertSocialAccount(args: {
       lastSyncAt: new Date(),
       syncError: undefined,
     },
-    { new: true, upsert: true, setDefaultsOnInsert: true },
-  );
+    create: {
+      userId: args.userId,
+      platform: args.provider,
+      platformUserId: args.platformUserId,
+      platformUsername: args.email,
+      displayName: args.name,
+      profilePictureUrl: args.picture,
+      accessToken: args.accessToken,
+      refreshToken: args.refreshToken,
+      tokenExpiresAt: args.expiresAt,
+      scopes: [],
+      isActive: true,
+    },
+  });
 }
 
 export async function legacySocialLoginGoogle(
@@ -150,19 +164,22 @@ export async function legacySocialLoginGoogle(
       role: user.role,
     });
 
-    // Persist refresh token hash for rotation/revocation (optional for mobile, but enables refresh flow)
     const refreshPayload = verifyRefreshToken(tokens.refreshToken);
-    await RefreshToken.create({
-      userId: user._id,
-      tokenHash: hashToken(tokens.refreshToken),
-      deviceInfo: req.headers["user-agent"],
-      ipAddress: req.ip,
-      expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
-      revoked: false,
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(tokens.refreshToken),
+        deviceInfo: req.headers["user-agent"] as string | undefined,
+        ipAddress: req.ip,
+        expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
+        revoked: false,
+      },
     });
 
+    const { passwordHash: _phGoogle, ...publicUser } = user;
+    void _phGoogle;
     return ok(res, {
-      user: user.toPublicJSON(),
+      user: publicUser as Record<string, unknown>,
       token: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresIn: tokens.expiresIn,
@@ -218,19 +235,22 @@ export async function legacySocialLoginApple(
       role: user.role,
     });
 
-    // Persist refresh token hash for rotation/revocation (optional for mobile, but enables refresh flow)
     const refreshPayload = verifyRefreshToken(tokens.refreshToken);
-    await RefreshToken.create({
-      userId: user._id,
-      tokenHash: hashToken(tokens.refreshToken),
-      deviceInfo: req.headers["user-agent"],
-      ipAddress: req.ip,
-      expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
-      revoked: false,
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(tokens.refreshToken),
+        deviceInfo: req.headers["user-agent"] as string | undefined,
+        ipAddress: req.ip,
+        expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
+        revoked: false,
+      },
     });
 
+    const { passwordHash: _phApple, ...publicUserApple } = user;
+    void _phApple;
     return ok(res, {
-      user: user.toPublicJSON(),
+      user: publicUserApple as Record<string, unknown>,
       token: tokens.accessToken,
       refreshToken: tokens.refreshToken,
       expiresIn: tokens.expiresIn,

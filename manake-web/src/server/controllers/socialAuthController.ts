@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import crypto from "crypto";
-import { User } from "../models/User";
-import {
-  SocialAccount,
-  SocialPlatform,
-  ISocialAccount,
-} from "../models/SocialAccount";
+import { prisma } from "../config/prisma";
 import { generateTokenPair } from "../utils/jwt";
 import { BadRequestError, UnauthorizedError } from "../errors";
 import {
@@ -17,6 +12,8 @@ import {
   exchangeAppleCode,
 } from "../services/socialAuth";
 
+type SocialPlatform = string;
+
 interface SocialAuthBody {
   token: string;
   mode?: "login" | "link";
@@ -25,12 +22,21 @@ interface SocialAuthBody {
   pageName?: string;
 }
 
-const sanitizeAccount = (account: ISocialAccount) => {
-  const json = account.toObject({ getters: true, versionKey: false });
-  delete (json as Record<string, unknown>).accessToken;
-  delete (json as Record<string, unknown>).refreshToken;
-  delete (json as Record<string, unknown>).pageAccessToken;
-  return json;
+const sanitizeAccount = (account: Record<string, unknown>) => {
+  const safe = { ...account };
+  delete safe.accessToken;
+  delete safe.refreshToken;
+  delete safe.pageAccessToken;
+  return safe;
+};
+
+const toPublicUser = (user: Record<string, unknown>) => {
+  const safe = { ...user };
+  delete safe.passwordHash;
+  delete safe.emailVerificationToken;
+  delete safe.passwordResetToken;
+  delete safe.passwordResetExpires;
+  return safe;
 };
 
 const upsertUserFromSocial = async (
@@ -43,19 +49,25 @@ const upsertUserFromSocial = async (
   },
 ) => {
   // Try find by social account first
-  const existingAccount = await SocialAccount.findOne({
-    platform: provider as SocialPlatform,
-    platformUserId: profile.platformUserId,
+  const existingAccount = await prisma.socialAccount.findFirst({
+    where: {
+      platform: provider as SocialPlatform,
+      platformUserId: profile.platformUserId,
+    },
   });
 
   if (existingAccount) {
-    const user = await User.findById(existingAccount.userId);
+    const user = await prisma.user.findUnique({
+      where: { id: existingAccount.userId },
+    });
     if (user) return user;
   }
 
   // Then by email
   if (profile.email) {
-    const existingUser = await User.findOne({ email: profile.email });
+    const existingUser = await prisma.user.findUnique({
+      where: { email: profile.email },
+    });
     if (existingUser) return existingUser;
   }
 
@@ -63,20 +75,18 @@ const upsertUserFromSocial = async (
     throw new BadRequestError("Email is required to create a new account");
   }
 
-  // Create new user with random password (since social auth)
-  const passwordHash = await crypto
+  const passwordHash = crypto
     .createHash("sha256")
     .update(generateRandomPassword())
     .digest("hex");
 
-  const user = await User.create({
-    email: profile.email,
-    name: profile.name || profile.email.split("@")[0],
-    passwordHash,
-    role: "user",
-    avatar: profile.picture,
-    socialProfiles: {
-      [provider]: profile.platformUserId,
+  const user = await prisma.user.create({
+    data: {
+      email: profile.email,
+      name: profile.name || profile.email.split("@")[0],
+      passwordHash,
+      role: "user",
+      avatar: profile.picture,
     },
   });
 
@@ -86,26 +96,26 @@ const upsertUserFromSocial = async (
 const upsertSocialAccount = async (
   userId: string,
   provider: SocialProvider,
-  profile: Awaited<ReturnType<typeof verifySocialToken>>, // includes tokens
+  profile: Awaited<ReturnType<typeof verifySocialToken>>,
   scopes?: string[],
   pageId?: string,
   pageName?: string,
 ) => {
-  const expiresAt = profile.expiresAt;
-
-  const account = await SocialAccount.findOneAndUpdate(
-    {
-      userId,
-      platform: provider,
-      platformUserId: profile.platformUserId,
+  const account = await prisma.socialAccount.upsert({
+    where: {
+      userId_platform_platformUserId: {
+        userId,
+        platform: provider,
+        platformUserId: profile.platformUserId,
+      },
     },
-    {
+    update: {
       platformUsername: profile.email,
       displayName: profile.name,
       profilePictureUrl: profile.picture,
       accessToken: profile.accessToken || "",
       refreshToken: profile.refreshToken,
-      tokenExpiresAt: expiresAt,
+      tokenExpiresAt: profile.expiresAt,
       scopes: scopes || [],
       pageId,
       pageName,
@@ -113,8 +123,22 @@ const upsertSocialAccount = async (
       lastSyncAt: new Date(),
       syncError: undefined,
     },
-    { new: true, upsert: true, setDefaultsOnInsert: true },
-  );
+    create: {
+      userId,
+      platform: provider,
+      platformUserId: profile.platformUserId,
+      platformUsername: profile.email,
+      displayName: profile.name,
+      profilePictureUrl: profile.picture,
+      accessToken: profile.accessToken || "",
+      refreshToken: profile.refreshToken,
+      tokenExpiresAt: profile.expiresAt,
+      scopes: scopes || [],
+      pageId,
+      pageName,
+      isActive: true,
+    },
+  });
 
   return account;
 };
@@ -140,7 +164,9 @@ export const socialAuth = async (
     if (!req.user?.userId) {
       throw new UnauthorizedError("Authentication required to link accounts");
     }
-    user = (await User.findById(req.user.userId)) || user;
+    user =
+      (await prisma.user.findUnique({ where: { id: req.user.userId } })) ||
+      user;
   }
 
   const socialAccount = await upsertSocialAccount(
@@ -160,8 +186,10 @@ export const socialAuth = async (
 
   res.status(mode === "link" ? 200 : 201).json({
     message: mode === "link" ? "Account linked" : "Login successful",
-    user: user.toPublicJSON(),
-    socialAccount: sanitizeAccount(socialAccount),
+    user: toPublicUser(user as unknown as Record<string, unknown>),
+    socialAccount: sanitizeAccount(
+      socialAccount as unknown as Record<string, unknown>,
+    ),
     token: tokens.accessToken,
     ...tokens,
   });
@@ -200,7 +228,9 @@ export const appleCodeExchange = async (
     if (!req.user?.userId) {
       throw new UnauthorizedError("Authentication required to link accounts");
     }
-    user = (await User.findById(req.user.userId)) || user;
+    user =
+      (await prisma.user.findUnique({ where: { id: req.user.userId } })) ||
+      user;
   }
 
   const socialAccount = await upsertSocialAccount(
@@ -220,8 +250,10 @@ export const appleCodeExchange = async (
 
   res.status(mode === "link" ? 200 : 201).json({
     message: mode === "link" ? "Account linked" : "Login successful",
-    user: user.toPublicJSON(),
-    socialAccount: sanitizeAccount(socialAccount),
+    user: toPublicUser(user as unknown as Record<string, unknown>),
+    socialAccount: sanitizeAccount(
+      socialAccount as unknown as Record<string, unknown>,
+    ),
     token: tokens.accessToken,
     ...tokens,
   });
@@ -263,7 +295,9 @@ export const socialAuthCallback = async (
     if (!req.user?.userId) {
       throw new UnauthorizedError("Authentication required to link accounts");
     }
-    user = (await User.findById(req.user.userId)) || user;
+    user =
+      (await prisma.user.findUnique({ where: { id: req.user.userId } })) ||
+      user;
   }
 
   const socialAccount = await upsertSocialAccount(
@@ -283,8 +317,10 @@ export const socialAuthCallback = async (
 
   res.status(mode === "link" ? 200 : 201).json({
     message: mode === "link" ? "Account linked" : "Login successful",
-    user: user.toPublicJSON(),
-    socialAccount: sanitizeAccount(socialAccount),
+    user: toPublicUser(user as unknown as Record<string, unknown>),
+    socialAccount: sanitizeAccount(
+      socialAccount as unknown as Record<string, unknown>,
+    ),
     ...tokens,
   });
 };

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { InternalPost } from "../models/InternalPost";
+import { prisma } from "../config/prisma";
 import { NotFoundError } from "../errors";
 
 // Create a new post
@@ -7,14 +7,10 @@ export const createPost = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
   const { content, mediaUrls, mediaType } = req.body;
 
-  const post = await InternalPost.create({
-    author: userId,
-    content,
-    mediaUrls,
-    mediaType,
+  const post = await prisma.internalPost.create({
+    data: { authorId: userId, content, mediaUrls: mediaUrls || [], mediaType },
+    include: { author: { select: { id: true, name: true, avatar: true } } },
   });
-
-  await post.populate("author", "name avatar");
   res.status(201).json(post);
 };
 
@@ -23,34 +19,25 @@ export const getFeed = async (req: Request, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 20;
   const cursor = req.query.cursor as string;
 
-  const query: any = {};
-  if (cursor) {
-    query._id = { $lt: cursor };
-  }
-
-  const posts = await InternalPost.find(query)
-    .sort({ createdAt: -1 }) // Newest first
-    .limit(limit)
-    .populate("author", "name avatar")
-    .lean();
-
-  const nextCursor =
-    posts.length === limit ? posts[posts.length - 1]._id : null;
-
-  res.json({
-    data: posts,
-    nextCursor,
+  const posts = await prisma.internalPost.findMany({
+    where: cursor ? { id: { lt: cursor } } : undefined,
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: { author: { select: { id: true, name: true, avatar: true } } },
   });
+
+  const nextCursor = posts.length === limit ? posts[posts.length - 1].id : null;
+  res.json({ data: posts, nextCursor });
 };
 
 // Get a single post by id
 export const getPostById = async (req: Request, res: Response) => {
   const { id } = req.params;
 
-  const post = await InternalPost.findById(id)
-    .populate("author", "name avatar")
-    .lean();
-
+  const post = await prisma.internalPost.findUnique({
+    where: { id },
+    include: { author: { select: { id: true, name: true, avatar: true } } },
+  });
   if (!post) throw new NotFoundError("Post");
   res.json(post);
 };
@@ -60,23 +47,22 @@ export const toggleLike = async (req: Request, res: Response) => {
   const { id } = req.params;
   const userId = req.user!.userId;
 
-  const post = await InternalPost.findById(id);
+  const post = await prisma.internalPost.findUnique({
+    where: { id },
+    select: { likes: true },
+  });
   if (!post) throw new NotFoundError("Post");
 
-  const likes = post.likes as any[]; // Mongoose types can be finicky
-  const userIdStr = String(userId);
-  const index = likes.findIndex((like) => String(like) === userIdStr);
+  const isLiked = post.likes.includes(userId);
+  const updatedLikes = isLiked
+    ? post.likes.filter((l: string) => l !== userId)
+    : [...post.likes, userId];
 
-  if (index === -1) {
-    likes.push(userId as any);
-  } else {
-    likes.splice(index, 1);
-  }
-
-  post.likes = likes;
-  await post.save();
-
-  res.json({ likesCount: likes.length, isLiked: index === -1 });
+  await prisma.internalPost.update({
+    where: { id },
+    data: { likes: { set: updatedLikes } },
+  });
+  res.json({ likesCount: updatedLikes.length, isLiked: !isLiked });
 };
 
 // Delete post
@@ -85,8 +71,10 @@ export const deletePost = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
 
   // Only allow author or admin (middleware should handle role, here check author)
-  const result = await InternalPost.deleteOne({ _id: id, author: userId });
-  if (result.deletedCount === 0) throw new NotFoundError("Post");
+  const result = await prisma.internalPost.deleteMany({
+    where: { id, authorId: userId },
+  });
+  if (result.count === 0) throw new NotFoundError("Post");
 
   res.json({ message: "Deleted" });
 };

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { NotFoundError, UnauthorizedError } from "../errors";
-import { SocialAccount } from "../models/SocialAccount";
+import { prisma } from "../config/prisma";
 
 function requireUserId(req: Request): string {
   const userId = req.user?.userId;
@@ -14,12 +14,26 @@ export const listConnectedAccounts = async (
 ): Promise<void> => {
   const userId = requireUserId(req);
 
-  const accounts = await SocialAccount.find({ userId, isActive: true })
-    .select(
-      "platform platformUserId platformUsername displayName profilePictureUrl scopes pageId pageName isActive lastSyncAt syncError createdAt updatedAt",
-    )
-    .sort({ updatedAt: -1 })
-    .lean();
+  const accounts = await prisma.socialAccount.findMany({
+    where: { userId, isActive: true },
+    select: {
+      id: true,
+      platform: true,
+      platformUserId: true,
+      platformUsername: true,
+      displayName: true,
+      profilePictureUrl: true,
+      scopes: true,
+      pageId: true,
+      pageName: true,
+      isActive: true,
+      lastSyncAt: true,
+      syncError: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+    orderBy: { updatedAt: "desc" },
+  });
 
   res.json({ accounts });
 };
@@ -34,13 +48,12 @@ export const disconnectAccount = async (
     platformUserId: string;
   };
 
-  const account = await SocialAccount.findOneAndUpdate(
-    { userId, platform, platformUserId },
-    { isActive: false },
-    { new: true },
-  );
+  const result = await prisma.socialAccount.updateMany({
+    where: { userId, platform, platformUserId },
+    data: { isActive: false },
+  });
 
-  if (!account) throw new NotFoundError("Social account");
+  if (result.count === 0) throw new NotFoundError("Social account");
 
   res.json({ message: "Disconnected" });
 };
