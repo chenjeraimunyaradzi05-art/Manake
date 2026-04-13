@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { Story } from "../models/Story";
-import { User } from "../models/User";
+import { prisma } from "../config/prisma";
 import { logger } from "../utils/logger";
 import { escapeRegex } from "../utils/regex";
 
@@ -8,33 +7,37 @@ export const getStories = async (req: Request, res: Response) => {
   try {
     const { category, search, limit, page = 1, featured, status } = req.query;
 
-    // Build query filter - default to published stories only
-    const filter: Record<string, unknown> = {
-      status: status || "published",
-    };
-    if (category && category !== "all") {
-      filter.category = category;
-    }
-    if (featured === "true") {
-      filter.featured = true;
-    }
-    if (search) {
-      const safeSearch = escapeRegex(String(search).trim().slice(0, 64));
-      const safeRegex = new RegExp(safeSearch, "i");
-      filter.$or = [
-        { title: safeRegex },
-        { excerpt: safeRegex },
-        { tags: safeRegex },
-      ];
-    }
-
     const pageNum = parseInt(page as string, 10) || 1;
     const limitNum = parseInt(limit as string, 10) || 20;
     const skip = (pageNum - 1) * limitNum;
 
+    const searchStr = search
+      ? escapeRegex(String(search).trim().slice(0, 64))
+      : null;
+
+    const where: Record<string, unknown> = {
+      status: status || "published",
+      ...(category && category !== "all" ? { category } : {}),
+      ...(featured === "true" ? { featured: true } : {}),
+      ...(searchStr
+        ? {
+            OR: [
+              { title: { contains: searchStr, mode: "insensitive" } },
+              { excerpt: { contains: searchStr, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
+
     const [stories, total] = await Promise.all([
-      Story.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
-      Story.countDocuments(filter),
+      prisma.story.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+        include: { comments: true },
+      }),
+      prisma.story.count({ where }),
     ]);
 
     // Return paginated shape that frontend expects
@@ -55,7 +58,10 @@ export const getStories = async (req: Request, res: Response) => {
 
 export const getStoryById = async (req: Request, res: Response) => {
   try {
-    const story = await Story.findById(req.params.id);
+    const story = await prisma.story.findUnique({
+      where: { id: req.params.id },
+      include: { comments: true },
+    });
     if (!story) return res.status(404).json({ message: "Story not found" });
     res.json(story);
   } catch (error) {
@@ -66,7 +72,10 @@ export const getStoryById = async (req: Request, res: Response) => {
 
 export const getStoryBySlug = async (req: Request, res: Response) => {
   try {
-    const story = await Story.findOne({ slug: req.params.slug });
+    const story = await prisma.story.findUnique({
+      where: { slug: req.params.slug },
+      include: { comments: true },
+    });
     if (!story) return res.status(404).json({ message: "Story not found" });
     res.json(story);
   } catch (error) {
@@ -80,22 +89,33 @@ export const likeStory = async (req: Request, res: Response) => {
     if (!req.user?.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
-
     const storyId = req.params.id;
+    const userId = req.user.userId;
 
-    const updated = await Story.findOneAndUpdate(
-      { _id: storyId, likedBy: { $ne: req.user.userId } },
-      { $addToSet: { likedBy: req.user.userId }, $inc: { likes: 1 } },
-      { new: true }
-    ).select("likes");
+    const story = await prisma.story.findUnique({
+      where: { id: storyId },
+      select: { id: true, likes: true },
+    });
+    if (!story) return res.status(404).json({ message: "Story not found" });
 
-    if (!updated) {
-      const exists = await Story.findById(storyId).select("likes");
-      if (!exists) return res.status(404).json({ message: "Story not found" });
-      return res.json({ likes: exists.likes, liked: true });
+    // Upsert like row; if already exists, do nothing
+    const existing = await prisma.storyLike.findUnique({
+      where: { userId_storyId: { userId, storyId } },
+    });
+    if (!existing) {
+      await prisma.$transaction([
+        prisma.storyLike.create({ data: { userId, storyId } }),
+        prisma.story.update({
+          where: { id: storyId },
+          data: { likes: { increment: 1 } },
+        }),
+      ]);
     }
-
-    res.json({ likes: updated.likes, liked: true });
+    const updated = await prisma.story.findUnique({
+      where: { id: storyId },
+      select: { likes: true },
+    });
+    res.json({ likes: updated?.likes ?? story.likes, liked: true });
   } catch (error) {
     logger.error("Error liking story", { error });
     res.status(500).json({ message: "Error liking story" });
@@ -107,22 +127,37 @@ export const unlikeStory = async (req: Request, res: Response) => {
     if (!req.user?.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
-
     const storyId = req.params.id;
+    const userId = req.user.userId;
 
-    const updated = await Story.findOneAndUpdate(
-      { _id: storyId, likedBy: req.user.userId },
-      { $pull: { likedBy: req.user.userId }, $inc: { likes: -1 } },
-      { new: true }
-    ).select("likes");
+    const story = await prisma.story.findUnique({
+      where: { id: storyId },
+      select: { id: true, likes: true },
+    });
+    if (!story) return res.status(404).json({ message: "Story not found" });
 
-    if (!updated) {
-      const exists = await Story.findById(storyId).select("likes");
-      if (!exists) return res.status(404).json({ message: "Story not found" });
-      return res.json({ likes: exists.likes, liked: false });
+    const existing = await prisma.storyLike.findUnique({
+      where: { userId_storyId: { userId, storyId } },
+    });
+    if (existing) {
+      await prisma.$transaction([
+        prisma.storyLike.delete({
+          where: { userId_storyId: { userId, storyId } },
+        }),
+        prisma.story.update({
+          where: { id: storyId },
+          data: { likes: { decrement: 1 } },
+        }),
+      ]);
     }
-
-    res.json({ likes: Math.max(0, updated.likes), liked: false });
+    const updated = await prisma.story.findUnique({
+      where: { id: storyId },
+      select: { likes: true },
+    });
+    res.json({
+      likes: Math.max(0, updated?.likes ?? story.likes),
+      liked: false,
+    });
   } catch (error) {
     logger.error("Error unliking story", { error });
     res.status(500).json({ message: "Error unliking story" });
@@ -131,13 +166,35 @@ export const unlikeStory = async (req: Request, res: Response) => {
 
 export const createStory = async (req: Request, res: Response) => {
   try {
-    const storyData = {
-      ...req.body,
-      status: "pending", // All user-submitted stories start as pending
-      submittedBy: req.user?.userId, // Track who submitted if authenticated
-    };
-    const newStory = new Story(storyData);
-    const savedStory = await newStory.save();
+    const { title, excerpt, content, category, image, tags, author } = req.body;
+    const authorName =
+      typeof author === "object" ? author?.name : author || "Anonymous";
+    const authorRole =
+      typeof author === "object" ? author?.role : "Community Member";
+    const authorImage = typeof author === "object" ? author?.image : undefined;
+
+    // Auto-generate slug from title
+    const slug = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    const savedStory = await prisma.story.create({
+      data: {
+        title,
+        excerpt,
+        content,
+        category,
+        image,
+        tags: Array.isArray(tags) ? tags : [],
+        slug,
+        authorName,
+        authorRole,
+        authorImage,
+        status: "pending",
+        submittedById: req.user?.userId ?? null,
+      },
+    });
     res.status(201).json({
       message: "Story submitted for review",
       data: savedStory,
@@ -148,35 +205,39 @@ export const createStory = async (req: Request, res: Response) => {
   }
 };
 
-// Get comments for a story
 export const getComments = async (req: Request, res: Response) => {
   try {
-    const story = await Story.findById(req.params.id).select("comments");
-    if (!story) return res.status(404).json({ message: "Story not found" });
-
-    res.json({
-      data: story.comments || [],
-      count: story.comments?.length || 0,
+    const storyExists = await prisma.story.findUnique({
+      where: { id: req.params.id },
+      select: { id: true },
     });
+    if (!storyExists)
+      return res.status(404).json({ message: "Story not found" });
+
+    const comments = await prisma.storyComment.findMany({
+      where: { storyId: req.params.id },
+      orderBy: { createdAt: "asc" },
+    });
+    res.json({ data: comments, count: comments.length });
   } catch (error) {
     logger.error("Error fetching comments", { error });
     res.status(500).json({ message: "Error fetching comments" });
   }
 };
 
-// Add a comment to a story
 export const addComment = async (req: Request, res: Response) => {
   try {
     const { author: authorFromBody, content } = req.body;
 
-    // If authenticated, always derive author from user profile to prevent spoofing
     let author = authorFromBody;
     if (req.user?.userId) {
-      const user = await User.findById(req.user.userId).select("name email");
+      const user = await prisma.user.findUnique({
+        where: { id: req.user.userId },
+        select: { name: true, email: true },
+      });
       author = user?.name || user?.email || "User";
     }
 
-    // Validate input
     if (!author || typeof author !== "string" || author.trim().length < 2) {
       return res
         .status(400)
@@ -198,23 +259,22 @@ export const addComment = async (req: Request, res: Response) => {
         .json({ message: "Comment too long (max 2000 characters)" });
     }
 
-    const story = await Story.findById(req.params.id);
-    if (!story) return res.status(404).json({ message: "Story not found" });
-
-    const comment = {
-      author: author.trim(),
-      content: content.trim(),
-      createdAt: new Date(),
-    };
-
-    story.comments = story.comments || [];
-    story.comments.push(comment);
-    await story.save();
-
-    res.status(201).json({
-      message: "Comment added successfully",
-      comment: story.comments[story.comments.length - 1],
+    const storyExists = await prisma.story.findUnique({
+      where: { id: req.params.id },
+      select: { id: true },
     });
+    if (!storyExists)
+      return res.status(404).json({ message: "Story not found" });
+
+    const comment = await prisma.storyComment.create({
+      data: {
+        storyId: req.params.id,
+        author: author.trim(),
+        content: content.trim(),
+      },
+    });
+
+    res.status(201).json({ message: "Comment added successfully", comment });
   } catch (error) {
     logger.error("Error adding comment", { error });
     res.status(500).json({ message: "Error adding comment" });

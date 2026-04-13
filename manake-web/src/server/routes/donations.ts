@@ -1,8 +1,7 @@
 import { Router, Request, Response } from "express";
-import mongoose from "mongoose";
 import { createPaymentIntent } from "../controllers/donationController";
 import { legacyAuthenticate } from "../controllers/mobileAuthController";
-import { Donation } from "../models/Donation";
+import { prisma } from "../config/prisma";
 
 const router = Router();
 
@@ -148,10 +147,11 @@ router.get(
         return;
       }
 
-      const donations = await Donation.find({ donorEmail: email })
-        .sort({ createdAt: -1 })
-        .limit(100)
-        .lean();
+      const donations = await prisma.donation.findMany({
+        where: { donorEmail: email },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      });
 
       ok(res, donations.map(normalizeDonationForMobile));
     } catch (error) {
@@ -173,29 +173,20 @@ router.get(
         return;
       }
 
-      const stats = await Donation.aggregate([
-        {
-          $match: {
-            donorEmail: email,
-            status: { $in: ["completed", "succeeded"] },
-          },
+      const agg = await prisma.donation.aggregate({
+        where: {
+          donorEmail: email,
+          status: { in: ["completed", "succeeded"] },
         },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: "$amount" },
-            count: { $sum: 1 },
-            average: { $avg: "$amount" },
-          },
-        },
-      ]);
-
-      const row = stats[0] || { total: 0, count: 0, average: 0 };
+        _sum: { amount: true },
+        _count: { id: true },
+        _avg: { amount: true },
+      });
 
       ok(res, {
-        total: Number(row.total) || 0,
-        count: Number(row.count) || 0,
-        average: Number(row.average) || 0,
+        total: agg._sum.amount ?? 0,
+        count: agg._count.id ?? 0,
+        average: agg._avg.amount ?? 0,
       });
     } catch (error) {
       const message =
@@ -214,14 +205,14 @@ router.get("/:id", legacyAuthenticate, async (req: Request, res: Response) => {
     }
 
     const { id } = req.params;
-    if (!mongoose.isValidObjectId(id)) {
+    if (!id || typeof id !== "string" || id.length < 1) {
       fail(res, "Donation not found");
       return;
     }
 
-    const donation = await Donation.findOne({ _id: id, donorEmail: email })
-      .lean()
-      .exec();
+    const donation = await prisma.donation.findFirst({
+      where: { id, donorEmail: email },
+    });
 
     if (!donation) {
       fail(res, "Donation not found");

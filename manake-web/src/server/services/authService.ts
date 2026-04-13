@@ -5,21 +5,47 @@
  */
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import {
-  generateTokenPair,
-  hashToken,
-  verifyRefreshToken,
-} from "../utils/jwt";
+import type { User as PrismaUser } from "@prisma/client";
+import { generateTokenPair, hashToken, verifyRefreshToken } from "../utils/jwt";
 import {
   BadRequestError,
   UnauthorizedError,
   ConflictError,
   NotFoundError,
 } from "../errors";
-import { User, IUser, UserRole } from "../models/User";
-import { RefreshToken } from "../models/RefreshToken";
+import { prisma } from "../config/prisma";
 import { emailService } from "./emailService";
 import { logger } from "../utils/logger";
+
+// Map a Prisma User row to the public-safe shape returned by the API
+function userToPublic(user: PrismaUser): Record<string, unknown> {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    phone: user.phone ?? undefined,
+    role: user.role,
+    avatar: user.avatar ?? undefined,
+    isEmailVerified: user.isEmailVerified,
+    bio: user.bio ?? undefined,
+    preferences: {
+      emailNotifications: user.emailNotifications,
+      pushNotifications: user.pushNotifications,
+      notifications: user.pushNotifications,
+      emailUpdates: user.emailNotifications,
+      darkMode: false,
+      language: "en",
+    },
+    stats: {
+      storiesLiked: 0,
+      commentsMade: 0,
+      totalDonated: 0,
+      storiesShared: 0,
+    },
+    createdAt: user.createdAt,
+    joinedAt: user.createdAt,
+  };
+}
 
 // Types
 export interface LoginCredentials {
@@ -41,7 +67,7 @@ export interface TokenPair {
 }
 
 export interface AuthResult {
-  user: Partial<IUser>;
+  user: Record<string, unknown>;
   tokens: TokenPair;
 }
 
@@ -69,10 +95,9 @@ class AuthService {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    // passwordHash is select:false, so we must explicitly include it
-    const user = await User.findOne({ email: normalizedEmail }).select(
-      "+passwordHash +failedLoginAttempts +lockoutUntil",
-    );
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
 
     if (!user) {
       throw new UnauthorizedError("Invalid email or password");
@@ -85,33 +110,38 @@ class AuthService {
       );
     }
 
-    const isPasswordValid = await user.comparePassword(String(password));
+    const isPasswordValid = await bcrypt.compare(
+      String(password),
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       const attempts = (user.failedLoginAttempts || 0) + 1;
-      user.failedLoginAttempts = attempts;
+      const updateData: Record<string, unknown> = {
+        failedLoginAttempts: attempts,
+      };
       if (attempts >= this.MAX_FAILED_LOGIN_ATTEMPTS) {
-        user.failedLoginAttempts = 0;
-        user.lockoutUntil = new Date(now.getTime() + this.LOCKOUT_DURATION_MS);
+        updateData.failedLoginAttempts = 0;
+        updateData.lockoutUntil = new Date(
+          now.getTime() + this.LOCKOUT_DURATION_MS,
+        );
       }
-      await user.save();
+      await prisma.user.update({ where: { id: user.id }, data: updateData });
       throw new UnauthorizedError("Invalid email or password");
     }
 
-    // Reset lockout state on successful login
-    user.failedLoginAttempts = 0;
-    user.lockoutUntil = undefined;
-
-    // Update last login
-    user.lastLogin = new Date();
-    await user.save();
+    // Reset lockout state and update last login
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { failedLoginAttempts: 0, lockoutUntil: null, lastLogin: now },
+    });
 
     // Generate tokens
-    const tokens = await this.createTokenPair(user, deviceInfo);
+    const tokens = await this.createTokenPair(updatedUser, deviceInfo);
 
-    logger.info("User logged in", { userId: user._id, email: user.email });
+    logger.info("User logged in", { userId: user.id, email: user.email });
 
     return {
-      user: user.toPublicJSON(),
+      user: userToPublic(updatedUser),
       tokens,
     };
   }
@@ -135,38 +165,39 @@ class AuthService {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: normalizedEmail }).select(
-      "_id",
-    );
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
     if (existingUser) {
       throw new ConflictError("Email already registered");
     }
 
-    // Hash password
     const passwordHash = await bcrypt.hash(String(password), 12);
 
-    // Create user
-    const user = await User.create({
-      email: normalizedEmail,
-      passwordHash,
-      name: String(name).trim(),
-      phone: phone ? String(phone).trim() : undefined,
-      role: "user" as UserRole,
+    const user = await prisma.user.create({
+      data: {
+        email: normalizedEmail,
+        passwordHash,
+        name: String(name).trim(),
+        phone: phone ? String(phone).trim() : undefined,
+        role: "user",
+      },
     });
 
-    // Generate tokens
     const tokens = await this.createTokenPair(user, deviceInfo);
 
-    // Send welcome email (non-blocking)
     emailService.sendWelcome(user.email, user.name).catch((err) => {
-      logger.error("Failed to send welcome email", { error: err, userId: user._id });
+      logger.error("Failed to send welcome email", {
+        error: err,
+        userId: user.id,
+      });
     });
 
-    logger.info("User registered", { userId: user._id, email: user.email });
+    logger.info("User registered", { userId: user.id, email: user.email });
 
     return {
-      user: user.toPublicJSON(),
+      user: userToPublic(user),
       tokens,
     };
   }
@@ -186,10 +217,8 @@ class AuthService {
     const payload = verifyRefreshToken(token);
 
     const tokenHash = hashToken(token);
-    const storedToken = await RefreshToken.findOne({
-      userId: payload.userId,
-      tokenHash,
-      revoked: false,
+    const storedToken = await prisma.refreshToken.findFirst({
+      where: { userId: payload.userId, tokenHash, revoked: false },
     });
 
     if (!storedToken) {
@@ -200,36 +229,42 @@ class AuthService {
       throw new UnauthorizedError("Refresh token expired");
     }
 
-    const user = await User.findById(payload.userId);
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+    });
     if (!user) {
       throw new UnauthorizedError("User not found");
     }
 
-    // Generate new token pair
     const tokens = generateTokenPair({
-      id: user._id.toString(),
+      id: user.id,
       email: user.email,
       role: user.role,
     });
 
-    // Rotate refresh token (revoke old, store new)
-    storedToken.revoked = true;
-    storedToken.revokedAt = new Date();
-    storedToken.replacedByToken = hashToken(tokens.refreshToken);
-    await storedToken.save();
-
-    // Store new refresh token
-    const newRefreshPayload = verifyRefreshToken(tokens.refreshToken);
-    await RefreshToken.create({
-      userId: user._id,
-      tokenHash: hashToken(tokens.refreshToken),
-      deviceInfo: deviceInfo?.userAgent,
-      ipAddress: deviceInfo?.ipAddress,
-      expiresAt: new Date((newRefreshPayload.exp ?? 0) * 1000),
-      revoked: false,
+    // Rotate refresh token
+    await prisma.refreshToken.update({
+      where: { id: storedToken.id },
+      data: {
+        revoked: true,
+        revokedAt: new Date(),
+        replacedByToken: hashToken(tokens.refreshToken),
+      },
     });
 
-    logger.info("Token refreshed", { userId: user._id });
+    const newRefreshPayload = verifyRefreshToken(tokens.refreshToken);
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(tokens.refreshToken),
+        deviceInfo: deviceInfo?.userAgent,
+        ipAddress: deviceInfo?.ipAddress,
+        expiresAt: new Date((newRefreshPayload.exp ?? 0) * 1000),
+        revoked: false,
+      },
+    });
+
+    logger.info("Token refreshed", { userId: user.id });
 
     return tokens;
   }
@@ -238,10 +273,10 @@ class AuthService {
    * Logout user (revoke all refresh tokens)
    */
   async logout(userId: string): Promise<void> {
-    await RefreshToken.updateMany(
-      { userId, revoked: false },
-      { revoked: true, revokedAt: new Date() },
-    );
+    await prisma.refreshToken.updateMany({
+      where: { userId, revoked: false },
+      data: { revoked: true, revokedAt: new Date() },
+    });
 
     logger.info("User logged out", { userId });
   }
@@ -249,14 +284,14 @@ class AuthService {
   /**
    * Get user profile by ID
    */
-  async getProfile(userId: string): Promise<Partial<IUser>> {
-    const user = await User.findById(userId);
+  async getProfile(userId: string): Promise<Record<string, unknown>> {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
       throw new NotFoundError("User");
     }
 
-    return user.toPublicJSON();
+    return userToPublic(user);
   }
 
   /**
@@ -265,7 +300,7 @@ class AuthService {
   async updateProfile(
     userId: string,
     updates: { name?: string; phone?: string },
-  ): Promise<Partial<IUser>> {
+  ): Promise<Record<string, unknown>> {
     const updateData: Record<string, unknown> = {};
     if (typeof updates.name === "string" && updates.name.trim()) {
       updateData.name = updates.name.trim();
@@ -274,17 +309,14 @@ class AuthService {
       updateData.phone = updates.phone.trim();
     }
 
-    const user = await User.findByIdAndUpdate(userId, updateData, {
-      new: true,
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
     });
-
-    if (!user) {
-      throw new NotFoundError("User");
-    }
 
     logger.info("Profile updated", { userId });
 
-    return user.toPublicJSON();
+    return userToPublic(user);
   }
 
   /**
@@ -296,23 +328,26 @@ class AuthService {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase();
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
 
     if (user) {
-      // Generate reset token
       const resetToken = crypto.randomBytes(32).toString("hex");
       const resetTokenHash = hashToken(resetToken);
-      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
-      await User.findByIdAndUpdate(user._id, {
-        passwordResetToken: resetTokenHash,
-        passwordResetExpires: resetExpires,
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          passwordResetToken: resetTokenHash,
+          passwordResetExpires: resetExpires,
+        },
       });
 
-      // Send password reset email
       await emailService.sendPasswordReset(user.email, resetToken, user.name);
 
-      logger.info("Password reset requested", { userId: user._id });
+      logger.info("Password reset requested", { userId: user.id });
     }
 
     // Always return success to prevent email enumeration
@@ -332,29 +367,34 @@ class AuthService {
     }
 
     const tokenHash = hashToken(String(token));
-    const user = await User.findOne({
-      passwordResetToken: tokenHash,
-      passwordResetExpires: { $gt: new Date() },
-    }).select("_id");
+    const user = await prisma.user.findFirst({
+      where: {
+        passwordResetToken: tokenHash,
+        passwordResetExpires: { gt: new Date() },
+      },
+      select: { id: true },
+    });
 
     if (!user) {
       throw new BadRequestError("Invalid or expired reset token");
     }
 
     const passwordHash = await bcrypt.hash(String(newPassword), 12);
-    await User.findByIdAndUpdate(user._id, {
-      passwordHash,
-      passwordResetToken: undefined,
-      passwordResetExpires: undefined,
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      },
     });
 
-    // Revoke outstanding refresh tokens after a password reset
-    await RefreshToken.updateMany(
-      { userId: user._id, revoked: false },
-      { revoked: true, revokedAt: new Date() },
-    );
+    await prisma.refreshToken.updateMany({
+      where: { userId: user.id, revoked: false },
+      data: { revoked: true, revokedAt: new Date() },
+    });
 
-    logger.info("Password reset completed", { userId: user._id });
+    logger.info("Password reset completed", { userId: user.id });
   }
 
   /**
@@ -366,27 +406,28 @@ class AuthService {
     }
 
     const tokenHash = hashToken(String(token));
-    const user = await User.findOne({
-      emailVerificationToken: tokenHash,
-    }).select("_id");
+    const user = await prisma.user.findFirst({
+      where: { emailVerificationToken: tokenHash },
+      select: { id: true },
+    });
 
     if (!user) {
       throw new BadRequestError("Invalid verification token");
     }
 
-    await User.findByIdAndUpdate(user._id, {
-      isEmailVerified: true,
-      emailVerificationToken: undefined,
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { isEmailVerified: true, emailVerificationToken: null },
     });
 
-    logger.info("Email verified", { userId: user._id });
+    logger.info("Email verified", { userId: user.id });
   }
 
   /**
    * Request email verification
    */
   async requestEmailVerification(userId: string): Promise<void> {
-    const user = await User.findById(userId);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
       throw new NotFoundError("User");
@@ -396,63 +437,59 @@ class AuthService {
       throw new BadRequestError("Email is already verified");
     }
 
-    // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationTokenHash = hashToken(verificationToken);
 
-    await User.findByIdAndUpdate(user._id, {
-      emailVerificationToken: verificationTokenHash,
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { emailVerificationToken: verificationTokenHash },
     });
 
-    // Send verification email
     await emailService.sendEmailVerification(
       user.email,
       verificationToken,
       user.name,
     );
 
-    logger.info("Email verification requested", { userId: user._id });
+    logger.info("Email verification requested", { userId: user.id });
   }
 
   /**
    * Create token pair and store refresh token
    */
   private async createTokenPair(
-    user: IUser,
+    user: PrismaUser,
     deviceInfo?: DeviceInfo,
   ): Promise<TokenPair> {
     const tokens = generateTokenPair({
-      id: user._id.toString(),
+      id: user.id,
       email: user.email,
       role: user.role,
     });
 
-    // Store refresh token hash
     const refreshPayload = verifyRefreshToken(tokens.refreshToken);
-    await RefreshToken.create({
-      userId: user._id,
-      tokenHash: hashToken(tokens.refreshToken),
-      deviceInfo: deviceInfo?.userAgent,
-      ipAddress: deviceInfo?.ipAddress,
-      expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
-      revoked: false,
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: hashToken(tokens.refreshToken),
+        deviceInfo: deviceInfo?.userAgent,
+        ipAddress: deviceInfo?.ipAddress,
+        expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
+        revoked: false,
+      },
     });
 
     return tokens;
   }
 
-  /**
-   * Find user by ID
-   */
-  async findById(userId: string): Promise<IUser | null> {
-    return User.findById(userId);
+  async findById(userId: string): Promise<PrismaUser | null> {
+    return prisma.user.findUnique({ where: { id: userId } });
   }
 
-  /**
-   * Find user by email
-   */
-  async findByEmail(email: string): Promise<IUser | null> {
-    return User.findOne({ email: email.toLowerCase().trim() });
+  async findByEmail(email: string): Promise<PrismaUser | null> {
+    return prisma.user.findUnique({
+      where: { email: email.toLowerCase().trim() },
+    });
   }
 
   /**
@@ -471,25 +508,27 @@ class AuthService {
       throw new BadRequestError("New password must be at least 8 characters");
     }
 
-    const user = await User.findById(userId).select("+passwordHash");
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
       throw new NotFoundError("User");
     }
 
-    const isPasswordValid = await user.comparePassword(String(currentPassword));
+    const isPasswordValid = await bcrypt.compare(
+      String(currentPassword),
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedError("Current password is incorrect");
     }
 
     const passwordHash = await bcrypt.hash(String(newPassword), 12);
-    await User.findByIdAndUpdate(userId, { passwordHash });
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
 
-    // Revoke all refresh tokens to invalidate existing sessions
-    await RefreshToken.updateMany(
-      { userId, revoked: false },
-      { revoked: true, revokedAt: new Date() },
-    );
+    await prisma.refreshToken.updateMany({
+      where: { userId, revoked: false },
+      data: { revoked: true, revokedAt: new Date() },
+    });
 
     logger.info("Password changed", { userId });
   }

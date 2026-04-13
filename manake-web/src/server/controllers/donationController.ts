@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { Donation } from "../models/Donation";
+import { prisma } from "../config/prisma";
 import { requireStripe } from "../config/stripe";
 import { logger } from "../utils/logger";
 
@@ -104,8 +104,35 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
         cancel_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/donate`,
       });
 
-      // Save pending donation record
-      await Donation.create({
+      await prisma.donation.create({
+        data: {
+          amount: amountDollars,
+          currency: normalizedCurrency,
+          donorName: donorName || "Anonymous",
+          donorEmail,
+          type: donationType,
+          purpose: normalizedPurpose,
+          recurring: recurringFlag,
+          ...(typeof frequency === "string" && frequency.trim()
+            ? { frequency: frequency.trim() }
+            : {}),
+          paymentIntentId: session.id,
+          reference,
+          paymentMethod: normalizedPaymentMethod,
+          ...(typeof isAnonymous === "boolean" ? { isAnonymous } : {}),
+          ...(typeof message === "string" && message.trim() ? { message } : {}),
+          status: "pending",
+        },
+      });
+
+      return res.json({
+        checkoutUrl: session.url,
+        reference,
+      });
+    }
+
+    await prisma.donation.create({
+      data: {
         amount: amountDollars,
         currency: normalizedCurrency,
         donorName: donorName || "Anonymous",
@@ -116,37 +143,12 @@ export const createPaymentIntent = async (req: Request, res: Response) => {
         ...(typeof frequency === "string" && frequency.trim()
           ? { frequency: frequency.trim() }
           : {}),
-        paymentIntentId: session.id,
         reference,
         paymentMethod: normalizedPaymentMethod,
         ...(typeof isAnonymous === "boolean" ? { isAnonymous } : {}),
         ...(typeof message === "string" && message.trim() ? { message } : {}),
         status: "pending",
-      });
-
-      return res.json({
-        checkoutUrl: session.url,
-        reference,
-      });
-    }
-
-    // For EcoCash or Bank transfer, just create a pending record with instructions
-    await Donation.create({
-      amount: amountDollars,
-      currency: normalizedCurrency,
-      donorName: donorName || "Anonymous",
-      donorEmail,
-      type: donationType,
-      purpose: normalizedPurpose,
-      recurring: recurringFlag,
-      ...(typeof frequency === "string" && frequency.trim()
-        ? { frequency: frequency.trim() }
-        : {}),
-      reference,
-      paymentMethod: normalizedPaymentMethod,
-      ...(typeof isAnonymous === "boolean" ? { isAnonymous } : {}),
-      ...(typeof message === "string" && message.trim() ? { message } : {}),
-      status: "pending",
+      },
     });
 
     return res.json({

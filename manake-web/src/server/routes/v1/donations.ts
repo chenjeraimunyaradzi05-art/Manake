@@ -11,7 +11,7 @@ import {
 } from "../../middleware/validation";
 import { strictRateLimit } from "../../middleware/rateLimit";
 import { authenticate, authorize } from "../../utils/jwt";
-import { Donation } from "../../models/Donation";
+import { prisma } from "../../config/prisma";
 import express from "express";
 import { requireStripe } from "../../config/stripe";
 import { logger } from "../../utils/logger";
@@ -59,22 +59,21 @@ router.post(
 
       const event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
 
-      // Handle the event
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object;
-          await Donation.findOneAndUpdate(
-            { paymentIntentId: session.id },
-            { status: "completed", completedAt: new Date() },
-          );
+          await prisma.donation.updateMany({
+            where: { paymentIntentId: session.id },
+            data: { status: "completed", completedAt: new Date() },
+          });
           break;
         }
         case "payment_intent.payment_failed": {
           const paymentIntent = event.data.object;
-          await Donation.findOneAndUpdate(
-            { paymentIntentId: paymentIntent.id },
-            { status: "failed" },
-          );
+          await prisma.donation.updateMany({
+            where: { paymentIntentId: paymentIntent.id },
+            data: { status: "failed" },
+          });
           break;
         }
       }
@@ -100,8 +99,12 @@ router.get(
     const skip = (pageNum - 1) * limitNum;
 
     const [donations, total] = await Promise.all([
-      Donation.find().sort({ createdAt: -1 }).skip(skip).limit(limitNum),
-      Donation.countDocuments(),
+      prisma.donation.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+      }),
+      prisma.donation.count(),
     ]);
 
     res.json({
@@ -121,19 +124,18 @@ router.get(
   authenticate,
   authorize("admin"),
   asyncHandler(async (_req: Request, res: Response) => {
-    const stats = await Donation.aggregate([
-      { $match: { status: { $in: ["completed", "succeeded"] } } },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: "$amount" },
-          count: { $sum: 1 },
-          avgAmount: { $avg: "$amount" },
-        },
-      },
-    ]);
+    const agg = await prisma.donation.aggregate({
+      where: { status: { in: ["completed", "succeeded"] } },
+      _sum: { amount: true },
+      _count: { id: true },
+      _avg: { amount: true },
+    });
 
-    res.json(stats[0] || { totalAmount: 0, count: 0, avgAmount: 0 });
+    res.json({
+      totalAmount: agg._sum.amount ?? 0,
+      count: agg._count.id ?? 0,
+      avgAmount: agg._avg.amount ?? 0,
+    });
   }),
 );
 

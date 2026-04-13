@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { Contact } from "../models/Contact";
-import { Message } from "../models/Message";
+import { prisma } from "../config/prisma";
 import { emailService } from "../services/emailService";
 import { logger } from "../utils/logger";
 
@@ -35,26 +34,27 @@ export const submitContact = async (req: Request, res: Response) => {
       message: message.trim().slice(0, 5000),
     };
 
-    const newContact = await Contact.create(sanitizedData);
+    const newContact = await prisma.contact.create({ data: sanitizedData });
 
     // Mirror contact into message store for unified inbox
-    await Message.create({
-      channel: "inapp",
-      direction: "inbound",
-      status: "pending",
-      senderEmail: sanitizedData.email,
-      senderName: sanitizedData.name,
-      content: sanitizedData.message,
-      contentType: "text",
-      metadata: {
-        subject: sanitizedData.subject,
-        contactId: newContact._id?.toString(),
-        source: "contact_form",
+    await prisma.message.create({
+      data: {
+        channel: "inapp",
+        direction: "inbound",
+        status: "pending",
+        senderEmail: sanitizedData.email,
+        senderName: sanitizedData.name,
+        content: sanitizedData.message,
+        contentType: "text",
+        metadata: {
+          subject: sanitizedData.subject,
+          contactId: newContact.id,
+          source: "contact_form",
+        },
+        conversationId: sanitizedData.email,
       },
-      conversationId: sanitizedData.email,
     });
 
-    // Send email notification to admin
     emailService
       .sendContactNotification(
         sanitizedData.email,
@@ -63,12 +63,14 @@ export const submitContact = async (req: Request, res: Response) => {
         sanitizedData.subject,
       )
       .catch((err) => {
-        logger.error("Failed to send contact notification email", { error: err });
+        logger.error("Failed to send contact notification email", {
+          error: err,
+        });
       });
 
     res.status(201).json({
       message: "Message received successfully",
-      contactId: newContact._id,
+      contactId: newContact.id,
     });
   } catch (error) {
     logger.error("Contact form error", { error });

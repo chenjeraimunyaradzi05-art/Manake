@@ -3,8 +3,7 @@
  * Fetches and aggregates posts from Instagram, Facebook, and Twitter/X
  */
 
-import mongoose from "mongoose";
-import { SocialPostMetric } from "../models/SocialPostMetric";
+import { prisma } from "../config/prisma";
 import { NotFoundError } from "../errors";
 
 export type SocialPlatform = "instagram" | "facebook" | "twitter";
@@ -59,8 +58,8 @@ function metricKey(platform: SocialPlatform, postId: string): string {
   return `${platform}:${postId}`;
 }
 
-function isMongoConnected(): boolean {
-  return mongoose.connection.readyState === 1;
+function isPrismaAvailable(): boolean {
+  return !!prisma;
 }
 
 function stableHashInt(input: string): number {
@@ -112,31 +111,49 @@ function getCacheKey(filters: SocialFeedFilters): string {
   });
 }
 
-async function loadMetricsForPosts(posts: SocialPost[]): Promise<Map<string, PostMetrics>> {
+async function loadMetricsForPosts(
+  posts: SocialPost[],
+): Promise<Map<string, PostMetrics>> {
   const map = new Map<string, PostMetrics>();
   for (const post of posts) {
-    map.set(metricKey(post.platform, post.id), { likedBy: new Set(), sharedBy: new Set() });
+    map.set(metricKey(post.platform, post.id), {
+      likedBy: new Set(),
+      sharedBy: new Set(),
+    });
   }
 
   if (!posts.length) return map;
 
-  if (!isMongoConnected()) {
+  if (!isPrismaAvailable()) {
     for (const post of posts) {
       const key = metricKey(post.platform, post.id);
       const mem = metricsMemory.get(key);
-      if (mem) map.set(key, { likedBy: new Set(mem.likedBy), sharedBy: new Set(mem.sharedBy) });
+      if (mem)
+        map.set(key, {
+          likedBy: new Set(mem.likedBy),
+          sharedBy: new Set(mem.sharedBy),
+        });
     }
     return map;
   }
 
-  const or = posts.map((p) => ({ platform: p.platform, postId: p.id }));
-  const docs = await SocialPostMetric.find({ $or: or }).lean();
-  for (const doc of docs) {
-    const key = metricKey(doc.platform as SocialPlatform, doc.postId as string);
-    map.set(key, {
-      likedBy: new Set(Array.isArray(doc.likedBy) ? doc.likedBy : []),
-      sharedBy: new Set(Array.isArray(doc.sharedBy) ? doc.sharedBy : []),
+  try {
+    const platformPostIds = posts.map((p) => `${p.platform}:${p.id}`);
+    const docs = await prisma.socialPostMetric.findMany({
+      where: {
+        OR: posts.map((p) => ({ platform: p.platform, postId: p.id })),
+      },
     });
+    for (const doc of docs) {
+      const key = metricKey(doc.platform as SocialPlatform, doc.postId);
+      map.set(key, {
+        likedBy: new Set(doc.likedBy),
+        sharedBy: new Set(doc.sharedBy),
+      });
+    }
+    void platformPostIds;
+  } catch {
+    // DB unavailable — return empty metrics
   }
 
   return map;
@@ -268,7 +285,10 @@ export async function getSocialPost(
   platform: SocialPlatform,
   userId?: string,
 ): Promise<SocialPost & { isLiked?: boolean; isShared?: boolean }> {
-  const feed = await getSocialFeed({ platforms: [platform], limit: 100 }, userId);
+  const feed = await getSocialFeed(
+    { platforms: [platform], limit: 100 },
+    userId,
+  );
   const found = feed.posts.find((p) => p.id === postId);
   if (!found) throw new NotFoundError("Social post");
   return found;
@@ -282,22 +302,27 @@ export async function likeSocialPost(
   platform: SocialPlatform,
   userId: string,
 ): Promise<void> {
-  if (!isMongoConnected()) {
-    const key = metricKey(platform, postId);
-    const existing = metricsMemory.get(key) ?? {
-      likedBy: new Set<string>(),
-      sharedBy: new Set<string>(),
-    };
-    existing.likedBy.add(userId);
-    metricsMemory.set(key, existing);
-    return;
-  }
+  const key = metricKey(platform, postId);
+  const existing = metricsMemory.get(key) ?? {
+    likedBy: new Set<string>(),
+    sharedBy: new Set<string>(),
+  };
+  existing.likedBy.add(userId);
+  metricsMemory.set(key, existing);
 
-  await SocialPostMetric.findOneAndUpdate(
-    { platform, postId },
-    { $addToSet: { likedBy: userId } },
-    { upsert: true, new: true },
-  );
+  try {
+    const row = await prisma.socialPostMetric.findUnique({
+      where: { platform_postId: { platform, postId } },
+    });
+    const likedBy = Array.from(new Set([...(row?.likedBy ?? []), userId]));
+    await prisma.socialPostMetric.upsert({
+      where: { platform_postId: { platform, postId } },
+      update: { likedBy },
+      create: { platform, postId, likedBy, sharedBy: row?.sharedBy ?? [] },
+    });
+  } catch {
+    /* DB unavailable */
+  }
 }
 
 /**
@@ -308,18 +333,23 @@ export async function unlikeSocialPost(
   platform: SocialPlatform,
   userId: string,
 ): Promise<void> {
-  if (!isMongoConnected()) {
-    const key = metricKey(platform, postId);
-    const existing = metricsMemory.get(key);
-    if (existing) existing.likedBy.delete(userId);
-    return;
-  }
+  const key = metricKey(platform, postId);
+  const existing = metricsMemory.get(key);
+  if (existing) existing.likedBy.delete(userId);
 
-  await SocialPostMetric.findOneAndUpdate(
-    { platform, postId },
-    { $pull: { likedBy: userId } },
-    { upsert: true },
-  );
+  try {
+    const row = await prisma.socialPostMetric.findUnique({
+      where: { platform_postId: { platform, postId } },
+    });
+    if (row) {
+      await prisma.socialPostMetric.update({
+        where: { platform_postId: { platform, postId } },
+        data: { likedBy: row.likedBy.filter((id) => id !== userId) },
+      });
+    }
+  } catch {
+    /* DB unavailable */
+  }
 }
 
 /**
@@ -330,22 +360,27 @@ export async function shareSocialPost(
   platform: SocialPlatform,
   userId: string,
 ): Promise<void> {
-  if (!isMongoConnected()) {
-    const key = metricKey(platform, postId);
-    const existing = metricsMemory.get(key) ?? {
-      likedBy: new Set<string>(),
-      sharedBy: new Set<string>(),
-    };
-    existing.sharedBy.add(userId);
-    metricsMemory.set(key, existing);
-    return;
-  }
+  const key = metricKey(platform, postId);
+  const existing = metricsMemory.get(key) ?? {
+    likedBy: new Set<string>(),
+    sharedBy: new Set<string>(),
+  };
+  existing.sharedBy.add(userId);
+  metricsMemory.set(key, existing);
 
-  await SocialPostMetric.findOneAndUpdate(
-    { platform, postId },
-    { $addToSet: { sharedBy: userId } },
-    { upsert: true, new: true },
-  );
+  try {
+    const row = await prisma.socialPostMetric.findUnique({
+      where: { platform_postId: { platform, postId } },
+    });
+    const sharedBy = Array.from(new Set([...(row?.sharedBy ?? []), userId]));
+    await prisma.socialPostMetric.upsert({
+      where: { platform_postId: { platform, postId } },
+      update: { sharedBy },
+      create: { platform, postId, likedBy: row?.likedBy ?? [], sharedBy },
+    });
+  } catch {
+    /* DB unavailable */
+  }
 }
 
 export default {

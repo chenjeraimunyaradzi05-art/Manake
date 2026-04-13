@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Types } from "mongoose";
 import { Group } from "../models/Group";
 import { Post } from "../models/Post";
 import { User } from "../models/User";
@@ -36,8 +35,12 @@ export const getGroups = async (req: Request, res: Response) => {
   const groupsWithCount = groups.map((g) => ({
     ...g,
     memberCount: g.members?.length || 0,
-    isMember: userId ? g.members?.some((m: ObjectIdLike) => m.toString() === userId) : false,
-    isAdmin: userId ? g.admins?.some((a: ObjectIdLike) => a.toString() === userId) : false,
+    isMember: userId
+      ? g.members?.some((m: ObjectIdLike) => m.toString() === userId)
+      : false,
+    isAdmin: userId
+      ? g.admins?.some((a: ObjectIdLike) => a.toString() === userId)
+      : false,
   }));
 
   res.json({
@@ -66,9 +69,19 @@ export const getGroup = async (req: Request, res: Response) => {
   res.json({
     ...group,
     memberCount: group.members?.length || 0,
-    isMember: userId ? group.members?.some((m: ObjectIdLike) => m.toString() === userId) : false,
-    isAdmin: userId ? group.admins?.some((a: { _id?: ObjectIdLike }) => a._id?.toString() === userId) : false,
-    isModerator: userId ? group.moderators?.some((m: { _id?: ObjectIdLike }) => m._id?.toString() === userId) : false,
+    isMember: userId
+      ? group.members?.some((m: ObjectIdLike) => m.toString() === userId)
+      : false,
+    isAdmin: userId
+      ? group.admins?.some(
+          (a: { _id?: ObjectIdLike }) => a._id?.toString() === userId,
+        )
+      : false,
+    isModerator: userId
+      ? group.moderators?.some(
+          (m: { _id?: ObjectIdLike }) => m._id?.toString() === userId,
+        )
+      : false,
   });
 };
 
@@ -102,13 +115,22 @@ export const updateGroup = async (req: Request, res: Response) => {
   const group = await Group.findById(groupId);
   if (!group) throw new NotFoundError("Group");
 
-  const isAdmin = group.admins.some((a: ObjectIdLike) => a.toString() === userId);
+  const isAdmin = group.admins.some(
+    (a: ObjectIdLike) => a.toString() === userId,
+  );
   if (!isAdmin) throw new ForbiddenError("Only admins can update this group");
 
-  const allowedUpdates = ["name", "description", "category", "icon", "isPrivate"];
+  const allowedUpdates = [
+    "name",
+    "description",
+    "category",
+    "icon",
+    "isPrivate",
+  ];
   for (const key of allowedUpdates) {
     if (updates[key] !== undefined) {
-      (group as any)[key] = updates[key];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (group as unknown as Record<string, unknown>)[key] = updates[key];
     }
   }
 
@@ -133,10 +155,14 @@ export const joinGroup = async (req: Request, res: Response) => {
     throw new BadRequestError("This is a private group. Request to join.");
   }
 
-  group.members.push(userId as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (group.members as unknown[]).push(userId);
   await group.save();
 
-  res.json({ message: "Joined group successfully", memberCount: group.members.length });
+  res.json({
+    message: "Joined group successfully",
+    memberCount: group.members.length,
+  });
 };
 
 // Leave a group
@@ -147,20 +173,27 @@ export const leaveGroup = async (req: Request, res: Response) => {
   const group = await Group.findById(groupId);
   if (!group) throw new NotFoundError("Group");
 
-  const memberIndex = group.members.findIndex((m: ObjectIdLike) => m.toString() === userId);
+  const memberIndex = group.members.findIndex(
+    (m: ObjectIdLike) => m.toString() === userId,
+  );
   if (memberIndex === -1) {
     throw new BadRequestError("Not a member of this group");
   }
 
   // Can't leave if you're the only admin
-  const isOnlyAdmin = group.admins.length === 1 && group.admins[0].toString() === userId;
+  const isOnlyAdmin =
+    group.admins.length === 1 && group.admins[0].toString() === userId;
   if (isOnlyAdmin && group.members.length > 1) {
     throw new BadRequestError("Transfer admin role before leaving");
   }
 
   group.members.splice(memberIndex, 1);
-  group.admins = group.admins.filter((a: ObjectIdLike) => a.toString() !== userId) as typeof group.admins;
-  group.moderators = group.moderators.filter((m: ObjectIdLike) => m.toString() !== userId) as typeof group.moderators;
+  group.admins = group.admins.filter(
+    (a: ObjectIdLike) => a.toString() !== userId,
+  ) as typeof group.admins;
+  group.moderators = group.moderators.filter(
+    (m: ObjectIdLike) => m.toString() !== userId,
+  ) as typeof group.moderators;
   await group.save();
 
   res.json({ message: "Left group successfully" });
@@ -184,11 +217,15 @@ export const getGroupMembers = async (req: Request, res: Response) => {
   // Add role info
   const membersWithRoles = members.map((m) => ({
     ...m,
-    role: group.admins.some((a: ObjectIdLike) => a.toString() === m._id.toString())
+    role: group.admins.some(
+      (a: ObjectIdLike) => a.toString() === m._id.toString(),
+    )
       ? "admin"
-      : group.moderators.some((mod: ObjectIdLike) => mod.toString() === m._id.toString())
-      ? "moderator"
-      : "member",
+      : group.moderators.some(
+            (mod: ObjectIdLike) => mod.toString() === m._id.toString(),
+          )
+        ? "moderator"
+        : "member",
   }));
 
   res.json({
@@ -236,7 +273,9 @@ export const createGroupPost = async (req: Request, res: Response) => {
   const group = await Group.findById(groupId);
   if (!group) throw new NotFoundError("Group");
 
-  const isMember = group.members.some((m: ObjectIdLike) => m.toString() === userId);
+  const isMember = group.members.some(
+    (m: ObjectIdLike) => m.toString() === userId,
+  );
   if (!isMember) throw new ForbiddenError("Must be a member to post");
 
   const post = await Post.create({
@@ -259,7 +298,9 @@ export const deleteGroup = async (req: Request, res: Response) => {
   const group = await Group.findById(groupId);
   if (!group) throw new NotFoundError("Group");
 
-  const isAdmin = group.admins.some((a: ObjectIdLike) => a.toString() === userId);
+  const isAdmin = group.admins.some(
+    (a: ObjectIdLike) => a.toString() === userId,
+  );
   if (!isAdmin) throw new ForbiddenError("Only admins can delete this group");
 
   await Post.deleteMany({ group: groupId });

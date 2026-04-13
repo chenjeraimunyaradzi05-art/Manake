@@ -1,0 +1,514 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── User ────────────────────────────────────────────────────────────────────
+
+model User {
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  passwordHash           String
+  name                   String
+  phone                  String?
+  role                   String    @default("user")
+  avatar                 String?
+  isActive               Boolean   @default(true)
+  isEmailVerified        Boolean   @default(false)
+  emailVerificationToken String?
+  passwordResetToken     String?
+  passwordResetExpires   DateTime?
+  failedLoginAttempts    Int       @default(0)
+  lockoutUntil           DateTime?
+  lastLogin              DateTime?
+
+  // Social OAuth IDs
+  googleId    String?
+  facebookId  String?
+  appleId     String?
+
+  // Profile
+  bio         String?
+  headline    String?
+  bannerImage String?
+  location    String?
+  interests   String[]
+  skills      String[]
+
+  // Mentorship
+  isMentor             Boolean  @default(false)
+  mentorshipStyle      String?
+  yearsInRecovery      Int?
+  specializations      String[]
+  mentorHoursPerWeek   Int?
+  mentorPreferredTimes String[]
+  mentorAverageRating  Float?
+
+  // Milestones (JSON — complex nested array)
+  recoveryDaysCount    Int?
+  lastMilestoneReached DateTime?
+  milestones           Json?
+
+  // Privacy
+  visibility          String   @default("public")
+  allowMessages       String   @default("connections")
+  allowMentorRequests Boolean  @default(true)
+  showConnectionList  Boolean  @default(true)
+  showActivityFeed    Boolean  @default(true)
+  blockList           String[]
+
+  // Preferences
+  emailNotifications Boolean @default(true)
+  pushNotifications  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  refreshTokens         RefreshToken[]
+  notifications         Notification[]
+  pushTokens            PushToken[]
+  socialAccounts        SocialAccount[]
+  connectionsInitiated  Connection[]     @relation("Initiator")
+  connectionsReceived   Connection[]     @relation("Receiver")
+  mentorships           Mentorship[]     @relation("Mentor")
+  menteerships          Mentorship[]     @relation("Mentee")
+  stories               Story[]          @relation("SubmittedStories")
+  storyLikes            StoryLike[]
+  posts                 Post[]
+  postLikes             PostLike[]
+  postComments          PostComment[]
+  internalPosts         InternalPost[]
+  internalPostLikes     InternalPostLike[]
+  groupMemberships      GroupMember[]
+  messages              Message[]
+
+  @@index([role])
+  @@index([isActive])
+}
+
+// ─── RefreshToken ─────────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id              String    @id @default(cuid())
+  userId          String
+  tokenHash       String    @unique
+  deviceInfo      String?
+  ipAddress       String?
+  expiresAt       DateTime
+  revoked         Boolean   @default(false)
+  revokedAt       DateTime?
+  replacedByToken String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ─── Donation ─────────────────────────────────────────────────────────────────
+
+model Donation {
+  id              String    @id @default(cuid())
+  amount          Float
+  currency        String    @default("USD")
+  donorName       String
+  donorEmail      String
+  type            String    @default("one-time")
+  purpose         String    @default("general_donation")
+  recurring       Boolean   @default(false)
+  frequency       String?
+  status          String    @default("pending")
+  paymentIntentId String?
+  reference       String?   @unique
+  paymentMethod   String    @default("card")
+  isAnonymous     Boolean   @default(false)
+  message         String?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([donorEmail])
+  @@index([status])
+}
+
+// ─── Story ────────────────────────────────────────────────────────────────────
+
+model Story {
+  id              String    @id @default(cuid())
+  title           String
+  excerpt         String
+  content         String
+  slug            String?   @unique
+  authorName      String
+  authorRole      String
+  authorImage     String?
+  category        String
+  image           String    @default("https://images.unsplash.com/photo-1489710437720-ebb67ec84dd2?auto=format&fit=crop&q=80")
+  date            DateTime  @default(now())
+  likes           Int       @default(0)
+  tags            String[]
+  status          String    @default("pending")
+  featured        Boolean   @default(false)
+  publishedAt     DateTime?
+  rejectionReason String?
+  submittedById   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  submittedBy User?          @relation("SubmittedStories", fields: [submittedById], references: [id], onDelete: SetNull)
+  comments    StoryComment[]
+  likedBy     StoryLike[]
+
+  @@index([status])
+  @@index([category])
+  @@index([slug])
+}
+
+model StoryComment {
+  id        String   @id @default(cuid())
+  storyId   String
+  author    String
+  content   String
+  createdAt DateTime @default(now())
+
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@index([storyId])
+}
+
+model StoryLike {
+  userId    String
+  storyId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story Story @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, storyId])
+}
+
+// ─── Post ─────────────────────────────────────────────────────────────────────
+
+model Post {
+  id        String   @id @default(cuid())
+  authorId  String
+  content   String
+  media     Json     @default("[]")
+  scope     String   @default("public")
+  mood      String?
+  shares    Json     @default("[]")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes    PostLike[]
+  comments PostComment[]
+
+  @@index([authorId])
+}
+
+model PostLike {
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
+}
+
+model PostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+// ─── InternalPost ─────────────────────────────────────────────────────────────
+
+model InternalPost {
+  id            String   @id @default(cuid())
+  authorId      String
+  content       String
+  mediaUrls     String[]
+  mediaType     String   @default("none")
+  commentsCount Int      @default(0)
+  sharesCount   Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  author           User              @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  internalPostLikes InternalPostLike[]
+
+  @@index([createdAt])
+}
+
+model InternalPostLike {
+  userId         String
+  internalPostId String
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  internalPost InternalPost @relation(fields: [internalPostId], references: [id], onDelete: Cascade)
+
+  @@id([userId, internalPostId])
+}
+
+// ─── Contact ──────────────────────────────────────────────────────────────────
+
+model Contact {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── Connection ───────────────────────────────────────────────────────────────
+
+model Connection {
+  id              String    @id @default(cuid())
+  userId          String
+  connectedUserId String
+  status          String    @default("pending")
+  connectionType  String    @default("peer")
+  initiatedAt     DateTime  @default(now())
+  acceptedAt      DateTime?
+  strength        Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user          User @relation("Initiator", fields: [userId], references: [id], onDelete: Cascade)
+  connectedUser User @relation("Receiver", fields: [connectedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, connectedUserId])
+  @@index([connectedUserId, status])
+}
+
+// ─── Mentorship ───────────────────────────────────────────────────────────────
+
+model Mentorship {
+  id        String    @id @default(cuid())
+  mentorId  String
+  menteeId  String
+  status    String    @default("pending")
+  goals     String[]
+  startDate DateTime?
+  endDate   DateTime?
+  meetings  Json      @default("[]")
+  rating    Float?
+  review    String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  mentor User @relation("Mentor", fields: [mentorId], references: [id])
+  mentee User @relation("Mentee", fields: [menteeId], references: [id])
+
+  @@index([mentorId, status])
+  @@index([menteeId, status])
+}
+
+// ─── Notification ─────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String?
+  message   String?
+  data      Json?
+  isRead    Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+}
+
+// ─── Message ──────────────────────────────────────────────────────────────────
+
+model Message {
+  id             String    @id @default(cuid())
+  channel        String
+  direction      String
+  status         String    @default("pending")
+  externalId     String?
+  senderPhone    String?
+  senderEmail    String?
+  senderName     String?
+  recipientPhone String?
+  recipientEmail String?
+  content        String
+  contentType    String    @default("text")
+  mediaUrl       String?
+  mediaMimeType  String?
+  mediaSize      Int?
+  metadata       Json      @default("{}")
+  conversationId String?
+  replyToId      String?
+  userId         String?
+  sentAt         DateTime?
+  deliveredAt    DateTime?
+  readAt         DateTime?
+  failedAt       DateTime?
+  failureReason  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([channel])
+  @@index([conversationId])
+  @@index([userId])
+  @@index([externalId])
+  @@index([senderPhone])
+}
+
+// ─── Conversation ─────────────────────────────────────────────────────────────
+
+model Conversation {
+  id            String   @id @default(cuid())
+  type          String   @default("direct")
+  groupName     String?
+  groupAvatar   String?
+  lastMessage   String?
+  lastMessageAt DateTime @default(now())
+  participants  String[]
+  admins        String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ─── Group ────────────────────────────────────────────────────────────────────
+
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  icon        String?
+  category    String?
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members GroupMember[]
+
+  @@index([name])
+}
+
+model GroupMember {
+  userId   String
+  groupId  String
+  role     String   @default("member")
+  joinedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([userId, groupId])
+}
+
+// ─── WebhookEvent ─────────────────────────────────────────────────────────────
+
+model WebhookEvent {
+  id                 String    @id @default(cuid())
+  source             String
+  eventType          String
+  eventId            String?
+  status             String    @default("received")
+  headers            Json      @default("{}")
+  payload            Json
+  signature          String?
+  processedAt        DateTime?
+  processingDuration Int?
+  error              String?
+  retryCount         Int       @default(0)
+  maxRetries         Int       @default(3)
+  ipAddress          String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@unique([eventId, source])
+  @@index([source])
+  @@index([status])
+}
+
+// ─── PushToken ────────────────────────────────────────────────────────────────
+
+model PushToken {
+  id        String   @id @default(cuid())
+  userId    String?
+  token     String   @unique
+  platform  String
+  deviceId  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId, isActive])
+  @@index([deviceId])
+}
+
+// ─── SocialAccount ────────────────────────────────────────────────────────────
+
+model SocialAccount {
+  id                String    @id @default(cuid())
+  userId            String
+  platform          String
+  platformUserId    String
+  platformUsername  String?
+  displayName       String?
+  profilePictureUrl String?
+  accessToken       String
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  scopes            String[]
+  pageId            String?
+  pageName          String?
+  pageAccessToken   String?
+  isActive          Boolean   @default(true)
+  lastSyncAt        DateTime?
+  syncError         String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform, platformUserId])
+  @@index([platform, isActive])
+}
+
+// ─── SocialPostMetric ─────────────────────────────────────────────────────────
+
+model SocialPostMetric {
+  id        String   @id @default(cuid())
+  platform  String
+  postId    String
+  likedBy   String[]
+  sharedBy  String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([platform, postId])
+}

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Mentorship } from "../models/Mentorship";
 import { User } from "../models/User";
-import mongoose from "mongoose";
+import { prisma } from "../config/prisma";
 import { logger } from "../utils/logger";
 import { escapeRegex } from "../utils/regex";
 
@@ -29,7 +29,9 @@ export const getMentors = async (req: Request, res: Response) => {
 
     // Filter by availability
     if (availability) {
-      filter["mentorship.availability.hoursPerWeek"] = { $gte: Number(availability) };
+      filter["mentorship.availability.hoursPerWeek"] = {
+        $gte: Number(availability),
+      };
     }
 
     // Filter by minimum rating
@@ -124,7 +126,7 @@ export const getMentor = async (req: Request, res: Response) => {
       activeMenteeCount,
     });
   } catch (error) {
-      logger.error("Get mentor error", { error });
+    logger.error("Get mentor error", { error });
     res.status(500).json({ error: "Failed to fetch mentor details" });
   }
 };
@@ -147,7 +149,9 @@ export const requestMentorship = async (req: Request, res: Response) => {
     });
 
     if (!mentor) {
-      return res.status(404).json({ error: "Mentor not found or not accepting requests" });
+      return res
+        .status(404)
+        .json({ error: "Mentor not found or not accepting requests" });
     }
 
     // Check for existing pending/active mentorship
@@ -158,7 +162,11 @@ export const requestMentorship = async (req: Request, res: Response) => {
     });
 
     if (existing) {
-      return res.status(400).json({ error: "You already have a mentorship request with this mentor" });
+      return res
+        .status(400)
+        .json({
+          error: "You already have a mentorship request with this mentor",
+        });
     }
 
     const mentorship = await Mentorship.create({
@@ -168,9 +176,11 @@ export const requestMentorship = async (req: Request, res: Response) => {
       goals: goals || [],
     });
 
-    res.status(201).json({ mentorship, message: "Mentorship request sent successfully" });
+    res
+      .status(201)
+      .json({ mentorship, message: "Mentorship request sent successfully" });
   } catch (error) {
-      logger.error("Request mentorship error", { error });
+    logger.error("Request mentorship error", { error });
     res.status(500).json({ error: "Failed to request mentorship" });
   }
 };
@@ -206,7 +216,7 @@ export const getMyMentorships = async (req: Request, res: Response) => {
 
     res.json({ mentorships });
   } catch (error) {
-      logger.error("Get my mentorships error", { error });
+    logger.error("Get my mentorships error", { error });
     res.status(500).json({ error: "Failed to fetch mentorships" });
   }
 };
@@ -247,7 +257,7 @@ export const acceptMentorship = async (req: Request, res: Response) => {
     const mentorship = await Mentorship.findOneAndUpdate(
       { _id: id, mentor: userId, status: "pending" },
       { status: "active", startDate: new Date() },
-      { new: true }
+      { new: true },
     )
       .populate("mentor", "name avatar")
       .populate("mentee", "name avatar");
@@ -258,7 +268,7 @@ export const acceptMentorship = async (req: Request, res: Response) => {
 
     res.json({ mentorship, message: "Mentorship request accepted" });
   } catch (error) {
-      logger.error("Accept mentorship error", { error });
+    logger.error("Accept mentorship error", { error });
     res.status(500).json({ error: "Failed to accept mentorship" });
   }
 };
@@ -285,7 +295,7 @@ export const declineMentorship = async (req: Request, res: Response) => {
 
     res.json({ message: "Mentorship request declined" });
   } catch (error) {
-      logger.error("Decline mentorship error", { error });
+    logger.error("Decline mentorship error", { error });
     res.status(500).json({ error: "Failed to decline mentorship" });
   }
 };
@@ -313,7 +323,7 @@ export const endMentorship = async (req: Request, res: Response) => {
 
     mentorship.status = "completed";
     mentorship.endDate = new Date();
-    
+
     // Only mentee can rate
     if (mentorship.mentee.toString() === userId) {
       if (rating) mentorship.rating = rating;
@@ -327,7 +337,10 @@ export const endMentorship = async (req: Request, res: Response) => {
       });
 
       const avgRating =
-        mentorMentorships.reduce((sum, m) => sum + (m.rating || 0), rating || 0) /
+        mentorMentorships.reduce(
+          (sum, m) => sum + (m.rating || 0),
+          rating || 0,
+        ) /
         (mentorMentorships.length + (rating ? 1 : 0));
 
       await User.findByIdAndUpdate(mentorship.mentor, {
@@ -339,7 +352,7 @@ export const endMentorship = async (req: Request, res: Response) => {
 
     res.json({ mentorship, message: "Mentorship ended successfully" });
   } catch (error) {
-      logger.error("End mentorship error", { error });
+    logger.error("End mentorship error", { error });
     res.status(500).json({ error: "Failed to end mentorship" });
   }
 };
@@ -366,7 +379,7 @@ export const addMeeting = async (req: Request, res: Response) => {
           meetings: { date, duration, notes },
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!mentorship) {
@@ -375,7 +388,7 @@ export const addMeeting = async (req: Request, res: Response) => {
 
     res.json({ mentorship, message: "Meeting added" });
   } catch (error) {
-      logger.error("Add meeting error", { error });
+    logger.error("Add meeting error", { error });
     res.status(500).json({ error: "Failed to add meeting" });
   }
 };
@@ -401,7 +414,7 @@ export const rateMeeting = async (req: Request, res: Response) => {
       {
         $set: { "meetings.$.rating": rating },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!mentorship) {
@@ -410,7 +423,7 @@ export const rateMeeting = async (req: Request, res: Response) => {
 
     res.json({ mentorship, message: "Meeting rated" });
   } catch (error) {
-      logger.error("Rate meeting error", { error });
+    logger.error("Rate meeting error", { error });
     res.status(500).json({ error: "Failed to rate meeting" });
   }
 };
@@ -443,7 +456,7 @@ export const becomeMentor = async (req: Request, res: Response) => {
           "profile.bio": bio || undefined,
         },
       },
-      { new: true }
+      { new: true },
     ).select("name avatar profile mentorship");
 
     if (!user) {
@@ -452,7 +465,7 @@ export const becomeMentor = async (req: Request, res: Response) => {
 
     res.json({ user, message: "You are now a mentor!" });
   } catch (error) {
-      logger.error("Become mentor error", { error });
+    logger.error("Become mentor error", { error });
     res.status(500).json({ error: "Failed to become mentor" });
   }
 };
@@ -468,16 +481,20 @@ export const updateMentorSettings = async (req: Request, res: Response) => {
     }
 
     const updateFields: Record<string, unknown> = {};
-    
-    if (updates.mentorshipStyle) updateFields["mentorship.mentorshipStyle"] = updates.mentorshipStyle;
-    if (updates.specializations) updateFields["mentorship.specializations"] = updates.specializations;
-    if (updates.availability) updateFields["mentorship.availability"] = updates.availability;
-    if (updates.allowMentorRequests !== undefined) updateFields["privacy.allowMentorRequests"] = updates.allowMentorRequests;
+
+    if (updates.mentorshipStyle)
+      updateFields["mentorship.mentorshipStyle"] = updates.mentorshipStyle;
+    if (updates.specializations)
+      updateFields["mentorship.specializations"] = updates.specializations;
+    if (updates.availability)
+      updateFields["mentorship.availability"] = updates.availability;
+    if (updates.allowMentorRequests !== undefined)
+      updateFields["privacy.allowMentorRequests"] = updates.allowMentorRequests;
 
     const user = await User.findByIdAndUpdate(
       userId,
       { $set: updateFields },
-      { new: true }
+      { new: true },
     ).select("name avatar profile mentorship privacy");
 
     if (!user) {
@@ -486,7 +503,7 @@ export const updateMentorSettings = async (req: Request, res: Response) => {
 
     res.json({ user, message: "Mentor settings updated" });
   } catch (error) {
-      logger.error("Update mentor settings error", { error });
+    logger.error("Update mentor settings error", { error });
     res.status(500).json({ error: "Failed to update mentor settings" });
   }
 };
@@ -500,53 +517,49 @@ export const getMentorshipStats = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const user = await User.findById(userId).select("mentorship");
-    const isMentor = user?.mentorship?.isMentor;
+    const dbUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { isMentor: true },
+    });
+    const isMentor = dbUser?.isMentor;
 
-    const [
-      asMentor,
-      asMentee,
-      pendingRequests,
-    ] = await Promise.all([
-      Mentorship.aggregate([
-        { $match: { mentor: new mongoose.Types.ObjectId(userId) } },
-        {
-          $group: {
-            _id: "$status",
-            count: { $sum: 1 },
-          },
-        },
-      ]),
-      Mentorship.aggregate([
-        { $match: { mentee: new mongoose.Types.ObjectId(userId) } },
-        {
-          $group: {
-            _id: "$status",
-            count: { $sum: 1 },
-          },
-        },
-      ]),
-      isMentor
-        ? Mentorship.countDocuments({ mentor: userId, status: "pending" })
-        : 0,
-    ]);
+    const [asMentorGroups, asMenteeGroups, pendingRequests] = await Promise.all(
+      [
+        prisma.mentorship.groupBy({
+          by: ["status"],
+          where: { mentorId: userId },
+          _count: { id: true },
+        }),
+        prisma.mentorship.groupBy({
+          by: ["status"],
+          where: { menteeId: userId },
+          _count: { id: true },
+        }),
+        isMentor
+          ? prisma.mentorship.count({
+              where: { mentorId: userId, status: "pending" },
+            })
+          : 0,
+      ],
+    );
+
+    const toStatusMap = (rows: { status: string; _count: { id: number } }[]) =>
+      rows.reduce((acc, r) => ({ ...acc, [r.status]: r._count.id }), {
+        pending: 0,
+        active: 0,
+        completed: 0,
+      });
 
     const stats = {
       isMentor,
-      asMentor: asMentor.reduce(
-        (acc, { _id, count }) => ({ ...acc, [_id]: count }),
-        { pending: 0, active: 0, completed: 0 }
-      ),
-      asMentee: asMentee.reduce(
-        (acc, { _id, count }) => ({ ...acc, [_id]: count }),
-        { pending: 0, active: 0, completed: 0 }
-      ),
+      asMentor: toStatusMap(asMentorGroups),
+      asMentee: toStatusMap(asMenteeGroups),
       pendingRequests,
     };
 
     res.json({ stats });
   } catch (error) {
-      logger.error("Get mentorship stats error", { error });
+    logger.error("Get mentorship stats error", { error });
     res.status(500).json({ error: "Failed to fetch stats" });
   }
 };

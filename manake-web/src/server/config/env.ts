@@ -14,15 +14,8 @@ const envSchema = z.object({
     .default("development"),
   PORT: z.coerce.number().default(5000),
 
-  // Database — Railway injects MONGO_URL; also accept the conventional MONGODB_URI
-  MONGODB_URI: z
-    .string()
-    .optional()
-    // Relaxed validation: check for length instead of specific prefix as fallback
-    .refine((value) => !value || value.length > 10, {
-      message: "Invalid MongoDB connection string",
-    }),
-  MONGO_URL: z.string().optional(),
+  // Database — Railway injects DATABASE_URL for PostgreSQL
+  DATABASE_URL: z.string().optional(),
 
   // JWT
   JWT_SECRET: z.string().min(32).optional(),
@@ -113,17 +106,13 @@ export function ensureProductionEnv(): void {
   if (!isProduction) return;
 
   const required = [
+    "DATABASE_URL",
     "JWT_SECRET",
     "JWT_REFRESH_SECRET",
     "STRIPE_SECRET_KEY",
   ] as const;
 
-  // Accept Railway's MONGO_URL or the conventional MONGODB_URI
-  const hasMongo = process.env.MONGODB_URI || process.env.MONGO_URL;
-  const missing = [
-    ...required.filter((key) => !process.env[key]),
-    ...(!hasMongo ? ["MONGODB_URI or MONGO_URL"] : []),
-  ];
+  const missing = required.filter((key) => !process.env[key]);
 
   if (missing.length > 0) {
     throw new Error(
