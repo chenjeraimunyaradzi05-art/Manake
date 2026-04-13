@@ -63,7 +63,7 @@ export const getStories = async (req: Request, res: Response) => {
 export const getStoryById = async (req: Request, res: Response) => {
   try {
     const story = await prisma.story.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       include: { comments: true },
     });
     if (!story) return res.status(404).json({ message: "Story not found" });
@@ -77,7 +77,7 @@ export const getStoryById = async (req: Request, res: Response) => {
 export const getStoryBySlug = async (req: Request, res: Response) => {
   try {
     const story = await prisma.story.findUnique({
-      where: { slug: req.params.slug },
+      where: { slug: req.params.slug as string },
       include: { comments: true },
     });
     if (!story) return res.status(404).json({ message: "Story not found" });
@@ -93,7 +93,7 @@ export const likeStory = async (req: Request, res: Response) => {
     if (!req.user?.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    const storyId = req.params.id;
+    const storyId = req.params.id as string;
     const userId = req.user.userId;
 
     const story = await prisma.story.findUnique({
@@ -131,7 +131,7 @@ export const unlikeStory = async (req: Request, res: Response) => {
     if (!req.user?.userId) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    const storyId = req.params.id;
+    const storyId = req.params.id as string;
     const userId = req.user.userId;
 
     const story = await prisma.story.findUnique({
@@ -212,14 +212,14 @@ export const createStory = async (req: Request, res: Response) => {
 export const getComments = async (req: Request, res: Response) => {
   try {
     const storyExists = await prisma.story.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       select: { id: true },
     });
     if (!storyExists)
       return res.status(404).json({ message: "Story not found" });
 
     const comments = await prisma.storyComment.findMany({
-      where: { storyId: req.params.id },
+      where: { storyId: req.params.id as string },
       orderBy: { createdAt: "asc" },
     });
     res.json({ data: comments, count: comments.length });
@@ -264,7 +264,7 @@ export const addComment = async (req: Request, res: Response) => {
     }
 
     const storyExists = await prisma.story.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
       select: { id: true },
     });
     if (!storyExists)
@@ -272,7 +272,7 @@ export const addComment = async (req: Request, res: Response) => {
 
     const comment = await prisma.storyComment.create({
       data: {
-        storyId: req.params.id,
+        storyId: req.params.id as string,
         author: author.trim(),
         content: content.trim(),
       },

@@ -82,7 +82,7 @@ export const sendConnectionRequest = async (req: Request, res: Response) => {
 // Respond to a connection request (accept/reject)
 export const respondToRequest = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { requestId } = req.params;
+  const requestId = req.params.requestId as string;
   const { action } = req.body as { action: "accept" | "reject" };
 
   if (!["accept", "reject"].includes(action)) {
@@ -109,7 +109,7 @@ export const respondToRequest = async (req: Request, res: Response) => {
 // Remove a connection
 export const removeConnection = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { connectionId } = req.params;
+  const connectionId = req.params.connectionId as string;
 
   const result = await prisma.connection.deleteMany({
     where: {

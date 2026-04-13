@@ -12,7 +12,7 @@ import {
 } from "../../middleware/validation";
 import { contactRateLimit } from "../../middleware/rateLimit";
 import { authenticate, authorize } from "../../utils/jwt";
-import { Contact } from "../../models/Contact";
+import { prisma } from "../../config/prisma";
 import { z } from "zod";
 
 const router = Router();
@@ -38,8 +38,12 @@ router.get(
     const skip = (pageNum - 1) * limitNum;
 
     const [contacts, total] = await Promise.all([
-      Contact.find().sort({ createdAt: -1 }).skip(skip).limit(limitNum),
-      Contact.countDocuments(),
+      prisma.contact.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limitNum,
+      }),
+      prisma.contact.count(),
     ]);
 
     res.json({
@@ -69,11 +73,10 @@ router.patch(
     const { id } = req.params;
     const { status } = req.body;
 
-    const contact = await Contact.findByIdAndUpdate(
-      id,
-      { status },
-      { new: true },
-    );
+    const contact = await prisma.contact.update({
+      where: { id },
+      data: { status },
+    });
 
     if (!contact) {
       return res.status(404).json({ message: "Contact not found" });

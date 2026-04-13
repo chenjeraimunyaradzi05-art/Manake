@@ -156,7 +156,7 @@ export const approveStory = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const story = await prisma.story.findUnique({ where: { id } });
   if (!story) throw new NotFoundError("Story");
   const updated = await prisma.story.update({
@@ -170,7 +170,7 @@ export const rejectStory = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { reason } = req.body as { reason?: string };
 
   const story = await prisma.story.findUnique({ where: { id } });
@@ -186,7 +186,7 @@ export const featureStory = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { featured } = req.body as { featured: boolean };
 
   const story = await prisma.story.findUnique({ where: { id } });
@@ -205,7 +205,7 @@ export const deleteStory = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const story = await prisma.story.findUnique({ where: { id } });
   if (!story) throw new NotFoundError("Story");
   await prisma.story.delete({ where: { id } });
@@ -261,7 +261,7 @@ export const getUserById = async (
   res: Response,
 ): Promise<void> => {
   const user = await prisma.user.findUnique({
-    where: { id: req.params.id },
+    where: { id: req.params.id as string },
     omit: { passwordHash: true },
   } as Parameters<typeof prisma.user.findUnique>[0]);
 
@@ -273,7 +273,7 @@ export const updateUserRole = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { role } = req.body as { role: "user" | "admin" | "moderator" };
   const actorRole = req.user?.role;
 
@@ -303,7 +303,7 @@ export const toggleUserActive = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) throw new NotFoundError("User");
   const user = await prisma.user.update({
@@ -321,7 +321,7 @@ export const deleteUser = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   // Prevent self-deletion
   if (req.user?.userId === id) {

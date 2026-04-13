@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { BadRequestError, NotFoundError, ForbiddenError } from "../errors";
 
@@ -9,7 +10,7 @@ export const getGroups = async (req: Request, res: Response) => {
   const limit = parseInt(req.query.limit as string) || 20;
   const page = parseInt(req.query.page as string) || 1;
 
-  const groupWhere = {
+  const groupWhere: Prisma.GroupWhereInput = {
     ...(category ? { category: category as string } : {}),
     ...(search
       ? { name: { contains: search as string, mode: "insensitive" as const } }
@@ -45,7 +46,7 @@ export const getGroups = async (req: Request, res: Response) => {
 
 // Get a single group by ID
 export const getGroup = async (req: Request, res: Response) => {
-  const { groupId } = req.params;
+  const groupId = req.params.groupId as string;
   const userId = req.user?.userId;
 
   const group = await prisma.group.findUnique({
@@ -106,7 +107,7 @@ export const createGroup = async (req: Request, res: Response) => {
 // Update a group
 export const updateGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { groupId } = req.params;
+  const groupId = req.params.groupId as string;
   const updates = req.body as Record<string, unknown>;
 
   const group = await prisma.group.findUnique({
@@ -131,7 +132,7 @@ export const updateGroup = async (req: Request, res: Response) => {
 // Join a group
 export const joinGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { groupId } = req.params;
+  const groupId = req.params.groupId as string;
 
   const group = await prisma.group.findUnique({
     where: { id: groupId },
@@ -158,7 +159,7 @@ export const joinGroup = async (req: Request, res: Response) => {
 // Leave a group
 export const leaveGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { groupId } = req.params;
+  const groupId = req.params.groupId as string;
 
   const group = await prisma.group.findUnique({
     where: { id: groupId },
@@ -187,7 +188,7 @@ export const leaveGroup = async (req: Request, res: Response) => {
 
 // Get group members
 export const getGroupMembers = async (req: Request, res: Response) => {
-  const { groupId } = req.params;
+  const groupId = req.params.groupId as string;
   const limit = parseInt(req.query.limit as string) || 20;
   const page = parseInt(req.query.page as string) || 1;
 
@@ -227,7 +228,7 @@ export const createGroupPost = async (_req: Request, res: Response) => {
 // Delete a group (admin only)
 export const deleteGroup = async (req: Request, res: Response) => {
   const userId = req.user!.userId;
-  const { groupId } = req.params;
+  const groupId = req.params.groupId as string;
 
   const group = await prisma.group.findUnique({
     where: { id: groupId },

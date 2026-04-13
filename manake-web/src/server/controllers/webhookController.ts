@@ -73,7 +73,7 @@ export const ingestWebhook = async (
   if (!isValid) {
     await prisma.webhookEvent.update({
       where: { id: event.id },
-      data: { status: "failed", errorMessage: "Signature verification failed" },
+      data: { status: "failed", error: "Signature verification failed" },
     });
     throw new ApiError("Invalid webhook signature", 401, "INVALID_SIGNATURE");
   }
@@ -81,7 +81,7 @@ export const ingestWebhook = async (
   const duration = Date.now() - started;
   await prisma.webhookEvent.update({
     where: { id: event.id },
-    data: { status: "processed", processingMs: duration },
+    data: { status: "processed", processingDuration: duration },
   });
 
   res.json({ status: "ok", processedInMs: duration });

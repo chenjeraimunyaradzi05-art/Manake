@@ -82,7 +82,7 @@ export const listConversations = async (req: Request, res: Response) => {
 
 // Get conversation details + messages
 export const getConversationHistory = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const userId = req.user!.userId;
 
   const conversation = await prisma.conversation.findFirst({

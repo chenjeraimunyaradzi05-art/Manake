@@ -32,7 +32,7 @@ export const getFeed = async (req: Request, res: Response) => {
 
 // Get a single post by id
 export const getPostById = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   const post = await prisma.internalPost.findUnique({
     where: { id },
@@ -44,30 +44,37 @@ export const getPostById = async (req: Request, res: Response) => {
 
 // Like/Unlike
 export const toggleLike = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const userId = req.user!.userId;
 
   const post = await prisma.internalPost.findUnique({
     where: { id },
-    select: { likes: true },
+    select: { id: true },
   });
   if (!post) throw new NotFoundError("Post");
 
-  const isLiked = post.likes.includes(userId);
-  const updatedLikes = isLiked
-    ? post.likes.filter((l: string) => l !== userId)
-    : [...post.likes, userId];
-
-  await prisma.internalPost.update({
-    where: { id },
-    data: { likes: { set: updatedLikes } },
+  const existing = await prisma.internalPostLike.findUnique({
+    where: { userId_internalPostId: { userId, internalPostId: id } },
   });
-  res.json({ likesCount: updatedLikes.length, isLiked: !isLiked });
+
+  let isLiked: boolean;
+  if (existing) {
+    await prisma.internalPostLike.delete({
+      where: { userId_internalPostId: { userId, internalPostId: id } },
+    });
+    isLiked = false;
+  } else {
+    await prisma.internalPostLike.create({ data: { userId, internalPostId: id } });
+    isLiked = true;
+  }
+
+  const likesCount = await prisma.internalPostLike.count({ where: { internalPostId: id } });
+  res.json({ likesCount, isLiked });
 };
 
 // Delete post
 export const deletePost = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const userId = req.user!.userId;
 
   // Only allow author or admin (middleware should handle role, here check author)

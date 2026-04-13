@@ -24,7 +24,7 @@ const PUBLIC_USER_SELECT = {
 
 // Get a user's public profile
 export const getProfile = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
   const currentUserId = req.user?.userId;
 
   const user = await prisma.user.findUnique({
@@ -71,7 +71,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
 // Get user's recent activity (posts)
 export const getUserActivity = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
   const limit = parseInt(req.query.limit as string) || 10;
 
   const activity = await prisma.post.findMany({
@@ -85,7 +85,7 @@ export const getUserActivity = async (req: Request, res: Response) => {
 
 // Get user's stats
 export const getUserStats = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
 
   const [connectionsCount, postsCount] = await Promise.all([
     prisma.connection.count({
@@ -151,7 +151,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
 // Get mutual connections
 export const getMutualConnections = async (req: Request, res: Response) => {
-  const { userId } = req.params;
+  const userId = req.params.userId as string;
   const currentUserId = req.user!.userId;
   const limit = parseInt(req.query.limit as string) || 5;
 

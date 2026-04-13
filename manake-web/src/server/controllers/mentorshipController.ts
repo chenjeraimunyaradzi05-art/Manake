@@ -95,7 +95,7 @@ export const getFeaturedMentors = async (_req: Request, res: Response) => {
 // Get mentor details
 export const getMentor = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     const mentor = await prisma.user.findFirst({
       where: { id, isMentor: true },
@@ -249,7 +249,7 @@ export const getPendingRequests = async (req: Request, res: Response) => {
 export const acceptMentorship = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { id } = req.params;
+    const id = req.params.id as string;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const existing = await prisma.mentorship.findFirst({
@@ -278,7 +278,7 @@ export const acceptMentorship = async (req: Request, res: Response) => {
 export const declineMentorship = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { id } = req.params;
+    const id = req.params.id as string;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
     const existing = await prisma.mentorship.findFirst({
@@ -299,7 +299,7 @@ export const declineMentorship = async (req: Request, res: Response) => {
 export const endMentorship = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { rating, review } = req.body as { rating?: number; review?: string };
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
@@ -313,14 +313,12 @@ export const endMentorship = async (req: Request, res: Response) => {
     if (!existing)
       return res.status(404).json({ error: "Active mentorship not found" });
 
-    const data: Record<string, unknown> = {
-      status: "completed",
-      endDate: new Date(),
-    };
+    let ratingVal: number | undefined;
+    let reviewVal: string | undefined;
 
     if (existing.menteeId === userId && rating) {
-      data.rating = rating;
-      if (review) data.review = review;
+      ratingVal = rating;
+      if (review) reviewVal = review;
 
       // Recalculate mentor's average rating
       const completed = await prisma.mentorship.findMany({
@@ -340,7 +338,15 @@ export const endMentorship = async (req: Request, res: Response) => {
       });
     }
 
-    const mentorship = await prisma.mentorship.update({ where: { id }, data });
+    const mentorship = await prisma.mentorship.update({
+      where: { id },
+      data: {
+        status: "completed",
+        endDate: new Date(),
+        ...(ratingVal !== undefined ? { rating: ratingVal } : {}),
+        ...(reviewVal !== undefined ? { review: reviewVal } : {}),
+      },
+    });
     res.json({ mentorship, message: "Mentorship ended successfully" });
   } catch (error) {
     logger.error("End mentorship error", { error });
@@ -352,7 +358,7 @@ export const endMentorship = async (req: Request, res: Response) => {
 export const addMeeting = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { date, duration, notes } = req.body;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
@@ -373,7 +379,7 @@ export const addMeeting = async (req: Request, res: Response) => {
 
     const mentorship = await prisma.mentorship.update({
       where: { id },
-      data: { meetings },
+      data: { meetings: JSON.parse(JSON.stringify(meetings)) },
     });
 
     res.json({ mentorship, message: "Meeting added" });
@@ -387,7 +393,8 @@ export const addMeeting = async (req: Request, res: Response) => {
 export const rateMeeting = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { id, meetingId } = req.params;
+    const id = req.params.id as string;
+    const meetingId = req.params.meetingId as string;
     const { rating } = req.body;
     if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
@@ -406,7 +413,7 @@ export const rateMeeting = async (req: Request, res: Response) => {
     meetings[idx] = { ...meetings[idx], rating };
     const mentorship = await prisma.mentorship.update({
       where: { id },
-      data: { meetings },
+      data: { meetings: JSON.parse(JSON.stringify(meetings)) },
     });
 
     res.json({ mentorship, message: "Meeting rated" });

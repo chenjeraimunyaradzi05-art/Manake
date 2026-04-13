@@ -102,7 +102,7 @@ export const getMessage = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const message = await prisma.message.findUnique({ where: { id } });
 
   if (!message) throw new NotFoundError("Message");
@@ -116,7 +116,7 @@ export const updateMessageStatus = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const { status, failureReason } = req.body;
 
   const exists = await prisma.message.findUnique({ where: { id } });
@@ -143,7 +143,7 @@ export const deleteMessage = async (
   req: Request,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
+  const id = req.params.id as string;
   const exists = await prisma.message.findUnique({ where: { id } });
   if (!exists) throw new ApiError("Message not found", 404, "NOT_FOUND");
   await prisma.message.delete({ where: { id } });
@@ -190,7 +190,7 @@ export const markMessageRead = async (
     throw new UnauthorizedError("Authentication required");
   }
 
-  const { id } = req.params;
+  const id = req.params.id as string;
   const actor = req.user;
   const privileged = isPrivilegedRole(actor.role);
 
