@@ -331,7 +331,18 @@ export const registerSchema = z
     password: passwordSchema,
     confirmPassword: z.string().optional(),
     name: z.string().min(2, "Name must be at least 2 characters").max(100),
-    phone: zwPhoneSchema.optional().or(z.literal("")),
+    phone: z
+      .string()
+      .optional()
+      .transform((val) => (val ? val.replace(/[\s().-]/g, "") : val))
+      .pipe(
+        z
+          .string()
+          .regex(/^\+?[1-9]\d{6,14}$/, "Invalid phone number format")
+          .optional()
+          .or(z.literal(""))
+          .optional(),
+      ),
   })
   .refine(
     (data) =>

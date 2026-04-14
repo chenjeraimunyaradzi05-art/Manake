@@ -20,7 +20,7 @@ const __serverDir = path.dirname(__serverFilename);
 // dist is at ../../dist relative to src/server/index.ts
 const distPath = path.resolve(__serverDir, "../../dist");
 
-import { connectDB } from "./config/db";
+import { connectDB, isDatabaseReady } from "./config/db";
 import apiRoutes from "./routes";
 import { initSocketIO } from "./socket";
 import {
@@ -197,11 +197,15 @@ app.use(requestLogger);
 app.use("/api", apiRoutes);
 
 // Health check endpoint
+const SERVER_START_TIME = new Date().toISOString();
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
     timestamp: new Date().toISOString(),
-    version: "1.0.0",
+    startedAt: SERVER_START_TIME,
+    commit: process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7) ?? "local",
+    dbReady: isDatabaseReady(),
+    env: process.env.NODE_ENV,
   });
 });
 

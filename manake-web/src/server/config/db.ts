@@ -5,6 +5,8 @@ import { logger } from "../utils/logger";
 
 let databaseReady = false;
 
+export const isDatabaseReady = (): boolean => databaseReady;
+
 const DB_READY_TIMEOUT_MS = 2000;
 
 const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
