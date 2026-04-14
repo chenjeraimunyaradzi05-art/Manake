@@ -17,6 +17,7 @@ import {
   ConflictError,
   NotFoundError,
 } from "../errors";
+import { ensureDatabaseReady } from "../config/db";
 import { prisma } from "../config/prisma";
 import { emailService } from "./emailService";
 import { logger } from "../utils/logger";
@@ -93,6 +94,8 @@ class AuthService {
     credentials: LoginCredentials,
     deviceInfo?: DeviceInfo,
   ): Promise<AuthResult> {
+    await ensureDatabaseReady();
+
     const { email, password } = credentials;
 
     assertJwtConfig();
@@ -163,6 +166,7 @@ class AuthService {
   ): Promise<AuthResult> {
     const { email, password, name, phone } = data;
 
+    await ensureDatabaseReady();
     assertJwtConfig();
 
     if (!email || !password || !name) {

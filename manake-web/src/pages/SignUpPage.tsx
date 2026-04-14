@@ -62,7 +62,15 @@ export const SignUpPage = () => {
           msg = data.error.message;
         } else if (data?.message) {
           msg = data.message;
+        } else if (err.code === "ECONNABORTED") {
+          msg =
+            "The server took too long to respond. Please try again in a moment.";
+        } else if (!err.response) {
+          msg =
+            "Cannot reach the server right now. Please try again in a moment.";
         }
+      } else if (err instanceof Error && err.message) {
+        msg = err.message;
       }
       setError(msg);
     } finally {
