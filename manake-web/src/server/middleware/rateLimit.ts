@@ -1,7 +1,29 @@
 import { Request, Response, NextFunction } from "express";
 import Redis from "ioredis";
+import { logger } from "../utils/logger";
 
 let redisClient: Redis | null = null;
+const REDIS_CONNECT_TIMEOUT_MS = 1000;
+const REDIS_OPERATION_TIMEOUT_MS = 1500;
+
+const resetRedisClient = (): void => {
+  if (redisClient) {
+    redisClient.disconnect();
+    redisClient = null;
+  }
+};
+
+const withRedisTimeout = async <T>(promise: Promise<T>): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error("Redis rate limit operation timed out"));
+      }, REDIS_OPERATION_TIMEOUT_MS);
+    }),
+  ]);
+};
+
 const getRedisClient = (): Redis | null => {
   const url = process.env.REDIS_URL;
   if (!url) return null;
@@ -10,6 +32,15 @@ const getRedisClient = (): Redis | null => {
       maxRetriesPerRequest: 1,
       enableReadyCheck: true,
       lazyConnect: true,
+      enableOfflineQueue: false,
+      connectTimeout: REDIS_CONNECT_TIMEOUT_MS,
+      retryStrategy: () => null,
+    });
+    redisClient.on("error", (error) => {
+      logger.warn("Redis rate limiter unavailable", {
+        message: error.message,
+      });
+      resetRedisClient();
     });
   }
   return redisClient;
@@ -63,11 +94,11 @@ export const rateLimit = (options: RateLimitOptions = {}) => {
     if (redis) {
       try {
         const redisKey = `ratelimit:${key}`;
-        const count = await redis.incr(redisKey);
+        const count = await withRedisTimeout(redis.incr(redisKey));
         if (count === 1) {
-          await redis.pexpire(redisKey, windowMs);
+          await withRedisTimeout(redis.pexpire(redisKey, windowMs));
         }
-        const ttl = await redis.pttl(redisKey);
+        const ttl = await withRedisTimeout(redis.pttl(redisKey));
         const resetTime = now + (ttl > 0 ? ttl : windowMs);
 
         res.setHeader("X-RateLimit-Limit", max.toString());
@@ -82,8 +113,12 @@ export const rateLimit = (options: RateLimitOptions = {}) => {
         }
 
         return next();
-      } catch {
-        // Fall back to in-memory store if Redis is unavailable
+      } catch (error) {
+        logger.warn("Falling back to in-memory rate limiter", {
+          path: req.path,
+          message: error instanceof Error ? error.message : String(error),
+        });
+        resetRedisClient();
       }
     }
 
