@@ -55,6 +55,13 @@ export const connectDB = async () => {
   }
 };
 
+export const markDatabaseUnready = (): void => {
+  if (databaseReady) {
+    databaseReady = false;
+    logger.warn("Database marked as unavailable due to query failure");
+  }
+};
+
 export const ensureDatabaseReady = async (): Promise<void> => {
   const dbUrl = process.env.DATABASE_URL;
 

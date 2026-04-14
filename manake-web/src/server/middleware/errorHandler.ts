@@ -3,7 +3,8 @@
  * Catches all errors and returns consistent JSON responses
  */
 import { Request, Response, NextFunction } from "express";
-import { ApiError, isApiError, ValidationError } from "../errors";
+import { ApiError, isApiError, ValidationError, ServiceUnavailableError } from "../errors";
+import { markDatabaseUnready } from "../config/db";
 import { logger } from "../utils/logger";
 
 /**
@@ -98,23 +99,58 @@ export const errorHandler = (
 
   let apiError: ApiError;
 
+  // Normalise non-Error throwables so the rest of the handler never crashes
+  const normalizedErr: Error =
+    err instanceof Error ? err : new Error(String(err ?? "Unknown error"));
+
+  // Detect Prisma connection/query errors and mark DB as unready
+  const prismaCode =
+    (err as { code?: string; clientVersion?: string }).code;
+  const isPrismaError = Boolean(
+    (err as { clientVersion?: string }).clientVersion,
+  );
+  const prismaConnectionCodes = new Set(["P1001", "P1002", "P1008", "P1017"]);
+  if (isPrismaError && prismaCode && prismaConnectionCodes.has(prismaCode)) {
+    markDatabaseUnready();
+  }
+
   // Convert known error types to ApiError
   if (isApiError(err)) {
     apiError = err;
+  } else if (isPrismaError) {
+    // Prisma known request errors (P2xxx = data errors)
+    if (prismaCode === "P2002") {
+      apiError = new ValidationError(
+        [{ field: "unknown", message: "A record with that value already exists" }],
+        "Duplicate entry",
+      );
+    } else if (prismaCode === "P2025") {
+      apiError = new ApiError("Record not found", 404, "NOT_FOUND");
+    } else if (prismaCode && prismaConnectionCodes.has(prismaCode)) {
+      apiError = new ServiceUnavailableError(
+        "Database is temporarily unavailable. Please try again in a moment.",
+      );
+    } else {
+      apiError = new ApiError(
+        process.env.NODE_ENV === "production" ? "Database error" : (normalizedErr.message),
+        500,
+        "DATABASE_ERROR",
+      );
+    }
   } else if (
-    err.name === "MongoError" ||
-    err.name === "ValidationError" ||
-    err.name === "CastError"
+    normalizedErr.name === "MongoError" ||
+    normalizedErr.name === "ValidationError" ||
+    normalizedErr.name === "CastError"
   ) {
     apiError = handleMongoError(
-      err as Error & { code?: number; keyPattern?: Record<string, unknown> },
+      normalizedErr as Error & { code?: number; keyPattern?: Record<string, unknown> },
     );
   } else if (
-    err.name === "JsonWebTokenError" ||
-    err.name === "TokenExpiredError"
+    normalizedErr.name === "JsonWebTokenError" ||
+    normalizedErr.name === "TokenExpiredError"
   ) {
-    apiError = handleJWTError(err);
-  } else if (err.name === "SyntaxError" && "body" in err) {
+    apiError = handleJWTError(normalizedErr);
+  } else if (normalizedErr.name === "SyntaxError" && "body" in normalizedErr) {
     // JSON parse error
     apiError = new ApiError(
       "Invalid JSON in request body",
@@ -126,7 +162,7 @@ export const errorHandler = (
     apiError = new ApiError(
       process.env.NODE_ENV === "production"
         ? "Internal server error"
-        : err.message,
+        : normalizedErr.message,
       500,
       "INTERNAL_ERROR",
     );
@@ -145,7 +181,7 @@ export const errorHandler = (
   };
 
   if (apiError.statusCode >= 500) {
-    logger.error("Server Error", { ...logData, stack: err.stack });
+    logger.error("Server Error", { ...logData, stack: normalizedErr.stack });
   } else if (apiError.statusCode >= 400) {
     logger.warn("Client Error", logData);
   }
@@ -157,7 +193,7 @@ export const errorHandler = (
       message: apiError.message,
       ...(apiError.details && { details: apiError.details }),
       // Include stack trace in development
-      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+      ...(process.env.NODE_ENV === "development" && { stack: normalizedErr.stack }),
     },
     requestId,
   };
