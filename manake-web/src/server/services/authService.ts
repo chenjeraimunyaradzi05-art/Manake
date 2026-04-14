@@ -16,13 +16,17 @@ import {
   UnauthorizedError,
   ConflictError,
   NotFoundError,
+  ServiceUnavailableError,
 } from "../errors";
-import { ensureDatabaseReady } from "../config/db";
+import { ensureDatabaseReady, markDatabaseUnready } from "../config/db";
 import { prisma } from "../config/prisma";
 import { emailService } from "./emailService";
 import { logger } from "../utils/logger";
 
 type PrismaUser = NonNullable<Awaited<ReturnType<typeof prisma.user.findUnique>>>;
+type ExistingUserLookup = { id: string } | null;
+
+const AUTH_DB_TIMEOUT_MS = 8000;
 
 // Map a Prisma User row to the public-safe shape returned by the API
 function userToPublic(user: PrismaUser): Record<string, unknown> {
@@ -87,6 +91,42 @@ class AuthService {
   private readonly MAX_FAILED_LOGIN_ATTEMPTS = 5;
   private readonly LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 
+  private async withAuthDbTimeout<T>(
+    operation: Promise<T>,
+    operationName: string,
+  ): Promise<T> {
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      return await Promise.race([
+        operation,
+        new Promise<T>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error(`Auth DB operation timed out: ${operationName}`));
+          }, AUTH_DB_TIMEOUT_MS);
+        }),
+      ]);
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Auth DB operation timed out:")
+      ) {
+        markDatabaseUnready();
+        logger.warn("Authentication database operation timed out", {
+          operation: operationName,
+        });
+        throw new ServiceUnavailableError(
+          "Authentication is temporarily unavailable. Please try again in a moment.",
+        );
+      }
+      throw error;
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    }
+  }
+
   /**
    * Authenticate user with email and password
    */
@@ -106,9 +146,12 @@ class AuthService {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
+    const user: PrismaUser | null = await this.withAuthDbTimeout<PrismaUser | null>(
+      prisma.user.findUnique({
+        where: { email: normalizedEmail },
+      }) as Promise<PrismaUser | null>,
+      "login.findUser",
+    );
 
     if (!user) {
       throw new UnauthorizedError("Invalid email or password");
@@ -136,15 +179,21 @@ class AuthService {
           now.getTime() + this.LOCKOUT_DURATION_MS,
         );
       }
-      await prisma.user.update({ where: { id: user.id }, data: updateData });
+      await this.withAuthDbTimeout(
+        prisma.user.update({ where: { id: user.id }, data: updateData }),
+        "login.updateFailedAttempts",
+      );
       throw new UnauthorizedError("Invalid email or password");
     }
 
     // Reset lockout state and update last login
-    const updatedUser = await prisma.user.update({
-      where: { id: user.id },
-      data: { failedLoginAttempts: 0, lockoutUntil: null, lastLogin: now },
-    });
+    const updatedUser: PrismaUser = await this.withAuthDbTimeout<PrismaUser>(
+      prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: 0, lockoutUntil: null, lastLogin: now },
+      }) as Promise<PrismaUser>,
+      "login.updateSuccessfulLogin",
+    );
 
     // Generate tokens
     const tokens = await this.createTokenPair(updatedUser, deviceInfo);
@@ -179,25 +228,32 @@ class AuthService {
 
     const normalizedEmail = String(email).trim().toLowerCase();
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-      select: { id: true },
-    });
+    const existingUser: ExistingUserLookup =
+      await this.withAuthDbTimeout<ExistingUserLookup>(
+        prisma.user.findUnique({
+          where: { email: normalizedEmail },
+          select: { id: true },
+        }) as Promise<ExistingUserLookup>,
+        "register.findExistingUser",
+      );
     if (existingUser) {
       throw new ConflictError("Email already registered");
     }
 
     const passwordHash = await bcrypt.hash(String(password), 10);
 
-    const user = await prisma.user.create({
-      data: {
-        email: normalizedEmail,
-        passwordHash,
-        name: String(name).trim(),
-        phone: phone ? String(phone).trim() : undefined,
-        role: "user",
-      },
-    });
+    const user: PrismaUser = await this.withAuthDbTimeout<PrismaUser>(
+      prisma.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash,
+          name: String(name).trim(),
+          phone: phone ? String(phone).trim() : undefined,
+          role: "user",
+        },
+      }) as Promise<PrismaUser>,
+      "register.createUser",
+    );
 
     const tokens = await this.createTokenPair(user, deviceInfo);
 
@@ -484,16 +540,19 @@ class AuthService {
     });
 
     const refreshPayload = verifyRefreshToken(tokens.refreshToken);
-    await prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        tokenHash: hashToken(tokens.refreshToken),
-        deviceInfo: deviceInfo?.userAgent,
-        ipAddress: deviceInfo?.ipAddress,
-        expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
-        revoked: false,
-      },
-    });
+    await this.withAuthDbTimeout(
+      prisma.refreshToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashToken(tokens.refreshToken),
+          deviceInfo: deviceInfo?.userAgent,
+          ipAddress: deviceInfo?.ipAddress,
+          expiresAt: new Date((refreshPayload.exp ?? 0) * 1000),
+          revoked: false,
+        },
+      }),
+      "tokens.storeRefreshToken",
+    );
 
     return tokens;
   }

@@ -6,8 +6,9 @@ declare global {
 }
 
 /**
- * Append connection timeout to the DATABASE_URL so Prisma fails fast
- * instead of hanging indefinitely when the DB is unreachable.
+ * Append defensive timeout settings to the DATABASE_URL so Prisma fails fast
+ * instead of hanging indefinitely when the DB is unreachable or a stale pooled
+ * connection stops responding after a database restart.
  * A hung Prisma query causes Railway's reverse proxy to return 502.
  */
 function withConnectionTimeout(url: string | undefined): string | undefined {
@@ -16,6 +17,12 @@ function withConnectionTimeout(url: string | undefined): string | undefined {
     const parsed = new URL(url);
     if (!parsed.searchParams.has("connect_timeout")) {
       parsed.searchParams.set("connect_timeout", "10");
+    }
+    if (!parsed.searchParams.has("socket_timeout")) {
+      parsed.searchParams.set("socket_timeout", "10");
+    }
+    if (!parsed.searchParams.has("pool_timeout")) {
+      parsed.searchParams.set("pool_timeout", "10");
     }
     return parsed.toString();
   } catch {

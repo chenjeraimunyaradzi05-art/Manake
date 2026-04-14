@@ -4,10 +4,12 @@ import { ServiceUnavailableError } from "../errors";
 import { logger } from "../utils/logger";
 
 let databaseReady = false;
+let lastDatabaseCheckAt = 0;
 
 export const isDatabaseReady = (): boolean => databaseReady;
 
 const DB_READY_TIMEOUT_MS = 2000;
+const DB_READY_REVALIDATE_MS = 5000;
 
 const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -47,9 +49,11 @@ export const connectDB = async () => {
   try {
     await prisma.$connect();
     databaseReady = true;
+    lastDatabaseCheckAt = Date.now();
     logger.info("PostgreSQL connected via Prisma");
   } catch (error) {
     databaseReady = false;
+    lastDatabaseCheckAt = 0;
     logger.error("Database connection error", { error });
     throw error;
   }
@@ -58,6 +62,7 @@ export const connectDB = async () => {
 export const markDatabaseUnready = (): void => {
   if (databaseReady) {
     databaseReady = false;
+    lastDatabaseCheckAt = 0;
     logger.warn("Database marked as unavailable due to query failure");
   }
 };
@@ -72,15 +77,20 @@ export const ensureDatabaseReady = async (): Promise<void> => {
     );
   }
 
-  if (databaseReady) {
+  const shouldRevalidate =
+    !databaseReady || Date.now() - lastDatabaseCheckAt >= DB_READY_REVALIDATE_MS;
+
+  if (!shouldRevalidate) {
     return;
   }
 
   try {
     await withTimeout(prisma.$queryRaw`SELECT 1`, DB_READY_TIMEOUT_MS);
     databaseReady = true;
+    lastDatabaseCheckAt = Date.now();
   } catch (error) {
     databaseReady = false;
+    lastDatabaseCheckAt = 0;
     logger.warn("Database unavailable during request", {
       message: error instanceof Error ? error.message : String(error),
     });
