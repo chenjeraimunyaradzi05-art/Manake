@@ -54,14 +54,14 @@ export const LoginPage = () => {
           msg = data.error.message;
         } else if (data?.message) {
           msg = data.message;
-        } else if (err.response?.statusText) {
-          msg = `Request failed: ${err.response.status} ${err.response.statusText}`;
         } else if (err.code === "ECONNABORTED") {
           msg =
             "The server took too long to respond. Please try again in a moment.";
         } else if (!err.response) {
           msg =
             "Cannot reach the server right now. Please try again in a moment.";
+        } else {
+          msg = `Server error (${err.response.status}). Please try again.`;
         }
       } else if (err instanceof Error && err.message) {
         msg = err.message;

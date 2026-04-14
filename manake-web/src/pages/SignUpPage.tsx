@@ -14,7 +14,11 @@ const signUpSchema = z
     name: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Please enter a valid email address"),
     phone: z.string().optional(),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -67,14 +71,14 @@ export const SignUpPage = () => {
           msg = data.error.message;
         } else if (data?.message) {
           msg = data.message;
-        } else if (err.response?.statusText) {
-          msg = `Request failed: ${err.response.status} ${err.response.statusText}`;
         } else if (err.code === "ECONNABORTED") {
           msg =
             "The server took too long to respond. Please try again in a moment.";
         } else if (!err.response) {
           msg =
             "Cannot reach the server right now. Please try again in a moment.";
+        } else {
+          msg = `Server error (${err.response.status}). Please try again.`;
         }
       } else if (err instanceof Error && err.message) {
         msg = err.message;
