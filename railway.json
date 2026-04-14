@@ -5,7 +5,7 @@
     "buildCommand": "npm run build --workspace=manake-web"
   },
   "deploy": {
-    "startCommand": "sh -lc 'npx prisma migrate deploy --schema=manake-web/prisma/schema.prisma || true; npm run start --workspace=manake-web'",
+    "startCommand": "sh -lc 'npx prisma db push --schema=manake-web/prisma/schema.prisma --skip-generate --accept-data-loss || true; npm run start --workspace=manake-web'",
     "region": "us-west2",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
