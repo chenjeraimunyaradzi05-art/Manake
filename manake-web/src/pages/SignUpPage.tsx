@@ -54,14 +54,21 @@ export const SignUpPage = () => {
       console.error("Registration failed", err);
       let msg = "Failed to create account. Please try again.";
       if (isAxiosError(err)) {
-        const data = err.response?.data as {
+        const rawData = err.response?.data;
+        const data = rawData as {
           error?: { message?: string };
           message?: string;
         };
-        if (data?.error?.message) {
+        if (typeof rawData === "string" && rawData.trim()) {
+          msg = /^\s*</.test(rawData)
+            ? `Server error (${err.response?.status ?? 500}). Please try again later.`
+            : rawData.trim();
+        } else if (data?.error?.message) {
           msg = data.error.message;
         } else if (data?.message) {
           msg = data.message;
+        } else if (err.response?.statusText) {
+          msg = `Request failed: ${err.response.status} ${err.response.statusText}`;
         } else if (err.code === "ECONNABORTED") {
           msg =
             "The server took too long to respond. Please try again in a moment.";
