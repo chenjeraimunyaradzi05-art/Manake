@@ -2,6 +2,7 @@
   "name": "manake-platform",
   "version": "1.0.0",
   "private": true,
+  "description": "Manake Recovery Platform - Vite/React Application",
   "scripts": {
     "build": "cd manake-web && npm run build",
     "dev": "cd manake-web && npm run dev"
