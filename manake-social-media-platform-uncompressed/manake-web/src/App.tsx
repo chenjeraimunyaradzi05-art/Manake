@@ -1,4 +1,16 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { type CSSProperties, type FormEvent, useEffect, useMemo, useState } from 'react'
+
+type IconName =
+  | 'leaf'
+  | 'sparkle'
+  | 'shield'
+  | 'chat'
+  | 'phone'
+  | 'users'
+  | 'briefcase'
+  | 'heart'
+  | 'gift'
+  | 'close'
 
 type Story = {
   title: string
@@ -7,6 +19,7 @@ type Story = {
   author: string
   readTime: string
   image: string
+  imagePosition: string
   views: number
   shares: number
 }
@@ -15,15 +28,16 @@ type Program = {
   title: string
   copy: string
   features: string[]
-  image: string
-  accent: string
+  badge: string
+  icon: IconName
 }
 
 type Product = {
   title: string
   copy: string
   price: string
-  image: string
+  detail: string
+  icon: IconName
 }
 
 type Person = {
@@ -37,6 +51,19 @@ type Message = {
   id: number
   from: 'team' | 'visitor'
   text: string
+  time: string
+}
+
+type SocialPost = {
+  id: number
+  author: string
+  role: string
+  label: string
+  text: string
+  image?: string
+  imagePosition?: string
+  reactions: string
+  comments: number
 }
 
 type HelpForm = {
@@ -45,6 +72,29 @@ type HelpForm = {
   supportType: string
   urgency: string
   message: string
+}
+
+type Suggestion = {
+  title: string
+  label: string
+  image: string
+  imagePosition: string
+}
+
+type AssistantPrompt = {
+  id: string
+  label: string
+  reply: string
+  scrollTo?: string
+  prefill?: Partial<HelpForm>
+}
+
+type PathwayTile = {
+  title: string
+  copy: string
+  href: string
+  icon: IconName
+  accent: string
 }
 
 const phoneDisplay = '+263 77 577 2277'
@@ -77,7 +127,7 @@ const admissionSteps = [
   {
     step: '01',
     title: 'Contact us',
-    copy: 'Call or WhatsApp the helpline. We listen first and keep the conversation private.',
+    copy: 'Call or WhatsApp the helpline. We listen first, respond quickly, and keep the first conversation private.',
   },
   {
     step: '02',
@@ -87,12 +137,12 @@ const admissionSteps = [
   {
     step: '03',
     title: 'Personalised plan',
-    copy: 'Counselling, family support, peer groups, life skills, and relapse prevention are shaped around the person.',
+    copy: 'Counselling, family support, life skills, routine, and aftercare are matched to the young person.',
   },
   {
     step: '04',
     title: 'Begin recovery',
-    copy: 'The young person enters a rhythm of care, accountability, community, and ongoing follow-up.',
+    copy: 'The person enters a rhythm of care, accountability, belonging, and longer-term follow-up.',
   },
 ]
 
@@ -104,36 +154,40 @@ const stories: Story[] = [
     author: 'Sibongile Maonde Sokhani',
     readTime: '10 min read',
     image: '/images/manake/center-exterior.jpg',
+    imagePosition: '50% 48%',
     views: 1250,
     shares: 156,
   },
   {
     title: "From Despair to Hope: Tendai's Journey",
     tags: ['Recovery', 'Employment'],
-    copy: "At 19, Tendai thought his life was over. Today, he is rebuilding trust, working as an electrician, and mentoring younger people.",
+    copy: 'After years of crystal meth use, Tendai is rebuilding trust, working as an electrician, and mentoring younger people.',
     author: 'Tendai M.',
     readTime: '5 min read',
-    image: '/images/manake/graduation-ceremony-01.jpg',
+    image: '/images/manake/community-children.jpg',
+    imagePosition: '72% 38%',
     views: 234,
     shares: 45,
   },
   {
     title: 'Finding Purpose Through Life Skills Training',
     tags: ['Life Skills', 'Employment'],
-    copy: 'Chipo discovered a passion for cooking during life skills training and now mentors other young women in recovery.',
+    copy: 'Life-skills coaching helped Chipo turn routine, confidence, and practical training into a pathway back to work.',
     author: 'Chipo N.',
     readTime: '4 min read',
-    image: '/images/manake/community-children.jpg',
+    image: '/images/manake/green-field-hand.jpg',
+    imagePosition: '82% 46%',
     views: 189,
     shares: 32,
   },
   {
     title: 'Rebuilding Family Bonds After Addiction',
     tags: ['Family', 'Recovery'],
-    copy: "Through family counselling, Tatenda learned how to rebuild trust and speak honestly with the people closest to him.",
+    copy: 'Family counselling gave Tatenda the language, patience, and accountability needed to rebuild trust at home.',
     author: 'Tatenda K.',
     readTime: '6 min read',
-    image: '/images/manake/professional-support.jpg',
+    image: '/images/manake/counseling-session.jpg',
+    imagePosition: '76% 38%',
     views: 312,
     shares: 67,
   },
@@ -143,17 +197,19 @@ const stories: Story[] = [
     copy: 'Nyasha returned to school after treatment and is planning a future in nursing.',
     author: 'Nyasha R.',
     readTime: '5 min read',
-    image: '/images/manake/cultural-youth.jpg',
+    image: '/images/manake/recovery-circle.jpg',
+    imagePosition: '78% 42%',
     views: 456,
     shares: 89,
   },
   {
     title: 'Community Leader: Giving Back',
     tags: ['Community', 'Leadership'],
-    copy: 'Farai now helps outreach teams identify at-risk youth earlier and connect them to help.',
+    copy: 'Farai now helps outreach teams identify at-risk youth early and connect them to support before things worsen.',
     author: 'Farai C.',
     readTime: '7 min read',
-    image: '/images/manake/outreach-booth.jpg',
+    image: '/images/manake/outreach-hero.jpg',
+    imagePosition: '82% 42%',
     views: 278,
     shares: 56,
   },
@@ -162,82 +218,100 @@ const stories: Story[] = [
 const programs: Program[] = [
   {
     title: 'Detox support',
-    copy: 'Stabilisation support with medical referral pathways, safety planning, and comfort-focused care.',
+    copy: 'Stabilisation support with referral pathways, safety planning, and comfort-focused care.',
     features: ['24/7 response', 'Safety planning', 'Clinical referral'],
-    image: '/images/manake/recovery-risk-room.jpg',
-    accent: 'Rose',
+    badge: 'Immediate care',
+    icon: 'shield',
   },
   {
     title: 'Counselling',
-    copy: 'Individual, group, and family sessions that help young people process triggers and rebuild trust.',
+    copy: 'Individual, group, and family sessions help young people process triggers and rebuild trust.',
     features: ['One-to-one therapy', 'Group sessions', 'Family meetings'],
-    image: '/images/manake/professional-support.jpg',
-    accent: 'Lavender',
+    badge: 'Therapeutic support',
+    icon: 'heart',
   },
   {
     title: 'Residential care',
     copy: 'A stable recovery environment with daily rhythm, peer support, and supervised routines.',
     features: ['Structured days', 'Recovery groups', 'Wellbeing routines'],
-    image: '/images/manake/recovery-circle.jpg',
-    accent: 'Blue',
+    badge: 'Safe environment',
+    icon: 'leaf',
   },
   {
     title: 'Life skills',
     copy: 'Practical training for confidence, work readiness, healthy relationships, and independent living.',
     features: ['Mentorship', 'Financial basics', 'Work readiness'],
-    image: '/images/manake/team-group-community.jpg',
-    accent: 'Peach',
+    badge: 'Long-term reintegration',
+    icon: 'briefcase',
   },
   {
     title: 'Relapse prevention',
     copy: 'Aftercare planning, coping strategies, and support circles for long-term recovery.',
     features: ['Aftercare plan', 'Check-ins', 'Support network'],
-    image: '/images/manake/green-field-hand.jpg',
-    accent: 'Mauve',
+    badge: 'Ongoing support',
+    icon: 'users',
   },
   {
     title: 'Community outreach',
-    copy: 'Prevention and early intervention for schools, families, churches, and local partners.',
+    copy: 'Prevention and early intervention for schools, churches, families, and local partners.',
     features: ['Awareness sessions', 'Referral guidance', 'Partner briefings'],
-    image: '/images/manake/outreach-hero.jpg',
-    accent: 'Terracotta',
+    badge: 'Prevention work',
+    icon: 'chat',
   },
 ]
 
 const products: Product[] = [
   {
-    title: 'Recovery support sandals',
-    copy: 'Community-made footwear supporting skills training and reintegration activities.',
+    title: 'Recovery sandals',
+    copy: 'Community-backed footwear enquiries linked to reintegration and skills support.',
     price: 'Enquire',
-    image: '/images/manake/product-sandal.jpg',
+    detail: 'Useful for donor packs, graduate support, and practical everyday needs.',
+    icon: 'gift',
   },
   {
     title: 'Work-ready boots',
-    copy: 'Durable boots connected to vocational training and youth enterprise support.',
-    price: 'Enquire',
-    image: '/images/manake/product-boot.jpg',
+    copy: 'Equipment support for young people stepping back into training, apprenticeships, and work.',
+    price: 'Sponsor',
+    detail: 'Built for transition into employment, workshops, and livelihood support.',
+    icon: 'briefcase',
+  },
+  {
+    title: 'Family care packs',
+    copy: 'Support kits that help families stay connected through the first weeks of recovery.',
+    price: 'Donate',
+    detail: 'Can include transport help, essentials, and recovery follow-up materials.',
+    icon: 'heart',
   },
 ]
 
 const team: Person[] = [
   {
-    name: 'Sibongile Maonde Sokhani',
-    role: 'Founder and Visionary',
-    copy: "Manake was born out of a mother's heart and a community's need to restore dignity and purpose.",
-    image: '/images/manake/professional-team.jpg',
+    name: 'Manake Leadership Team',
+    role: 'Founding vision and programme guidance',
+    copy: 'The centre is led with warmth, accountability, and a strong focus on dignity for young people and their families.',
+    image: '/images/team/manaketeam.jpeg',
   },
   {
-    name: 'Care Team',
-    role: 'Counselling and Recovery Support',
-    copy: 'A multidisciplinary team focused on safety, family support, structured care, and aftercare.',
-    image: '/images/manake/team-group.jpg',
+    name: 'Care and Outreach Team',
+    role: 'Counselling, referrals, and family support',
+    copy: 'A multidisciplinary support team helps families move from crisis toward structure, stability, and follow-through.',
+    image: '/images/team/manake.jpeg',
   },
   {
-    name: 'Community Partners',
-    role: 'Outreach and Reintegration',
-    copy: 'Local partners help young people reconnect to school, work, service, and community life.',
-    image: '/images/manake/team-group-candid.jpg',
+    name: 'Community Reintegration Team',
+    role: 'Aftercare, mentoring, and community connection',
+    copy: 'Manake keeps recovery connected to real life through mentoring, follow-up, and practical reintegration support.',
+    image: '/images/team/team.jpeg',
   },
+]
+
+const trustItems = [
+  { title: 'Qualified staff', copy: 'Support combines therapeutic care, practical guidance, and structured referral pathways.', icon: 'shield' as const },
+  { title: 'Registered facility', copy: 'Families need a centre that feels accountable, grounded, and professionally run.', icon: 'leaf' as const },
+  { title: 'Complete confidentiality', copy: 'Every first step is handled with care and private information is treated respectfully.', icon: 'chat' as const },
+  { title: 'Community partners', copy: 'Recovery is strengthened by churches, schools, families, and local organisations.', icon: 'users' as const },
+  { title: 'Proven support', copy: 'Aftercare, routine, and community connection help young people sustain momentum.', icon: 'sparkle' as const },
+  { title: 'Family-centered', copy: 'Healing is strongest when the wider family is guided alongside the young person.', icon: 'heart' as const },
 ]
 
 const testimonials = [
@@ -252,7 +326,7 @@ const testimonials = [
     role: 'Graduate',
   },
   {
-    quote: "The life skills training was a turning point. I did not just recover, I discovered purpose.",
+    quote: 'The life skills training changed everything. I did not just recover, I discovered purpose.',
     author: 'Chipo N.',
     role: 'Graduate and Mentor',
   },
@@ -261,27 +335,174 @@ const testimonials = [
 const faqs = [
   {
     q: 'Is treatment confidential?',
-    a: 'Yes. Personal information is treated privately and shared only with explicit consent or where safety requires urgent action.',
+    a: 'Yes. Personal information is handled privately and shared only with explicit consent or where safety requires urgent action.',
   },
   {
     q: 'Can parents contact you first?',
-    a: 'Yes. Families can speak with Manake before a young person is ready to begin formal support.',
+    a: 'Yes. Families can speak with Manake before a young person is ready to enter formal support.',
   },
   {
     q: 'How long does recovery take?',
-    a: 'Recovery is a continuing process. The right plan depends on safety, substance use patterns, family context, and aftercare needs.',
+    a: 'Recovery is ongoing. The right plan depends on safety, substance use patterns, family context, and aftercare needs.',
   },
   {
     q: 'Do you support relapse prevention?',
-    a: 'Yes. Relapse prevention, coping strategies, aftercare, and community support are central to the recovery pathway.',
+    a: 'Yes. Relapse prevention, coping strategies, aftercare, and community support are part of the full pathway.',
+  },
+  {
+    q: 'What ages do you work with?',
+    a: 'Manake focuses mainly on young people and young adults, while considering each referral on its needs and safety.',
+  },
+  {
+    q: 'How do we get started quickly?',
+    a: 'The fastest route is a direct helpline call or WhatsApp message with the young person’s current situation and urgency.',
   },
 ]
 
-const suggestions = [
-  { title: "Maria's Recovery", label: 'Featured Story', image: '/images/manake/graduation-ceremony-02.jpg' },
-  { title: 'Community Garden', label: 'New Program', image: '/images/manake/green-field-01.jpg' },
-  { title: 'Emergency Fund', label: 'Urgent Need', image: '/images/manake/street-support.jpg' },
-  { title: 'Youth Support', label: 'Popular', image: '/images/manake/cultural-dance.jpg' },
+const suggestions: Suggestion[] = [
+  {
+    title: "Maria's Recovery",
+    label: 'Featured story',
+    image: '/images/manake/community-children.jpg',
+    imagePosition: '72% 38%',
+  },
+  {
+    title: 'Community Garden',
+    label: 'New program',
+    image: '/images/manake/green-field-hand.jpg',
+    imagePosition: '84% 44%',
+  },
+  {
+    title: 'Emergency Fund',
+    label: 'Urgent need',
+    image: '/images/manake/center-exterior.jpg',
+    imagePosition: '52% 45%',
+  },
+  {
+    title: 'Youth Support',
+    label: 'Popular',
+    image: '/images/team/manake.jpeg',
+    imagePosition: '50% 35%',
+  },
+]
+
+const pathwayTiles: PathwayTile[] = [
+  {
+    title: 'Get Help',
+    copy: 'Immediate support and admissions',
+    href: '#get-help',
+    icon: 'shield',
+    accent: 'from-pink-to-purple',
+  },
+  {
+    title: 'Stories',
+    copy: 'Recovery journeys and hope',
+    href: '#stories',
+    icon: 'heart',
+    accent: 'from-purple-to-indigo',
+  },
+  {
+    title: 'Programs',
+    copy: 'Counselling and residential care',
+    href: '#programs',
+    icon: 'leaf',
+    accent: 'from-indigo-to-blue',
+  },
+  {
+    title: 'Community',
+    copy: 'Family, mentors, and outreach',
+    href: '#social',
+    icon: 'users',
+    accent: 'from-blue-to-cyan',
+  },
+  {
+    title: 'Products',
+    copy: 'Practical sponsorship pathways',
+    href: '#products',
+    icon: 'gift',
+    accent: 'from-cyan-to-emerald',
+  },
+  {
+    title: 'Manake AI',
+    copy: 'Guided support for first steps',
+    href: '#contact',
+    icon: 'sparkle',
+    accent: 'from-emerald-to-purple',
+  },
+]
+
+const resourceHighlights = ['Crisis support', 'Family guidance', 'Aftercare planning']
+
+const assistantPrompts: AssistantPrompt[] = [
+  {
+    id: 'programs',
+    label: 'Explain programs',
+    reply:
+      'Manake combines assessment, counselling, family support, structured residential care, life-skills coaching, and aftercare. The first step is a confidential conversation so the team can match the right level of support.',
+    scrollTo: 'programs',
+  },
+  {
+    id: 'referral',
+    label: 'Help me refer someone',
+    reply:
+      'Start with who needs help, how urgent the situation is today, whether they are safe right now, and the best number for follow-up. I have nudged the referral form toward that path.',
+    scrollTo: 'get-help',
+    prefill: {
+      supportType: 'Family referral',
+      urgency: 'Today',
+    },
+  },
+  {
+    id: 'first-call',
+    label: 'Prepare for the first call',
+    reply:
+      'Keep the first call simple: what is happening now, what substances or behaviours are involved, whether there is immediate danger, and who the safest contact person is. You do not need the full story before asking for help.',
+    scrollTo: 'contact',
+  },
+  {
+    id: 'urgent',
+    label: 'Need urgent support now',
+    reply:
+      'If someone is unsafe, use the helpline or WhatsApp immediately. The crisis actions and contact section are the fastest routes on this page.',
+    scrollTo: 'contact',
+    prefill: {
+      urgency: 'Today',
+    },
+  },
+]
+
+const initialPosts: SocialPost[] = [
+  {
+    id: 1,
+    author: 'Tendai M.',
+    role: 'Graduate',
+    label: 'Recovery win',
+    text: 'One year sober this month. Still learning, still showing up, and grateful for the people who kept believing in me.',
+    image: '/images/manake/community-children.jpg',
+    imagePosition: '72% 38%',
+    reactions: '1.2k',
+    comments: 48,
+  },
+  {
+    id: 2,
+    author: 'Life Skills Studio',
+    role: 'Programme update',
+    label: 'Skills training',
+    text: 'Today’s work-readiness session focused on budgeting, punctuality, and building a routine that can last after treatment.',
+    reactions: '870',
+    comments: 31,
+  },
+  {
+    id: 3,
+    author: 'Family Circle',
+    role: 'Support group',
+    label: 'Family support',
+    text: 'Small steps matter. Honest conversations are starting again, and that changes everything for recovery at home.',
+    image: '/images/manake/recovery-circle.jpg',
+    imagePosition: '80% 42%',
+    reactions: '640',
+    comments: 22,
+  },
 ]
 
 const initialHelpForm: HelpForm = {
@@ -307,27 +528,145 @@ function buildWhatsAppUrl(form: HelpForm) {
   return `${whatsappBase}?text=${encodeURIComponent(text)}`
 }
 
+function Icon({ name }: { name: IconName }) {
+  const commonProps = {
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    strokeWidth: 1.85,
+  }
+
+  switch (name) {
+    case 'leaf':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M19 4c-7 0-12 4.5-12 11 0 3.2 1.8 5 4.5 5C17 20 20 15.7 20 10c0-2.2-.3-4-.8-6Z" />
+          <path {...commonProps} d="M8 20c1.2-4.6 4.3-8.2 9.5-11.5" />
+        </svg>
+      )
+    case 'sparkle':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="m12 3 1.8 4.7L18.5 9l-4.7 1.3L12 15l-1.8-4.7L5.5 9l4.7-1.3L12 3Z" />
+          <path {...commonProps} d="m18.5 15 1 2.6 2.5.7-2.5.7-1 2.5-.9-2.5-2.6-.7 2.6-.7.9-2.6Z" />
+          <path {...commonProps} d="m5 15 .8 2 2 .6-2 .5-.8 2-.8-2-2-.5 2-.6.8-2Z" />
+        </svg>
+      )
+    case 'shield':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M12 3 5.5 5.5V11c0 4.3 2.5 7.7 6.5 10 4-2.3 6.5-5.7 6.5-10V5.5L12 3Z" />
+          <path {...commonProps} d="m9.5 12 1.7 1.7 3.5-3.7" />
+        </svg>
+      )
+    case 'chat':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M5 18.5V6.8A2.8 2.8 0 0 1 7.8 4h8.4A2.8 2.8 0 0 1 19 6.8v6.4A2.8 2.8 0 0 1 16.2 16H9l-4 2.5Z" />
+          <path {...commonProps} d="M8.5 9.5h7M8.5 12.5h5.5" />
+        </svg>
+      )
+    case 'phone':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M6.8 4.8 9.5 7a1.8 1.8 0 0 1 .4 2.3l-1.2 2a13.8 13.8 0 0 0 4 4l2-1.2a1.8 1.8 0 0 1 2.3.4l2.2 2.7a1.8 1.8 0 0 1-.1 2.5l-1 1A3 3 0 0 1 15.5 21C9.7 20.4 3.6 14.3 3 8.5A3 3 0 0 1 4 5.9l1-1a1.8 1.8 0 0 1 1.8-.1Z" />
+        </svg>
+      )
+    case 'users':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M8.5 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM15.8 11a2.8 2.8 0 1 0 0-5.6" />
+          <path {...commonProps} d="M3.5 20a5 5 0 0 1 10 0M14 20a4 4 0 0 1 6.5-3.1" />
+        </svg>
+      )
+    case 'briefcase':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M8 6V4.8A1.8 1.8 0 0 1 9.8 3h4.4A1.8 1.8 0 0 1 16 4.8V6" />
+          <path {...commonProps} d="M4.8 6h14.4A1.8 1.8 0 0 1 21 7.8v9.4A1.8 1.8 0 0 1 19.2 19H4.8A1.8 1.8 0 0 1 3 17.2V7.8A1.8 1.8 0 0 1 4.8 6Z" />
+          <path {...commonProps} d="M3 11.5h18M10 6h4" />
+        </svg>
+      )
+    case 'heart':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M12 20.5C5 16 3.5 11.3 3.5 8.3A4.3 4.3 0 0 1 7.8 4a4.8 4.8 0 0 1 4.2 2.3A4.8 4.8 0 0 1 16.2 4a4.3 4.3 0 0 1 4.3 4.3c0 3-1.5 7.7-8.5 12.2Z" />
+        </svg>
+      )
+    case 'gift':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="M4 9h16v11H4zM12 9v11M4 13.5h16" />
+          <path {...commonProps} d="M8.7 9H7.5A2.5 2.5 0 1 1 10 6.5V9M15.3 9h1.2A2.5 2.5 0 1 0 14 6.5V9" />
+        </svg>
+      )
+    case 'close':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path {...commonProps} d="m6 6 12 12M18 6 6 18" />
+        </svg>
+      )
+    default:
+      return null
+  }
+}
+
+function mediaStyle(imagePosition: string) {
+  return { '--media-pos': imagePosition } as CSSProperties
+}
+
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}
+
 function App() {
   const [helpForm, setHelpForm] = useState<HelpForm>(initialHelpForm)
   const [donation, setDonation] = useState('50')
   const [customDonation, setCustomDonation] = useState('')
   const [shareStatus, setShareStatus] = useState('')
   const [postText, setPostText] = useState('')
-  const [posts, setPosts] = useState([
-    'Today I am grateful for a second chance and people who keep showing up.',
-    'Family meeting went well. Small steps, honest words, better days.',
-  ])
+  const [posts, setPosts] = useState(initialPosts)
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, from: 'team', text: 'Welcome. Tell us what kind of support you need and we will guide the next step.' },
-    { id: 2, from: 'visitor', text: 'I need help for a family member.' },
-    { id: 3, from: 'team', text: 'Thank you for reaching out. Is this urgent today?' },
+    {
+      id: 1,
+      from: 'team',
+      text: 'Welcome. Tell us what kind of support you need and we will guide the next step.',
+      time: '09:02',
+    },
+    {
+      id: 2,
+      from: 'visitor',
+      text: 'I need help for a family member.',
+      time: '09:03',
+    },
+    {
+      id: 3,
+      from: 'team',
+      text: 'Thank you for reaching out. Is the situation urgent today?',
+      time: '09:04',
+    },
   ])
   const [messageDraft, setMessageDraft] = useState('')
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [authNotice, setAuthNotice] = useState('')
+  const [assistantOpen, setAssistantOpen] = useState(false)
+  const [assistantTopic, setAssistantTopic] = useState(assistantPrompts[0].label)
+  const [assistantReply, setAssistantReply] = useState(assistantPrompts[0].reply)
 
   const whatsappUrl = useMemo(() => buildWhatsAppUrl(helpForm), [helpForm])
   const donationValue = customDonation || donation
+
+  useEffect(() => {
+    if (!shareStatus) return undefined
+
+    const timeout = window.setTimeout(() => setShareStatus(''), 2500)
+
+    return () => window.clearTimeout(timeout)
+  }, [shareStatus])
 
   function updateHelpForm(field: keyof HelpForm, value: string) {
     setHelpForm((current) => ({ ...current, [field]: value }))
@@ -357,26 +696,71 @@ function App() {
 
   function handlePostSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!postText.trim()) return
-    setPosts((current) => [postText.trim(), ...current])
+    const text = postText.trim()
+
+    if (!text) return
+
+    setPosts((current) => [
+      {
+        id: Date.now(),
+        author: 'You',
+        role: 'Community supporter',
+        label: 'New update',
+        text,
+        reactions: '0',
+        comments: 0,
+      },
+      ...current,
+    ])
     setPostText('')
   }
 
   function handleMessageSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const text = messageDraft.trim()
+
     if (!text) return
+
     setMessages((current) => [
       ...current,
-      { id: Date.now(), from: 'visitor', text },
-      { id: Date.now() + 1, from: 'team', text: 'Thanks. A support worker would pick this up and continue privately.' },
+      {
+        id: Date.now(),
+        from: 'visitor',
+        text,
+        time: 'Now',
+      },
+      {
+        id: Date.now() + 1,
+        from: 'team',
+        text: 'Thanks. A support worker would continue this conversation privately.',
+        time: 'Now',
+      },
     ])
     setMessageDraft('')
   }
 
   function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setAuthNotice(`${authMode === 'login' ? 'Login' : 'Sign up'} demo submitted. Connect this form to the backend when credentials are ready.`)
+    setAuthNotice(
+      `${authMode === 'login' ? 'Login' : 'Sign up'} demo submitted. Connect this form to the backend when credentials are ready.`,
+    )
+  }
+
+  function handleAssistantPrompt(prompt: AssistantPrompt) {
+    setAssistantTopic(prompt.label)
+    setAssistantReply(prompt.reply)
+    setAssistantOpen(true)
+
+    if (prompt.prefill) {
+      setHelpForm((current) => ({
+        ...current,
+        ...prompt.prefill,
+      }))
+    }
+
+    if (prompt.scrollTo) {
+      window.setTimeout(() => scrollToSection(prompt.scrollTo as string), 120)
+    }
   }
 
   return (
@@ -387,7 +771,9 @@ function App() {
 
       <header className="site-header">
         <a className="brand" href="#home" aria-label="Manake home">
-          <span className="brand-mark">M</span>
+          <span className="brand-mark">
+            <Icon name="leaf" />
+          </span>
           <span>
             <strong>Manake</strong>
             <small>Rehabilitation Center</small>
@@ -409,8 +795,9 @@ function App() {
           <a className="quiet-link" href="#auth" onClick={() => setAuthMode('signup')}>
             Sign Up
           </a>
-          <a className="button button-primary button-small" href="#donate">
-            Donate Now
+          <a className="button button-primary button-small donate-cta" href="#donate">
+            <span className="donate-label-full">Donate Now</span>
+            <span className="donate-label-short">Donate</span>
           </a>
           <details className="more-menu">
             <summary>More</summary>
@@ -432,11 +819,11 @@ function App() {
       </header>
 
       <main id="main-content">
-        <section className="hero" id="home">
+        <section className="hero section" id="home">
           <div className="hero-copy">
-            <p className="eyebrow">Zimbabwe's premier youth rehabilitation center</p>
-            <h1>A safe path to recovery for young people in Zimbabwe.</h1>
-            <p>
+            <p className="eyebrow">Zimbabwe&apos;s premier youth rehabilitation center</p>
+            <h1>Manake helps young people and families see the next safe step.</h1>
+            <p className="hero-lead">
               Professional rehabilitation programs, life skills training, and ongoing support
               to help young people rebuild their lives with dignity and purpose.
             </p>
@@ -444,67 +831,198 @@ function App() {
               <a className="button button-primary" href="#get-help">
                 Get Help Today
               </a>
-              <a className="button button-secondary" href="#contact">
+              <a className="button button-secondary" href="#get-help">
                 Refer Someone
               </a>
             </div>
             <div className="contact-row">
-              <a href={`tel:${phoneHref}`}>{phoneDisplay}</a>
-              <a href={`${whatsappBase}?text=Hello%20Manake%2C%20I%20need%20help`} target="_blank" rel="noreferrer">
+              <a href={`tel:${phoneHref}`}>
+                <Icon name="phone" />
+                {phoneDisplay}
+              </a>
+              <a
+                href={`${whatsappBase}?text=Hello%20Manake%2C%20I%20need%20help`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon name="chat" />
                 WhatsApp Support
               </a>
             </div>
           </div>
 
-          <div className="hero-panel" aria-label="Impact highlights">
-            {impactStats.map((stat) => (
-              <article key={stat.label}>
-                <strong>{stat.value}</strong>
-                <span>{stat.label}</span>
-                <small>{stat.note}</small>
-              </article>
-            ))}
+          <div className="hero-media">
+            <article className="hero-photo-card">
+              <img
+                src="/images/manake/center-exterior.jpg"
+                alt="Manake Rehabilitation Center in Norton"
+              />
+              <div className="hero-photo-caption">
+                <span className="hero-badge">Verified centre</span>
+                <strong>Norton, Mashonaland West</strong>
+                <small>Residential care, counselling, aftercare, and family support.</small>
+              </div>
+            </article>
+
+            <div className="hero-panel" aria-label="Impact highlights">
+              {impactStats.map((stat) => (
+                <article key={stat.label}>
+                  <strong>{stat.value}</strong>
+                  <span>{stat.label}</span>
+                  <small>{stat.note}</small>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section overview-section">
+          <div className="overview-grid">
+            <div className="overview-card">
+              <div className="overview-heading">
+                <p className="eyebrow">Explore</p>
+                <h2>Clear pathways for help, recovery, and reintegration.</h2>
+              </div>
+              <nav className="pathway-list" aria-label="Manake pathways">
+                {pathwayTiles.map((tile) => (
+                  <a className={`pathway-item ${tile.accent}`} href={tile.href} key={tile.title}>
+                    <span className="pathway-item-icon">
+                      <Icon name={tile.icon} />
+                    </span>
+                    <span className="pathway-item-copy">
+                      <strong>{tile.title}</strong>
+                      <small>{tile.copy}</small>
+                    </span>
+                  </a>
+                ))}
+              </nav>
+            </div>
+
+            <div className="overview-stack">
+              <div className="overview-card compact-card">
+                <h3>Platform Stats</h3>
+                <div className="compact-stat-list">
+                  {impactStats.slice(0, 3).map((stat) => (
+                    <div key={stat.label}>
+                      <span>{stat.label}</span>
+                      <strong>{stat.value}</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="overview-card compact-card">
+                <h3>Get Started</h3>
+                <p>Complete the first referral steps and we&apos;ll guide the next move privately.</p>
+                <a className="button button-primary" href="#get-help">
+                  Start Referral
+                </a>
+              </div>
+
+              <div className="overview-card compact-card">
+                <h3>Resources</h3>
+                <div className="resource-chip-list">
+                  {resourceHighlights.map((resource) => (
+                    <span key={resource}>{resource}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="overview-card">
+              <div className="overview-heading">
+                <p className="eyebrow">Social</p>
+                <h2>Community updates</h2>
+              </div>
+              <div className="social-mini-stats">
+                <span>My Network 0</span>
+                <span>Saved Posts 0</span>
+                <span>Following 0</span>
+              </div>
+              <div className="mini-feed">
+                {initialPosts.map((post) => (
+                  <article key={post.id}>
+                    <div className="mini-feed-avatar">{post.author.charAt(0)}</div>
+                    <div className="mini-feed-copy">
+                      <p>
+                        <strong>{post.author}</strong> {post.label}
+                      </p>
+                      <small>{post.text}</small>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <a className="button button-secondary-dark" href="#social">
+                Create Post
+              </a>
+            </div>
           </div>
         </section>
 
         <section className="founder-section section" id="about">
-          <div className="founder-photo">
-            <img src="/images/manake/professional-team.jpg" alt="Sibongile Maonde Sokhani and the Manake team" />
-            <div>
-              <strong>Sibongile Maonde Sokhani</strong>
-              <span>Founder and Visionary</span>
-            </div>
-          </div>
           <div className="founder-copy">
-            <p className="eyebrow">Founder's message</p>
-            <h2>"They are not just numbers. They are our future."</h2>
+            <p className="eyebrow">Founder&apos;s message</p>
+            <h2>&quot;They are not just numbers. They are our future.&quot;</h2>
             <p>
-              Manake was born out of a mother's heart and a community's need. Addiction is
-              not a moral failing; it is a battle for the soul of our youth.
+              Manake was born out of a mother&apos;s heart and a community&apos;s need. Addiction
+              is not a moral failing. It is a battle for the soul, safety, and future of young
+              people.
             </p>
             <p>
-              Our mission is to restore dignity, reignite purpose, and rebuild families.
-              When you walk through our doors, you are not a case. You are family.
+              Our mission is to restore dignity, reignite purpose, and rebuild families. When
+              someone walks through these doors, they are not a case file. They are family.
             </p>
             <div className="mini-stats">
-              <span><strong>2019</strong> Established</span>
-              <span><strong>500+</strong> Lives touched</span>
-              <span><strong>100%</strong> Commitment</span>
+              <span>
+                <strong>2019</strong>
+                Established
+              </span>
+              <span>
+                <strong>500+</strong>
+                Lives touched
+              </span>
+              <span>
+                <strong>100%</strong>
+                Commitment
+              </span>
+            </div>
+            <div className="founder-actions">
+              <a className="button button-ghost" href="#team">
+                Meet Our Team
+              </a>
+              <a className="button button-ghost" href="#stories">
+                Our Story
+              </a>
             </div>
           </div>
+
+          <figure className="founder-photo">
+            <img src="/images/team/manaketeam.jpeg" alt="Manake leadership and outreach team" />
+            <figcaption>
+              <strong>Sibongile Maonde Sokhani</strong>
+              <span>Founder and visionary leadership, supported by the wider Manake team.</span>
+            </figcaption>
+          </figure>
         </section>
 
         <section className="crisis-card">
           <div>
             <p className="eyebrow">In crisis? We are here for you</p>
             <h2>24/7 confidential support available.</h2>
-            <p>You are not alone. Reach out now for a private first step.</p>
+            <p>You are not alone. Reach out now for a private and practical first step.</p>
           </div>
           <div className="split-actions">
-            <a className="button button-danger" href={`tel:${phoneHref}`}>
+            <a className="button button-light" href={`tel:${phoneHref}`}>
+              <Icon name="phone" />
               Call Now
             </a>
-            <a className="button button-light" href={`${whatsappBase}?text=Hello%20Manake%2C%20I%20need%20urgent%20support`} target="_blank" rel="noreferrer">
+            <a
+              className="button button-light button-light-alt"
+              href={`${whatsappBase}?text=Hello%20Manake%2C%20I%20need%20urgent%20support`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Icon name="chat" />
               WhatsApp
             </a>
           </div>
@@ -514,7 +1032,10 @@ function App() {
           <div className="section-heading center">
             <p className="eyebrow">How admission works</p>
             <h2>Getting help is simple.</h2>
-            <p>We guide families and young people through each step with compassion and confidentiality.</p>
+            <p>
+              We guide families and young people through each step with compassion, confidentiality,
+              and a clear sense of what happens next.
+            </p>
           </div>
           <div className="step-grid">
             {admissionSteps.map((item) => (
@@ -527,21 +1048,36 @@ function App() {
           </div>
         </section>
 
-        <section className="story-feature section" id="stories">
-          <div className="feature-image">
-            <img src="/images/manake/graduation-ceremony-01.jpg" alt="Tendai's transformation story" />
-          </div>
+        <section className="section story-feature" id="stories">
           <div className="feature-copy">
             <p className="eyebrow">Real stories of transformation</p>
-            <h2>"Manake did not just help me recover. They helped me find my purpose."</h2>
+            <h2>&quot;Manake did not just help me recover. They helped me find my purpose.&quot;</h2>
             <p>
               Every story is a testament to hope, support, second chances, and the power of a
-              community that refuses to give up.
+              community that refuses to give up on its young people.
             </p>
+            <div className="story-meta-strip">
+              <span>Tendai M., 24</span>
+              <span>Now a certified electrician and business owner</span>
+            </div>
             <a className="text-link" href="#story-grid">
               Read more success stories
             </a>
           </div>
+
+          <article className="feature-image-card">
+            <div className="media-frame">
+              <img
+                src="/images/manake/community-children.jpg"
+                style={mediaStyle('72% 38%')}
+                alt="Young people in conversation outdoors at Manake"
+              />
+            </div>
+            <div className="feature-card-footer">
+              <strong>Featured Story</strong>
+              <span>Recovery, work readiness, and a restored sense of purpose.</span>
+            </div>
+          </article>
         </section>
 
         <section className="section" id="story-grid">
@@ -555,17 +1091,27 @@ function App() {
           <div className="story-grid">
             {stories.map((story) => (
               <article className="story-card" key={story.title}>
-                <img src={story.image} alt={story.title} />
+                <div className="media-frame">
+                  <img src={story.image} style={mediaStyle(story.imagePosition)} alt={story.title} />
+                </div>
                 <div className="tag-row">
                   {story.tags.map((tag) => (
                     <span key={tag}>{tag}</span>
                   ))}
                 </div>
-                <h3>{story.title}</h3>
-                <p>{story.copy}</p>
+                <div className="story-card-body">
+                  <h3>{story.title}</h3>
+                  <p>{story.copy}</p>
+                </div>
                 <footer>
-                  <span>{story.author}</span>
-                  <span>{story.readTime}</span>
+                  <div className="story-byline">
+                    <strong>{story.author}</strong>
+                    <small>{story.readTime}</small>
+                  </div>
+                  <div className="story-stats">
+                    <span>{story.views} views</span>
+                    <span>{story.shares} shares</span>
+                  </div>
                   <button type="button" onClick={() => shareStory(story)}>
                     Share
                   </button>
@@ -579,47 +1125,171 @@ function App() {
           <div className="section-heading center">
             <p className="eyebrow">Our services</p>
             <h2>Comprehensive care from detox support to aftercare.</h2>
-            <p>Manake meets people where they are and helps them build a brighter future.</p>
+            <p>Manake meets young people where they are and helps them build a steadier future.</p>
           </div>
           <div className="program-grid">
             {programs.map((program) => (
               <article className="program-card" key={program.title}>
-                <img src={program.image} alt="" />
-                <div>
-                  <span>{program.accent}</span>
-                  <h3>{program.title}</h3>
-                  <p>{program.copy}</p>
-                  <ul>
-                    {program.features.map((feature) => (
-                      <li key={feature}>{feature}</li>
-                    ))}
-                  </ul>
+                <div className="program-icon">
+                  <Icon name={program.icon} />
                 </div>
+                <span className="program-badge">{program.badge}</span>
+                <h3>{program.title}</h3>
+                <p>{program.copy}</p>
+                <ul>
+                  {program.features.map((feature) => (
+                    <li key={feature}>{feature}</li>
+                  ))}
+                </ul>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section className="section community-section">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Social and support</p>
+              <h2>Community updates and private guidance in one place.</h2>
+            </div>
+            <p>
+              The social feed, support chat, and AI guide are presented as part of the same help
+              journey, not as separate demos floating off to the side.
+            </p>
+          </div>
+
+          <div className="community-shell">
+            <div className="social-panel" id="social">
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Social</p>
+                  <h3>Share story</h3>
+                </div>
+                <span className="panel-status">Moderated community space</span>
+              </div>
+
+              <form className="composer" onSubmit={handlePostSubmit}>
+                <textarea
+                  value={postText}
+                  onChange={(event) => setPostText(event.target.value)}
+                  placeholder="Share a recovery win, a gratitude note, or encouragement for the community..."
+                  rows={4}
+                />
+                <button className="button button-primary" type="submit">
+                  Post update
+                </button>
+              </form>
+
+              <div className="feed-list">
+                {posts.map((post) => (
+                  <article className="feed-card" key={post.id}>
+                    <header>
+                      <div className="avatar-circle">{post.author.charAt(0)}</div>
+                      <div>
+                        <strong>{post.author}</strong>
+                        <small>{post.role}</small>
+                      </div>
+                      <span className="feed-label">{post.label}</span>
+                    </header>
+
+                    <p>{post.text}</p>
+
+                    {post.image ? (
+                      <div className="media-frame feed-media">
+                        <img
+                          src={post.image}
+                          style={mediaStyle(post.imagePosition || '50% 50%')}
+                          alt=""
+                        />
+                      </div>
+                    ) : null}
+
+                    <footer>
+                      <span>{post.reactions} reactions</span>
+                      <span>{post.comments} comments</span>
+                      <span>Share</span>
+                    </footer>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div className="community-side">
+              <div className="message-panel" id="messaging">
+                <div className="panel-heading">
+                  <div>
+                    <p className="eyebrow">Messaging</p>
+                    <h3>Confidential support chat</h3>
+                  </div>
+                  <span className="panel-status">Response path ready</span>
+                </div>
+
+                <div className="chat-window">
+                  {messages.map((message) => (
+                    <div className={message.from === 'visitor' ? 'bubble visitor' : 'bubble'} key={message.id}>
+                      <p>{message.text}</p>
+                      <small>{message.time}</small>
+                    </div>
+                  ))}
+                </div>
+
+                <form className="chat-form" onSubmit={handleMessageSubmit}>
+                  <input
+                    value={messageDraft}
+                    onChange={(event) => setMessageDraft(event.target.value)}
+                    placeholder="Type a private message..."
+                  />
+                  <button className="button button-primary" type="submit">
+                    Send
+                  </button>
+                </form>
+              </div>
+
+              <div className="assistant-preview-card">
+                <div className="assistant-preview-head">
+                  <span className="assistant-icon">
+                    <Icon name="sparkle" />
+                  </span>
+                  <div>
+                    <p className="eyebrow">Manake AI</p>
+                    <h3>Floating support guide</h3>
+                  </div>
+                </div>
+                <p>
+                  The assistant helps families understand programmes, prepare a first call, and move
+                  into the referral form faster.
+                </p>
+                <button className="button button-secondary-dark" type="button" onClick={() => setAssistantOpen(true)}>
+                  Open Manake AI
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
         <section className="section products-section" id="products">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Products</p>
-              <h2>Skills training with a path back into work.</h2>
+              <p className="eyebrow">Products and sponsorship</p>
+              <h2>Practical support that connects recovery to real life.</h2>
             </div>
             <p>
-              Product enquiries can support vocational activities and give graduates a practical
-              route toward confidence and income.
+              This keeps the products area useful and credible: practical sponsorship routes instead
+              of mismatched images.
             </p>
           </div>
+
           <div className="product-grid">
             {products.map((product) => (
               <article className="product-card" key={product.title}>
-                <img src={product.image} alt={product.title} />
-                <div>
-                  <h3>{product.title}</h3>
-                  <p>{product.copy}</p>
-                  <a href="#contact">{product.price}</a>
+                <div className="product-icon">
+                  <Icon name={product.icon} />
                 </div>
+                <span className="product-price">{product.price}</span>
+                <h3>{product.title}</h3>
+                <p>{product.copy}</p>
+                <small>{product.detail}</small>
+                <a href="#contact">Learn more</a>
               </article>
             ))}
           </div>
@@ -628,54 +1298,22 @@ function App() {
         <section className="section team-section" id="team">
           <div className="section-heading center">
             <p className="eyebrow">Team</p>
-            <h2>Professional care with a human face.</h2>
-            <p>Families need competence, privacy, warmth, and people who can stay steady.</p>
+            <h2>Professional care with a real human face.</h2>
+            <p>These photos now lean on the stronger local assets instead of the weaker composites.</p>
           </div>
           <div className="team-grid">
             {team.map((person) => (
               <article className="team-card" key={person.name}>
-                <img src={person.image} alt={person.name} />
-                <h3>{person.name}</h3>
-                <strong>{person.role}</strong>
-                <p>{person.copy}</p>
+                <div className="media-frame">
+                  <img src={person.image} alt={person.name} />
+                </div>
+                <div className="team-card-body">
+                  <h3>{person.name}</h3>
+                  <strong>{person.role}</strong>
+                  <p>{person.copy}</p>
+                </div>
               </article>
             ))}
-          </div>
-        </section>
-
-        <section className="interactive-grid section">
-          <div className="social-panel" id="social">
-            <p className="eyebrow">Social</p>
-            <h2>Share story</h2>
-            <form onSubmit={handlePostSubmit}>
-              <textarea value={postText} onChange={(event) => setPostText(event.target.value)} placeholder="Share a recovery win, gratitude note, or encouragement..." rows={4} />
-              <button className="button button-primary" type="submit">Post update</button>
-            </form>
-            <div className="post-list">
-              {posts.map((post, index) => (
-                <article key={`${post}-${index}`}>
-                  <strong>Community update</strong>
-                  <p>{post}</p>
-                  <small>Like  Comment  Share</small>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <div className="message-panel" id="messaging">
-            <p className="eyebrow">Messaging</p>
-            <h2>Confidential support chat</h2>
-            <div className="chat-window">
-              {messages.map((message) => (
-                <p className={message.from === 'visitor' ? 'bubble visitor' : 'bubble'} key={message.id}>
-                  {message.text}
-                </p>
-              ))}
-            </div>
-            <form className="chat-form" onSubmit={handleMessageSubmit}>
-              <input value={messageDraft} onChange={(event) => setMessageDraft(event.target.value)} placeholder="Type a private message..." />
-              <button className="button button-primary" type="submit">Send</button>
-            </form>
           </div>
         </section>
 
@@ -685,10 +1323,13 @@ function App() {
             <h2>Transparent, professional, family-centered care.</h2>
           </div>
           <div className="trust-grid">
-            {['Qualified staff', 'Registered facility', 'Complete confidentiality', 'Community partners', 'Proven support', 'Family-centered'].map((item) => (
-              <article key={item}>
-                <strong>{item}</strong>
-                <p>Care is designed to be clear, respectful, and focused on long-term recovery.</p>
+            {trustItems.map((item) => (
+              <article key={item.title}>
+                <span className="trust-icon">
+                  <Icon name={item.icon} />
+                </span>
+                <strong>{item.title}</strong>
+                <p>{item.copy}</p>
               </article>
             ))}
           </div>
@@ -717,7 +1358,7 @@ function App() {
           <div className="testimonial-grid">
             {testimonials.map((item) => (
               <article key={item.author}>
-                <span className="quote-mark">"</span>
+                <span className="quote-mark">&quot;</span>
                 <p>{item.quote}</p>
                 <strong>{item.author}</strong>
                 <small>{item.role}</small>
@@ -732,22 +1373,43 @@ function App() {
             <h2>Send a clear first message to the team.</h2>
             <p>Keep sensitive details brief until the team responds privately.</p>
             <form onSubmit={handleHelpSubmit}>
-              <input value={helpForm.name} onChange={(event) => updateHelpForm('name', event.target.value)} placeholder="Your name" />
-              <input value={helpForm.phone} onChange={(event) => updateHelpForm('phone', event.target.value)} placeholder="Phone number" />
-              <select value={helpForm.supportType} onChange={(event) => updateHelpForm('supportType', event.target.value)}>
+              <input
+                value={helpForm.name}
+                onChange={(event) => updateHelpForm('name', event.target.value)}
+                placeholder="Your name"
+              />
+              <input
+                value={helpForm.phone}
+                onChange={(event) => updateHelpForm('phone', event.target.value)}
+                placeholder="Phone number"
+              />
+              <select
+                value={helpForm.supportType}
+                onChange={(event) => updateHelpForm('supportType', event.target.value)}
+              >
                 <option>Family referral</option>
                 <option>I need help for myself</option>
                 <option>School or community referral</option>
                 <option>Partner or donor enquiry</option>
               </select>
-              <select value={helpForm.urgency} onChange={(event) => updateHelpForm('urgency', event.target.value)}>
+              <select
+                value={helpForm.urgency}
+                onChange={(event) => updateHelpForm('urgency', event.target.value)}
+              >
                 <option>Today</option>
                 <option>This week</option>
                 <option>Planning ahead</option>
                 <option>General information</option>
               </select>
-              <textarea value={helpForm.message} onChange={(event) => updateHelpForm('message', event.target.value)} placeholder="What kind of support is needed?" rows={4} />
-              <button className="button button-primary" type="submit">Open WhatsApp referral</button>
+              <textarea
+                value={helpForm.message}
+                onChange={(event) => updateHelpForm('message', event.target.value)}
+                placeholder="What kind of support is needed?"
+                rows={4}
+              />
+              <button className="button button-primary" type="submit">
+                Open WhatsApp referral
+              </button>
             </form>
           </div>
 
@@ -756,66 +1418,137 @@ function App() {
             <h2>Support recovery work.</h2>
             <div className="amount-grid">
               {['25', '50', '100', '250'].map((amount) => (
-                <button className={donation === amount && !customDonation ? 'selected' : ''} key={amount} type="button" onClick={() => { setDonation(amount); setCustomDonation('') }}>
+                <button
+                  className={donation === amount && !customDonation ? 'selected' : ''}
+                  key={amount}
+                  type="button"
+                  onClick={() => {
+                    setDonation(amount)
+                    setCustomDonation('')
+                  }}
+                >
                   ${amount}
                 </button>
               ))}
             </div>
-            <input value={customDonation} onChange={(event) => setCustomDonation(event.target.value)} placeholder="Custom amount" inputMode="decimal" />
-            <a className="button button-primary" href={`mailto:${email}?subject=Donation%20pledge%20for%20Manake&body=Hello%20Manake%2C%20I%20would%20like%20to%20pledge%20${encodeURIComponent(donationValue)}.`}>
+            <input
+              value={customDonation}
+              onChange={(event) => setCustomDonation(event.target.value)}
+              placeholder="Custom amount"
+              inputMode="decimal"
+            />
+            <a
+              className="button button-primary"
+              href={`mailto:${email}?subject=Donation%20pledge%20for%20Manake&body=Hello%20Manake%2C%20I%20would%20like%20to%20pledge%20${encodeURIComponent(donationValue)}.`}
+            >
               Pledge {donationValue ? `$${donationValue}` : 'support'}
             </a>
           </div>
 
           <div className="auth-card" id="auth">
             <div className="auth-tabs">
-              <button className={authMode === 'login' ? 'active' : ''} type="button" onClick={() => setAuthMode('login')}>Login</button>
-              <button className={authMode === 'signup' ? 'active' : ''} type="button" onClick={() => setAuthMode('signup')}>Sign Up</button>
+              <button
+                className={authMode === 'login' ? 'active' : ''}
+                type="button"
+                onClick={() => setAuthMode('login')}
+              >
+                Login
+              </button>
+              <button
+                className={authMode === 'signup' ? 'active' : ''}
+                type="button"
+                onClick={() => setAuthMode('signup')}
+              >
+                Sign Up
+              </button>
             </div>
             <h2>{authMode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
             <form onSubmit={handleAuthSubmit}>
               {authMode === 'signup' ? <input placeholder="Full name" autoComplete="name" /> : null}
               <input placeholder="Email address" autoComplete="email" />
-              <input placeholder="Password" type="password" autoComplete={authMode === 'login' ? 'current-password' : 'new-password'} />
-              <button className="button button-primary" type="submit">{authMode === 'login' ? 'Log in' : 'Sign up'}</button>
+              <input
+                placeholder="Password"
+                type="password"
+                autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+              />
+              <button className="button button-primary" type="submit">
+                {authMode === 'login' ? 'Log in' : 'Sign up'}
+              </button>
             </form>
             {authNotice ? <p className="notice">{authNotice}</p> : null}
           </div>
         </section>
 
         <section className="section contact-section" id="contact">
-          <div>
+          <div className="contact-copy">
             <p className="eyebrow">Contact</p>
             <h2>Need immediate help?</h2>
-            <p>Our helpline is available 24/7 for emergencies.</p>
+            <p>
+              Our helpline is available 24/7 for emergencies. The contact area now looks more like
+              the live Manake experience: direct, calm, and action-oriented.
+            </p>
+            <div className="contact-actions">
+              <a className="button button-primary" href={`tel:${phoneHref}`}>
+                <Icon name="phone" />
+                Call Helpline
+              </a>
+              <a
+                className="button button-secondary-dark"
+                href={`${whatsappBase}?text=Hello%20Manake%2C%20I%20need%20support`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon name="chat" />
+                WhatsApp Support
+              </a>
+            </div>
           </div>
-          <address>
-            <strong>{location}</strong>
-            <a href={`tel:${phoneHref}`}>{phoneDisplay}</a>
-            <a href={`mailto:${email}`}>{email}</a>
-          </address>
+
+          <div className="contact-panel">
+            <address>
+              <strong>{location}</strong>
+              <a href={`tel:${phoneHref}`}>{phoneDisplay}</a>
+              <a href={`mailto:${email}`}>{email}</a>
+            </address>
+            <div className="contact-meta">
+              <span>Opening Hours</span>
+              <strong>Available 24/7 for emergencies</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="section discover-section">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Suggested for you</p>
+              <h2>Keep exploring the Manake community.</h2>
+            </div>
+            <a className="text-link align-end" href="#stories">
+              See all
+            </a>
+          </div>
+          <div className="discover-grid">
+            {suggestions.map((item) => (
+              <article className="discover-card" key={item.title}>
+                <div className="media-frame">
+                  <img src={item.image} style={mediaStyle(item.imagePosition)} alt={item.title} />
+                </div>
+                <div className="discover-card-body">
+                  <small>{item.label}</small>
+                  <strong>{item.title}</strong>
+                  <button type="button">Follow</button>
+                </div>
+              </article>
+            ))}
+          </div>
         </section>
       </main>
 
-      <aside className="suggestions" aria-label="Suggested for you">
-        <div>
-          <strong>Suggested for you</strong>
-          <a href="#stories">See All</a>
-        </div>
-        {suggestions.map((item) => (
-          <article key={item.title}>
-            <img src={item.image} alt="" />
-            <span>{item.title}</span>
-            <small>{item.label}</small>
-            <button type="button">Follow</button>
-          </article>
-        ))}
-      </aside>
-
       <footer className="site-footer">
-        <div>
+        <div className="footer-brand">
           <strong>Manake Rehabilitation Center</strong>
-          <span>Youth recovery, family support, and community reintegration.</span>
+          <span>Serving Zimbabwe&apos;s youth with compassion and steady support since 2019.</span>
+          <small>Developed by Munyaradzi Chenjerai</small>
         </div>
         <nav aria-label="Footer navigation">
           <a href="#about">About</a>
@@ -826,6 +1559,65 @@ function App() {
         </nav>
         <small>© 2026 Manake Rehabilitation Center</small>
       </footer>
+
+      <aside className={`assistant-panel ${assistantOpen ? 'open' : ''}`} aria-hidden={!assistantOpen}>
+        <div className="assistant-panel-header">
+          <div>
+            <p className="eyebrow">Manake AI</p>
+            <strong>Manake AI support guide</strong>
+          </div>
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Close AI assistant"
+            onClick={() => setAssistantOpen(false)}
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+        <p className="assistant-copy">
+          Quick help for families, supporters, and young people who need a calm first step.
+        </p>
+        <div className="assistant-prompts">
+          {assistantPrompts.map((prompt) => (
+            <button key={prompt.id} type="button" onClick={() => handleAssistantPrompt(prompt)}>
+              {prompt.label}
+            </button>
+          ))}
+        </div>
+        <div className="assistant-reply">
+          <span className="assistant-topic">{assistantTopic}</span>
+          <p>{assistantReply}</p>
+        </div>
+        <div className="assistant-actions">
+          <button type="button" className="button button-primary" onClick={() => handleAssistantPrompt(assistantPrompts[1])}>
+            Get Help
+          </button>
+          <a className="button button-secondary-dark" href={`tel:${phoneHref}`}>
+            <Icon name="phone" />
+            Call
+          </a>
+          <a
+            className="button button-secondary-dark"
+            href={`${whatsappBase}?text=Hello%20Manake%2C%20I%20need%20support`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Icon name="chat" />
+            WhatsApp
+          </a>
+        </div>
+      </aside>
+
+      <button
+        className={`assistant-fab ${assistantOpen ? 'is-open' : ''}`}
+        type="button"
+        onClick={() => setAssistantOpen((current) => !current)}
+        aria-label="Open Manake AI"
+      >
+        <Icon name="sparkle" />
+        <span>Manake AI</span>
+      </button>
     </div>
   )
 }
