@@ -1,14 +1,12 @@
 /* Typography system */
 
 @layer base {
-  :root {
-    --font-sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    --font-display: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  }
-
   body {
-    font-family: var(--font-sans);
-    line-height: 1.5;
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-main);
+    background: var(--cream-50);
   }
 
   h1,
@@ -17,7 +15,79 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-display);
+    font-family: var(--font-heading);
+    color: var(--green-900);
+    letter-spacing: -0.03em;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 6vw, 4.8rem);
+    line-height: 1.05;
+    font-weight: 800;
+  }
+
+  h2 {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    line-height: 1.15;
+    font-weight: 700;
+  }
+
+  h3 {
+    font-size: clamp(1.4rem, 3vw, 2.25rem);
     line-height: 1.2;
+    font-weight: 600;
+  }
+
+  p {
+    max-width: 68ch;
+  }
+
+  /* Button base styles */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.9rem 1.4rem;
+    font-weight: 700;
+    border-radius: var(--radius-full);
+    transition: var(--transition-normal);
+    cursor: pointer;
+    text-decoration: none;
+    border: 2px solid transparent;
+  }
+
+  .btn-primary {
+    background: var(--gold-500);
+    color: var(--green-900);
+  }
+
+  .btn-primary:hover {
+    background: var(--gold-600);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--green-900);
+    border-color: var(--green-900);
+  }
+
+  .btn-secondary:hover {
+    background: var(--green-900);
+    color: var(--white-soft);
+  }
+
+  /* Card base styles */
+  .card {
+    background: var(--white-soft);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-6);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-normal);
+  }
+
+  .card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
   }
 }

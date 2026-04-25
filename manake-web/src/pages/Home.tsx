@@ -5,13 +5,10 @@ import {
   Users,
   TrendingUp,
   Award,
-  Calendar,
   Phone,
-  BookOpen,
   Sparkles,
 } from "lucide-react";
 import { StoriesFeed } from "../components/StoriesFeed";
-import { DonationForm } from "../components/DonationForm";
 import { EmergencyWidget } from "../components/EmergencyWidget";
 import { StatCard, StatsGrid } from "../components/StatCard";
 import { TestimonialCard } from "../components/TestimonialCard";
@@ -70,12 +67,12 @@ export const HomePage = () => {
 
   return (
     <>
-      {/* Hero Section - Cosmic Royal Theme with Zimbabwe Landscape */}
+      {/* Hero Section - Healing Theme with Zimbabwe Landscape */}
       <section
         className="relative overflow-hidden min-h-[90vh] flex items-center"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, rgba(26,15,46,0.91) 0%, rgba(45,27,105,0.87) 50%, rgba(107,76,154,0.82) 100%), url('https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&fit=crop&q=80')",
+            "linear-gradient(135deg, rgba(18,61,46,0.92) 0%, rgba(63,111,85,0.88) 50%, rgba(122,155,118,0.84) 100%), url('https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&fit=crop&q=80')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -92,7 +89,7 @@ export const HomePage = () => {
             style={{ animationDelay: "0.5s" }}
           />
           <div
-            className="absolute bottom-40 left-1/4 w-2 h-2 bg-accent-400 rounded-full animate-sparkle"
+            className="absolute bottom-40 left-1/4 w-2 h-2 bg-sage-400 rounded-full animate-sparkle"
             style={{ animationDelay: "1s" }}
           />
           <div
@@ -101,9 +98,9 @@ export const HomePage = () => {
           />
 
           {/* Gradient orbs */}
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-accent-500/30 to-transparent rounded-full blur-3xl animate-celestial-pulse" />
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-gold-500/20 to-transparent rounded-full blur-3xl animate-celestial-pulse" />
           <div
-            className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-gold-500/20 to-transparent rounded-full blur-3xl animate-celestial-pulse"
+            className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-sage-400/15 to-transparent rounded-full blur-3xl animate-celestial-pulse"
             style={{ animationDelay: "1s" }}
           />
         </div>
@@ -112,43 +109,35 @@ export const HomePage = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Hero Text */}
             <div className="text-center lg:text-left">
-              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-gold-500/20 to-accent-500/20 backdrop-blur-sm text-gold-300 text-sm font-medium px-6 py-3 rounded-full mb-6 border border-gold-500/30">
+              <span className="inline-flex items-center gap-2 bg-gradient-to-r from-gold-500/20 to-sage-400/20 backdrop-blur-sm text-gold-300 text-sm font-medium px-6 py-3 rounded-full mb-6 border border-gold-500/30">
                 <Sparkles size={16} className="text-gold-400" />
                 Zimbabwe's Premier Youth Rehabilitation Center
               </span>
 
-              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6 leading-tight text-white">
-                Recovery is{" "}
-                <span className="bg-gradient-to-r from-emerald-400 to-emerald-300 bg-clip-text text-transparent">
-                  Possible.
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight text-white">
+                A safe path to
+                <span className="block bg-gradient-to-r from-sage-300 to-gold-400 bg-clip-text text-transparent">
+                  recovery for young people
                 </span>
-                <br />
-                Hope is{" "}
-                <span className="bg-gradient-to-r from-gold-400 to-gold-300 bg-clip-text text-transparent">
-                  Powerful.
-                </span>
+                <span className="block text-white">in Zimbabwe.</span>
               </h1>
 
-              <p className="text-xl text-primary-200 mb-8 max-w-xl mx-auto lg:mx-0">
-                Manake Rehabilitation Center empowers youth in Zimbabwe to
-                overcome drug and alcohol addiction through comprehensive
-                recovery programs, life skills training, and unwavering
-                community support.
+              <p className="text-xl text-white/90 mb-8 max-w-xl mx-auto lg:mx-0">
+                Professional rehabilitation programs, life skills training, and ongoing support to help youth rebuild their lives with dignity and purpose.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <Link to="/donate" className="btn-secondary text-lg px-8">
-                  <Heart size={22} />
-                  Donate Now
-                </Link>
-                <Link to="/get-help" className="btn-emerald text-lg px-8">
+                <Link to="/get-help" className="btn btn-primary text-lg px-8">
                   Get Help Today
                   <ArrowRight size={20} />
+                </Link>
+                <Link to="/contact" className="btn btn-secondary text-lg px-8 border-white text-white hover:bg-white hover:text-green-900">
+                  Refer Someone
                 </Link>
               </div>
 
               {/* Quick contact */}
-              <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-primary-300">
+              <div className="mt-8 flex flex-wrap justify-center lg:justify-start gap-6 text-sm text-white/80">
                 <a
                   href="tel:+263775772277"
                   className="flex items-center gap-2 hover:text-gold-400 transition-colors"
@@ -166,7 +155,7 @@ export const HomePage = () => {
               </div>
             </div>
 
-            {/* Hero Stats - Diamond Cards */}
+            {/* Hero Stats - Healing Cards */}
             <div className="hidden lg:block">
               <div className="grid grid-cols-2 gap-4">
                 {impactStats.map((stat, index) => (
@@ -189,7 +178,7 @@ export const HomePage = () => {
           </div>
         </div>
 
-        {/* Wave divider - Diamond inspired */}
+        {/* Wave divider */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg
             viewBox="0 0 1440 120"
@@ -198,18 +187,17 @@ export const HomePage = () => {
           >
             <path
               d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
-              fill="#f8f6ff"
+              fill={"var(--cream-50)"}
             />
           </svg>
         </div>
       </section>
 
-      {/* Mobile Stats - Royal theme */}
+      {/* Mobile Stats - Healing theme */}
       <section
         className="lg:hidden py-12"
         style={{
-          background:
-            "linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%)",
+          background: "var(--cream-50)",
         }}
       >
         <div className="container-custom">
@@ -333,6 +321,72 @@ export const HomePage = () => {
       {/* Emergency Banner */}
       <EmergencyWidget variant="card" />
 
+      {/* How Admission Works Section */}
+      <section className="py-20" style={{ background: "var(--white-soft)" }}>
+        <div className="container-custom">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-green-900 mb-4">
+              How Admission Works
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Getting help is simple. We're here to guide you through every step of the process.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                step: "01",
+                title: "Contact Us",
+                description: "Call or WhatsApp our 24/7 helpline. We'll listen to your situation with compassion and complete confidentiality.",
+                icon: "📞",
+                color: "var(--gold-500)"
+              },
+              {
+                step: "02",
+                title: "Assessment",
+                description: "Our team conducts a thorough assessment to understand your needs and determine the best treatment approach.",
+                icon: "📋",
+                color: "var(--sage-400)"
+              },
+              {
+                step: "03",
+                title: "Personalised Plan",
+                description: "We create a customized recovery plan including counseling, life skills, and family support tailored to you.",
+                icon: "🎯",
+                color: "var(--terracotta-500)"
+              },
+              {
+                step: "04",
+                title: "Begin Recovery",
+                description: "Start your journey with our supportive community. We provide 24/7 care and guide you every step of the way.",
+                icon: "🌱",
+                color: "var(--green-600)"
+              }
+            ].map((item, index) => (
+              <div key={index} className="card text-center relative">
+                <div 
+                  className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                  style={{ background: item.color }}
+                >
+                  {item.step}
+                </div>
+                <div className="text-4xl mb-4 mt-4">{item.icon}</div>
+                <h3 className="text-xl font-bold text-green-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{item.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <Link to="/contact" className="btn btn-primary">
+              Start Your Journey
+              <ArrowRight size={20} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Featured Story Section */}
       <section
         className="py-16"
@@ -420,20 +474,15 @@ export const HomePage = () => {
       {/* Stories Feed */}
       <StoriesFeed limit={6} showFilters={false} title="More Success Stories" />
 
-      {/* Programs Section - Royal Theme */}
-      <section
-        className="py-16"
-        style={{
-          background:
-            "linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%)",
-        }}
-      >
+      {/* Services Section */}
+      <section className="py-20" style={{ background: "var(--cream-50)" }}>
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="section-heading">Our Programs</h2>
-            <p className="section-subheading mx-auto">
-              Comprehensive support from recovery to rebuilding a fulfilling
-              life.
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-green-900 mb-4">
+              Our Services
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Comprehensive care from detox support to aftercare. We meet you where you are and help you build a brighter future.
             </p>
           </div>
 
@@ -441,270 +490,197 @@ export const HomePage = () => {
             {[
               {
                 icon: "🏥",
-                title: "Residential Recovery",
-                description:
-                  "6-month comprehensive program with 24/7 support, counseling, and medical care.",
-                duration: "6 months",
-                color: "primary",
+                title: "Detox Support",
+                description: "Medically supervised detoxification with 24/7 care and comfort management.",
+                features: ["24/7 Medical Care", "Comfort Management", "Safe Environment"]
               },
               {
-                icon: "💼",
-                title: "Life Skills Training",
-                description:
-                  "Practical training in vocational skills, financial literacy, and entrepreneurship.",
-                duration: "3 months",
-                color: "emerald",
+                icon: "🧠",
+                title: "Counselling",
+                description: "Individual and group therapy sessions with experienced addiction counselors.",
+                features: ["One-on-One Therapy", "Group Sessions", "Family Counseling"]
+              },
+              {
+                icon: "🏠",
+                title: "Residential Care",
+                description: "6-month comprehensive program with structured daily routines and peer support.",
+                features: ["6-Month Program", "Structured Routine", "Peer Support"]
               },
               {
                 icon: "👨‍👩‍👧‍👦",
-                title: "Family Counseling",
-                description:
-                  "Rebuilding trust and communication within families affected by addiction.",
-                duration: "Ongoing",
-                color: "accent",
+                title: "Family Support",
+                description: "Rebuilding family relationships through therapy, education, and joint healing sessions.",
+                features: ["Family Therapy", "Education", "Healing Sessions"]
+              },
+              {
+                icon: "�",
+                title: "Relapse Prevention",
+                description: "Ongoing support and strategies to maintain long-term recovery after treatment.",
+                features: ["Aftercare Planning", "Ongoing Support", "Recovery Strategies"]
+              },
+              {
+                icon: "�️",
+                title: "Life Skills",
+                description: "Vocational training, financial literacy, and practical skills for independent living.",
+                features: ["Job Training", "Financial Skills", "Independent Living"]
+              }
+            ].map((service, index) => (
+              <div key={index} className="card hover:shadow-lg transition-all duration-300">
+                <div className="text-4xl mb-4">{service.icon}</div>
+                <h3 className="text-xl font-bold text-green-900 mb-3">{service.title}</h3>
+                <p className="text-gray-600 mb-4">{service.description}</p>
+                <ul className="space-y-2">
+                  {service.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm text-gray-600">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold-500"></span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Signals Section */}
+      <section className="py-20" style={{ background: "var(--white-soft)" }}>
+        <div className="container-custom">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-green-900 mb-4">
+              Why Families Trust Manake
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              We're committed to transparency, professionalism, and lasting recovery.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: "🏆",
+                title: "Qualified Staff",
+                description: "Our team includes certified addiction counselors, medical professionals, and recovery specialists."
+              },
+              {
+                icon: "📋",
+                title: "Registered Facility",
+                description: "Fully licensed and registered with Zimbabwe's health authorities and rehabilitation standards."
+              },
+              {
+                icon: "🔒",
+                title: "Complete Confidentiality",
+                description: "All information is strictly confidential. We respect your privacy at every step of the journey."
               },
               {
                 icon: "🤝",
-                title: "Peer Support Groups",
-                description:
-                  "Weekly group sessions led by recovery graduates for ongoing support.",
-                duration: "Weekly",
-                color: "primary",
+                title: "Community Partners",
+                description: "Working with healthcare providers, community leaders, and organizations across Zimbabwe."
               },
               {
-                icon: "📚",
-                title: "Education Support",
-                description:
-                  "Help returning to school or pursuing GED and further education.",
-                duration: "Flexible",
-                color: "emerald",
+                icon: "📊",
+                title: "Proven Success",
+                description: "85% of our graduates maintain long-term recovery with our comprehensive aftercare program."
               },
               {
-                icon: "🚀",
-                title: "Employment Assistance",
-                description:
-                  "Job training, resume building, and placement support after recovery.",
-                duration: "As needed",
-                color: "accent",
+                icon: "❤️",
+                title: "Family-Centered",
+                description: "We believe in healing the whole family system, not just the individual struggling with addiction."
+              }
+            ].map((item, index) => (
+              <div key={index} className="card text-center">
+                <div className="text-4xl mb-4">{item.icon}</div>
+                <h3 className="text-xl font-bold text-green-900 mb-3">{item.title}</h3>
+                <p className="text-gray-600">{item.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20" style={{ background: "var(--cream-50)" }}>
+        <div className="container-custom">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-green-900 mb-4">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Got questions? We have answers. Here's what families and young people often ask us.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {[
+              {
+                question: "Is treatment confidential?",
+                answer: "Yes, absolutely. All information shared with us is strictly confidential. We cannot share any details with family, employers, or anyone else without explicit written consent."
               },
-            ].map((program, index) => (
-              <div
-                key={index}
-                className="feature-card flex flex-col hover:shadow-xl"
-              >
-                <span className="text-4xl mb-4">{program.icon}</span>
-                <h3 className="text-xl font-bold text-cosmic-deep mb-2">
-                  {program.title}
-                </h3>
-                <p className="text-primary-700 mb-4 flex-grow">
-                  {program.description}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-primary-600 flex items-center gap-1">
-                    <Calendar size={14} />
-                    {program.duration}
-                  </span>
-                  <Link
-                    to="/programs"
-                    className="text-accent-500 font-medium text-sm hover:text-accent-600"
-                  >
-                    Learn More →
-                  </Link>
-                </div>
+              {
+                question: "Can parents contact you for their child?",
+                answer: "Yes, we encourage parents to reach out. We can guide you through the process of getting your child the help they need, even if they're initially resistant."
+              },
+              {
+                question: "How long does recovery take?",
+                answer: "Recovery is a lifelong journey, but our intensive program typically runs 6 months. We provide aftercare and support for as long as needed to maintain sobriety."
+              },
+              {
+                question: "Do you support relapse prevention?",
+                answer: "Yes, relapse prevention is a core part of our program. We teach coping strategies, provide ongoing support, and offer help if setbacks occur."
+              },
+              {
+                question: "What ages do you work with?",
+                answer: "We specialize in helping young people aged 16-30, though we can accommodate slightly older or younger cases based on individual needs."
+              },
+              {
+                question: "How much does treatment cost?",
+                answer: "Costs vary based on the program and duration. We offer various payment options and can discuss financial assistance during the initial consultation."
+              }
+            ].map((faq, index) => (
+              <div key={index} className="card">
+                <h3 className="text-lg font-bold text-green-900 mb-3">{faq.question}</h3>
+                <p className="text-gray-600">{faq.answer}</p>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-12">
-            <Link to="/programs" className="btn-primary">
-              <BookOpen size={20} />
-              View All Programs
+            <p className="text-gray-600 mb-4">Still have questions?</p>
+            <Link to="/contact" className="btn btn-primary">
+              Contact Our Team
+              <Phone size={20} />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Zimbabwe Identity Section */}
-      <section
-        className="relative py-0 overflow-hidden"
-        style={{ minHeight: 320 }}
-      >
-        <img
-          src="https://images.unsplash.com/photo-1489493585363-d2a8c2b0e547?w=1920&fit=crop&q=80"
-          alt="Zimbabwe Victoria Falls — the pride of Zimbabwe"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-transparent" />
-        <div className="relative z-10 container-custom py-20 flex flex-col justify-center">
-          <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 text-gold-300 text-xs font-semibold tracking-widest uppercase mb-3">
-              <span className="h-px w-6 bg-gold-400" /> Norton, Mashonaland
-              West, Zimbabwe
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">
-              Rooted in Zimbabwe,
-              <span className="text-gold-400"> Growing Together</span>
-            </h2>
-            <p className="text-white/85 text-lg mb-6 max-w-xl">
-              From the heart of Norton, Mashonaland West, Manake serves youth
-              and families across Zimbabwe — bringing hope, healing, and a path
-              forward to every community we touch.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {["Norton", "Harare", "Mashonaland West", "All of Zimbabwe"].map(
-                (loc) => (
-                  <span
-                    key={loc}
-                    className="px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-white text-sm font-medium border border-white/20"
-                  >
-                    📍 {loc}
-                  </span>
-                ),
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* MET + Media Section - Royal Theme */}
-      <section className="py-16" style={{ background: "#ffffff" }}>
+      {/* Crisis Help Section */}
+      <section className="py-16" style={{ background: "var(--navy-800)" }}>
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="section-heading">Community Empowerment: MET</h2>
-            <p className="section-subheading mx-auto">
-              Manake Empowerment Trust (MET), formerly known as TODAY'S WOMEN OF
-              TRAFALGAR, supports social and economic development in Norton,
-              Mashonaland West — empowering women, youth, and people recovering
-              from substance abuse.
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-6">
-            <div className="feature-card">
-              <h3 className="text-xl font-bold text-cosmic-deep mb-4 flex items-center gap-2">
-                <span className="text-gold-500">◆</span> What MET does
-              </h3>
-              <ul className="space-y-3 text-primary-800">
-                <li>
-                  <span className="font-semibold text-primary-600">
-                    Skills training &amp; livelihoods:
-                  </span>{" "}
-                  Entrepreneurship and vocational training for income-generating
-                  skills.
-                </li>
-                <li>
-                  <span className="font-semibold text-primary-600">
-                    Substance abuse reform:
-                  </span>{" "}
-                  Works with partners supporting rehabilitation and
-                  reintegration.
-                </li>
-                <li>
-                  <span className="font-semibold text-primary-600">
-                    GBV advocacy:
-                  </span>{" "}
-                  Community action addressing GBV and related social challenges.
-                </li>
-              </ul>
-              <div className="mt-6">
-                <Link to="/about#met" className="btn-primary">
-                  Learn More About MET
-                </Link>
-              </div>
-            </div>
-
-            <div className="feature-card">
-              <h3 className="text-xl font-bold text-cosmic-deep mb-4 flex items-center gap-2">
-                <span className="text-gold-500">◆</span> Videos &amp; Media
-              </h3>
-              <p className="text-primary-700 mb-6">
-                Watch highlights from programs and community events.
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="card bg-red-50 border-2 border-red-200 mb-8">
+              <div className="text-4xl mb-4">🚨</div>
+              <h2 className="text-2xl font-bold text-red-800 mb-4">Need Immediate Help?</h2>
+              <p className="text-red-700 mb-6">
+                If you or someone you know is in crisis, help is available 24/7. Don't wait - reach out now.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/about#videos" className="btn-secondary">
-                  Watch Videos
-                </Link>
-                <Link to="/about" className="btn-accent">
-                  View All Media Links
-                </Link>
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                  <a href="tel:+263775772277" className="btn btn-primary bg-red-600 hover:bg-red-700 text-white w-full">
+                    <Phone size={20} />
+                    Call Helpline: +263 77 577 2277
+                  </a>
+                </div>
+                <div>
+                  <a href="https://wa.me/263775772277" className="btn btn-secondary border-red-600 text-red-600 hover:bg-red-600 hover:text-white w-full">
+                    <span>💬</span>
+                    WhatsApp Support
+                  </a>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Donation CTA Section - Royal Theme */}
-      <section
-        className="py-16"
-        style={{
-          background:
-            "linear-gradient(135deg, #f8f6ff 0%, #fef7fb 50%, #f5f0fb 100%)",
-        }}
-      >
-        <div className="container-custom">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <DonationForm />
-            </div>
-            <div className="order-first lg:order-last">
-              <h2 className="section-heading">Your Donation Saves Lives</h2>
-              <p className="text-lg text-primary-700 mb-8">
-                Every contribution directly supports a young person's journey
-                from addiction to hope. Here's how your donation makes a
-                difference:
-              </p>
-
-              <ul className="space-y-4">
-                {[
-                  {
-                    amount: "$10",
-                    impact: "Provides educational materials for one youth",
-                  },
-                  {
-                    amount: "$25",
-                    impact: "Covers meals and accommodation for one week",
-                  },
-                  {
-                    amount: "$50",
-                    impact: "Funds two weeks of counseling sessions",
-                  },
-                  {
-                    amount: "$100",
-                    impact: "Supports one month of life skills training",
-                  },
-                  {
-                    amount: "$250",
-                    impact: "Sponsors a youth's complete 3-month program",
-                  },
-                ].map((item, index) => (
-                  <li key={index} className="flex gap-4 items-start">
-                    <span
-                      className="font-bold px-3 py-1 rounded-lg text-sm text-cosmic-deep"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #ffd700 0%, #fef3c7 100%)",
-                      }}
-                    >
-                      {item.amount}
-                    </span>
-                    <span className="text-primary-800">{item.impact}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div
-                className="mt-8 p-6 rounded-xl border-2"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(80, 200, 120, 0.1) 0%, rgba(110, 231, 183, 0.1) 100%)",
-                  borderColor: "rgba(80, 200, 120, 0.3)",
-                }}
-              >
-                <p className="text-emerald-700 font-medium flex items-center gap-2">
-                  <span className="text-lg">💎</span> 100% of your donation goes
-                  directly to our programs. Administrative costs are covered by
-                  our founding sponsors.
-                </p>
+              <div className="text-sm text-red-600">
+                <p className="mb-2"><strong>Opening Hours:</strong> Available 24/7 for emergencies</p>
+                <p><strong>Location:</strong> Norton, Mashonaland West, Zimbabwe</p>
               </div>
             </div>
           </div>
@@ -729,12 +705,12 @@ export const HomePage = () => {
         </div>
       </section>
 
-      {/* Final CTA - Cosmic Royal Gradient */}
+      {/* Final CTA - Healing Theme */}
       <section
         className="py-20 text-white relative overflow-hidden"
         style={{
           background:
-            "linear-gradient(135deg, #1a0f2e 0%, #2d1b69 50%, #6b4c9a 100%)",
+            "linear-gradient(135deg, var(--green-900) 0%, var(--green-700) 50%, var(--sage-400) 100%)",
         }}
       >
         {/* Sparkle effects */}
@@ -745,41 +721,37 @@ export const HomePage = () => {
             style={{ animationDelay: "0.7s" }}
           />
           <div
-            className="absolute top-1/2 left-1/4 w-2 h-2 bg-accent-400 rounded-full animate-sparkle"
+            className="absolute top-1/2 left-1/4 w-2 h-2 bg-gold-400 rounded-full animate-sparkle"
             style={{ animationDelay: "1.2s" }}
           />
         </div>
 
         <div className="container-custom text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Ready to Make a{" "}
-            <span className="bg-gradient-to-r from-gold-400 to-gold-300 bg-clip-text text-transparent">
-              Difference
+            Ready to Start the
+            <span className="block bg-gradient-to-r from-gold-400 to-gold-300 bg-clip-text text-transparent">
+              Journey to Recovery
             </span>
             ?
           </h2>
-          <p className="text-xl text-primary-200 mb-8 max-w-2xl mx-auto">
-            Whether you want to get help, donate, or volunteer, we'd love to
-            hear from you. Together, we can transform lives.
+          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Whether you need help for yourself, a loved one, or want to support our mission, we're here for you every step of the way.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/donate" className="btn-secondary text-lg px-8">
-              <Heart size={22} />
-              Donate Now
-            </Link>
-            <Link to="/get-help" className="btn-emerald text-lg px-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+            <Link to="/get-help" className="btn btn-primary bg-gold-500 hover:bg-gold-600 text-green-900 text-lg px-8">
               Get Help Today
+              <ArrowRight size={20} />
             </Link>
-            <Link to="/contact" className="btn-accent text-lg px-8">
+            <Link to="/donate" className="btn btn-secondary border-white text-white hover:bg-white hover:text-green-900 text-lg px-8">
+              <Heart size={22} />
+              Support Our Work
+            </Link>
+            <Link to="/contact" className="btn btn-secondary border-white text-white hover:bg-white hover:text-green-900 text-lg px-8">
               Contact Us
             </Link>
           </div>
-          <p className="mt-8 text-primary-300 text-sm">
-            Developed with <Heart size={14} className="inline text-red-500" />{" "}
-            by{" "}
-            <span className="text-gold-400 font-medium">
-              Munyaradzi Chenjerai
-            </span>
+          <p className="text-white/80 text-sm">
+            Serving Zimbabwe's youth with compassion and excellence since 2019
           </p>
         </div>
       </section>
