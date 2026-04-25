@@ -2,159 +2,71 @@ import React from 'react'
 
 export default function Home() {
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f3f4f6',
-      padding: '20px',
-      fontFamily: 'Arial, sans-serif'
-    }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
-        <h1 style={{ 
-          fontSize: '48px', 
-          fontWeight: 'bold', 
-          color: '#1f2937',
-          marginBottom: '20px'
-        }}>
+    <div className="min-h-screen bg-gray-50 p-5 font-sans">
+      <div className="max-w-4xl mx-auto text-center">
+        <h1 className="text-5xl font-bold text-gray-900 mb-5">
           🌱 Welcome to Manake
         </h1>
-        <p style={{ 
-          fontSize: '24px', 
-          color: '#6b7280',
-          marginBottom: '40px'
-        }}>
+        <p className="text-2xl text-gray-600 mb-10">
           Recovery Platform - Community, Mentorship, Support
         </p>
         
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '40px', 
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          marginBottom: '40px'
-        }}>
-          <h2 style={{ 
-            fontSize: '32px', 
-            fontWeight: '600',
-            color: '#1f2937',
-            marginBottom: '20px'
-          }}>
+        <div className="bg-white p-10 rounded-xl shadow-lg mb-10">
+          <h2 className="text-3xl font-semibold text-gray-800 mb-5">
             ✅ Your Journey Starts Here
           </h2>
-          <p style={{ 
-            fontSize: '18px', 
-            color: '#6b7280',
-            marginBottom: '30px',
-            lineHeight: '1.6'
-          }}>
+          <p className="text-lg text-gray-600 mb-8 leading-relaxed">
             Join our supportive community dedicated to recovery and personal growth.
             Connect with mentors, access resources, and build lasting relationships.
           </p>
           
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '30px',
-            marginBottom: '30px'
-          }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             <div>
-              <div style={{ 
-                width: '80px', 
-                height: '80px', 
-                backgroundColor: '#dbeafe',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 20px',
-                fontSize: '40px'
-              }}>
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
                 👥
               </div>
-              <h3 style={{ fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>
+              <h3 className="font-semibold text-gray-800 mb-3">
                 Community
               </h3>
-              <p style={{ color: '#6b7280', fontSize: '14px' }}>
+              <p className="text-gray-600 text-sm">
                 Connect with others on similar journeys
               </p>
             </div>
             
             <div>
-              <div style={{ 
-                width: '80px', 
-                height: '80px', 
-                backgroundColor: '#d1fae5',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 20px',
-                fontSize: '40px'
-              }}>
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
                 📚
               </div>
-              <h3 style={{ fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>
+              <h3 className="font-semibold text-gray-800 mb-3">
                 Resources
               </h3>
-              <p style={{ color: '#6b7280', fontSize: '14px' }}>
+              <p className="text-gray-600 text-sm">
                 Access guided materials and tools
               </p>
             </div>
             
             <div>
-              <div style={{ 
-                width: '80px', 
-                height: '80px', 
-                backgroundColor: '#ede9fe',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 20px',
-                fontSize: '40px'
-              }}>
+              <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-5 text-4xl">
                 🎯
               </div>
-              <h3 style={{ fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>
+              <h3 className="font-semibold text-gray-800 mb-3">
                 Mentorship
               </h3>
-              <p style={{ color: '#6b7280', fontSize: '14px' }}>
+              <p className="text-gray-600 text-sm">
                 Get guidance from experienced mentors
               </p>
             </div>
           </div>
         </div>
         
-        <div style={{ 
-          backgroundColor: '#eff6ff', 
-          padding: '40px', 
-          borderRadius: '12px'
-        }}>
-          <h2 style={{ 
-            fontSize: '32px', 
-            fontWeight: '600',
-            color: '#1f2937',
-            marginBottom: '20px'
-          }}>
+        <div className="bg-blue-50 p-10 rounded-xl">
+          <h2 className="text-3xl font-semibold text-gray-800 mb-5">
             🚀 Ready to Start Your Journey?
           </h2>
-          <p style={{ 
-            fontSize: '18px', 
-            color: '#6b7280',
-            marginBottom: '30px'
-          }}>
+          <p className="text-lg text-gray-600 mb-8">
             Join thousands who have found support and hope through our platform.
           </p>
-          <button style={{ 
-            backgroundColor: '#3b82f6', 
-            color: 'white', 
-            padding: '15px 30px', 
-            borderRadius: '8px',
-            fontSize: '18px',
-            fontWeight: '600',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s'
-          }}>
+          <button className="bg-blue-600 text-white px-8 py-4 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors">
             Get Started Today
           </button>
         </div>
