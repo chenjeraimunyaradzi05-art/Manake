@@ -1,0 +1,15 @@
+[build]
+  publish = "manake-web/dist"
+  command = "cd manake-web && npm run build"
+  base = "manake-web"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+
+[functions]
+  directory = "netlify/functions"
