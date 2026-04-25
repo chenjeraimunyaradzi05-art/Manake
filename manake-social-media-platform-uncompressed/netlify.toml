@@ -1,6 +1,6 @@
 [build]
-  publish = "manake-web/dist"
   command = "npm run build"
+  publish = ".next"
 
 [build.environment]
   NODE_VERSION = "18"
