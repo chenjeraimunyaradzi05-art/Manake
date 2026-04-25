@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "manake-web: dev (5173)",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"--prefix",
+				"manake-web",
+				"run",
+				"dev",
+				"--",
+				"--host",
+				"--port",
+				"5173"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "manake-mobile: web",
+			"type": "shell",
+			"command": "npx expo",
+			"args": [
+				"start",
+				"--web",
+				"-c"
+			],
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "test"
+		}
+	]
+}

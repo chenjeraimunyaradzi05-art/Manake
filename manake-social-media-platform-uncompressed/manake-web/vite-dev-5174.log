@@ -1,0 +1,18 @@
+
+> manake-web@1.0.0 dev
+> vite --host 127.0.0.1 --port 5174
+
+Re-optimizing dependencies because lockfile has changed
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m753[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5174[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m22:44:03[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m22:45:46[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx[22m
+[2m22:45:54[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m22:47:37[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m22:48:38[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m22:49:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/App.tsx, /src/index.css[22m
+[2m22:49:51[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m
+[2m22:51:31[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/index.css[22m

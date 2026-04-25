@@ -1,0 +1,44 @@
+# Netlify Deployment Guide
+
+Your project is configured for full-stack deployment on Netlify (React Frontend + Express Backend via Serverless Functions).
+
+## 1. Connect Repository
+1. Log in to [Netlify Dashboard](https://app.netlify.com).
+2. Click **"Add new site"** -> **"Import from Git"**.
+3. Choose **GitHub**.
+4. Select repository: `chenjeraimunyaradzi05-art/Manake`.
+
+## 2. Verify Build Settings
+Netlify will auto-read `netlify.toml`, so these should be pre-filled:
+- **Build Command:** `npm run build`
+- **Publish Directory:** `dist`
+
+## 3. Environment Variables
+You MUST set these in **Site Settings > Environment Variables** for the app to work.
+
+| Key | Value | Note |
+|-----|-------|------|
+| `NODE_ENV` | `production` | |
+| `VITE_API_URL` | `/api` | Relies on `netlify.toml` redirects |
+| `DATABASE_URL` | *(Your PostgreSQL connection string)* | Required by Prisma auth and API routes |
+| `JWT_SECRET` | *(Create a long random string)* | Secure logic |
+| `JWT_REFRESH_SECRET` | *(Create a second long random string)* | Used for refresh tokens |
+| `JWT_EXPIRES_IN`| `15m` | Optional override |
+| `JWT_REFRESH_EXPIRES_IN` | `7d` | Optional override |
+| `FRONTEND_URL` | *(Your Netlify Site URL)* | e.g. `https://manake.netlify.app` |
+
+### Social Authentication Variables (REQUIRED for "Continue with Facebook/Google")
+| Key | Value | Note |
+|-----|-------|------|
+| `FACEBOOK_APP_ID` | *(Your Facebook App ID)* | Required for Facebook Login |
+| `FACEBOOK_APP_SECRET` | *(Your Facebook App Secret)* | Required for Facebook Login |
+| `GOOGLE_CLIENT_ID` | *(Your Google Client ID)* | Required for Google Login |
+| `GOOGLE_CLIENT_SECRET` | *(Your Google Client Secret)* | Required for Google Login |
+| `SOCIAL_REDIRECT_URI` | *(Your Netlify URL)/auth/{provider}/callback* | e.g. `https://manake.netlify.app/auth/google/callback` (Optional if handled by frontend) |
+
+**Note on FRONTEND_URL:** Since you don't know your URL until you create the site, you can set it to `http://localhost:5173` temporarily, or just create the site, grab the URL, and then update this variable.
+
+## 4. Troubleshooting
+- **Build Fails?** Check the "Deploy Log".
+- **API Errors?** Check the "Functions" tab > "api" logs.
+- **Signup/Login return 5xx?** Verify `DATABASE_URL`, `JWT_SECRET`, and `JWT_REFRESH_SECRET` are set, then redeploy.
