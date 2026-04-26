@@ -1,121 +1,144 @@
-import express from "express";
-import serverless from "serverless-http";
-import cors from "cors";
-import helmet from "helmet";
-import dotenv from "dotenv";
-import { connectDB, isDatabaseReady } from "../../src/server/config/db";
-import {
-  csrfOriginCheck,
-  errorHandler,
-  notFoundHandler,
-  requestLogger,
-  sanitizeRequest,
-  securityHeaders,
-} from "../../src/server/middleware";
-import apiRoutes from "../../src/server/routes";
-import { logger } from "../../src/server/utils/logger";
-import { getAllowedOrigins, normalizeOrigin } from "../../src/server/config/origins";
-
-// Load env vars
-dotenv.config();
-
-const app = express();
-app.set("trust proxy", 1);
-let dbConnectInFlight = false;
-
-const allowedOrigins = getAllowedOrigins();
-
-const warmDatabaseConnection = (): void => {
-  if (dbConnectInFlight || isDatabaseReady()) {
-    return;
-  }
-
-  dbConnectInFlight = true;
-  void connectDB()
-    .catch((error: unknown) => {
-      logger.warn("Background database warmup failed in Netlify function", {
-        message: error instanceof Error ? error.message : String(error),
-      });
-    })
-    .finally(() => {
-      dbConnectInFlight = false;
-    });
+type NetlifyEvent = {
+  httpMethod?: string;
+  path?: string;
+  rawUrl?: string;
+  headers?: Record<string, string | undefined>;
 };
 
-// Security middleware
-app.use(helmet());
-app.use(securityHeaders());
+type NetlifyResponse = {
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+};
 
-// CORS configuration - restrict origins
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+const allowedMethods = "GET, OPTIONS";
 
-      if (process.env.NODE_ENV !== "production") {
-        return callback(null, true);
-      }
+const normalizeOrigin = (origin: string | undefined): string | null => {
+  if (!origin) {
+    return null;
+  }
 
-      const normalizedOrigin = normalizeOrigin(origin);
-      if (normalizedOrigin && allowedOrigins.includes(normalizedOrigin)) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-  }),
-);
+  try {
+    const parsed = new URL(origin);
+    return parsed.origin;
+  } catch {
+    return null;
+  }
+};
 
-app.use(csrfOriginCheck(allowedOrigins));
+const getAllowedOrigins = (): string[] => {
+  return [
+    process.env.URL,
+    process.env.DEPLOY_PRIME_URL,
+    process.env.CONTEXT === "production" ? process.env.DEPLOY_URL : undefined,
+    process.env.FRONTEND_URL,
+    "https://manake.netlify.app",
+  ]
+    .map(normalizeOrigin)
+    .filter((origin): origin is string => Boolean(origin));
+};
 
-// Body parsing with size limit
-app.use(
-  express.json({
-    limit: "10kb",
-    verify: (req, res, buf) => {
-      (req as unknown as { rawBody?: Buffer }).rawBody = buf;
-      void res;
-    },
-  }),
-);
+const getCorsOrigin = (requestOrigin: string | undefined): string => {
+  const normalizedRequestOrigin = normalizeOrigin(requestOrigin);
 
-app.use(sanitizeRequest);
-app.use(requestLogger);
+  if (!normalizedRequestOrigin) {
+    return "*";
+  }
 
-// Warm the Prisma connection opportunistically, but never block the request.
-// Route handlers already perform fail-fast readiness checks that return JSON
-// errors instead of letting the function time out and surface as a 502.
-app.use((_req, _res, next) => {
-  warmDatabaseConnection();
-  next();
+  if (process.env.NODE_ENV !== "production") {
+    return normalizedRequestOrigin;
+  }
+
+  return getAllowedOrigins().includes(normalizedRequestOrigin) ? normalizedRequestOrigin : "null";
+};
+
+const json = (
+  statusCode: number,
+  body: Record<string, unknown>,
+  requestOrigin: string | undefined,
+): NetlifyResponse => ({
+  statusCode,
+  headers: {
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": allowedMethods,
+    "Access-Control-Allow-Origin": getCorsOrigin(requestOrigin),
+    "Cache-Control": "no-store",
+    "Content-Type": "application/json; charset=utf-8",
+    Vary: "Origin",
+  },
+  body: JSON.stringify(body),
 });
 
-// Mount routes at root - Netlify redirects /api/* to /.netlify/functions/api/*
-// So a request to /api/stories becomes /.netlify/functions/api/stories
-// The :splat captures "stories" and passes it to our handler
-app.use("/", apiRoutes);
+const getRequestPath = (event: NetlifyEvent): string => {
+  if (event.rawUrl) {
+    try {
+      return new URL(event.rawUrl).pathname;
+    } catch {
+      return event.rawUrl;
+    }
+  }
 
-// Also mount at /api for direct function invocation
-app.use("/api", apiRoutes);
+  return event.path ?? "/";
+};
 
-// Health check
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    dbReady: isDatabaseReady(),
-    env: process.env.NODE_ENV,
-    apiBase: "/api",
-    frontendOriginConfigured: Boolean(process.env.FRONTEND_URL),
-    oauthConfigured: {
-      google: Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
-      facebook: Boolean(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
+const isHealthPath = (path: string): boolean => {
+  return ["/health", "/api/health", "/.netlify/functions/api/health"].includes(path);
+};
+
+const isDiagnosticsPath = (path: string): boolean => {
+  return [
+    "/api/diagnostics/public",
+    "/diagnostics/public",
+    "/.netlify/functions/api/diagnostics/public",
+  ].includes(path);
+};
+
+export const handler = async (event: NetlifyEvent): Promise<NetlifyResponse> => {
+  const method = event.httpMethod ?? "GET";
+  const requestOrigin = event.headers?.origin ?? event.headers?.Origin;
+
+  if (method === "OPTIONS") {
+    return json(204, {}, requestOrigin);
+  }
+
+  if (method !== "GET") {
+    return json(405, { error: "Method not allowed" }, requestOrigin);
+  }
+
+  const path = getRequestPath(event);
+
+  if (isHealthPath(path) || path === "/" || path === "/.netlify/functions/api") {
+    return json(
+      200,
+      {
+        status: "ok",
+        timestamp: new Date().toISOString(),
+        apiBase: "/api",
+        backend: "netlify-function",
+      },
+      requestOrigin,
+    );
+  }
+
+  if (isDiagnosticsPath(path)) {
+    return json(
+      200,
+      {
+        status: "ok",
+        netlifyFunctionReady: true,
+        configuredOrigins: getAllowedOrigins().length,
+      },
+      requestOrigin,
+    );
+  }
+
+  return json(
+    404,
+    {
+      error: "API route not found",
+      message:
+        "The Netlify function is available for health checks. Configure the external backend URL for application API routes.",
     },
-  });
-});
-
-app.use(notFoundHandler);
-app.use(errorHandler);
-
-// Export the handler for Netlify Functions
-export const handler = serverless(app);
+    requestOrigin,
+  );
+};
