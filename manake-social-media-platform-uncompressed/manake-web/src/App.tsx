@@ -1,3 +1,5 @@
+'use client'
+
 import { type CSSProperties, type FormEvent, useEffect, useMemo, useState } from 'react'
 
 type IconName =
@@ -363,14 +365,14 @@ const suggestions: Suggestion[] = [
   {
     title: "Maria's Recovery",
     label: 'Featured story',
-    image: '/images/manake/community-children.jpg',
-    imagePosition: '72% 38%',
+    image: '/images/products/shoesmanake.jpeg',
+    imagePosition: '58% 42%',
   },
   {
     title: 'Community Garden',
     label: 'New program',
-    image: '/images/manake/green-field-hand.jpg',
-    imagePosition: '84% 44%',
+    image: '/images/team/team.jpeg',
+    imagePosition: '50% 42%',
   },
   {
     title: 'Emergency Fund',
@@ -382,7 +384,31 @@ const suggestions: Suggestion[] = [
     title: 'Youth Support',
     label: 'Popular',
     image: '/images/team/manake.jpeg',
-    imagePosition: '50% 35%',
+    imagePosition: '50% 46%',
+  },
+]
+
+const socialChannels = [
+  {
+    label: 'WhatsApp',
+    detail: '24/7 support line',
+    href: `${whatsappBase}?text=Hello%20Manake%2C%20I%20need%20support`,
+    icon: 'chat' as const,
+    external: true,
+  },
+  {
+    label: 'Stories',
+    detail: 'Recovery journeys',
+    href: '#stories',
+    icon: 'heart' as const,
+    external: false,
+  },
+  {
+    label: 'Donate',
+    detail: 'Support care packs',
+    href: '#donate',
+    icon: 'gift' as const,
+    external: false,
   },
 ]
 
@@ -478,8 +504,8 @@ const initialPosts: SocialPost[] = [
     role: 'Graduate',
     label: 'Recovery win',
     text: 'One year sober this month. Still learning, still showing up, and grateful for the people who kept believing in me.',
-    image: '/images/manake/community-children.jpg',
-    imagePosition: '72% 38%',
+    image: '/images/products/shoesmanake.jpeg',
+    imagePosition: '56% 42%',
     reactions: '1.2k',
     comments: 48,
   },
@@ -498,8 +524,8 @@ const initialPosts: SocialPost[] = [
     role: 'Support group',
     label: 'Family support',
     text: 'Small steps matter. Honest conversations are starting again, and that changes everything for recovery at home.',
-    image: '/images/manake/recovery-circle.jpg',
-    imagePosition: '80% 42%',
+    image: '/images/team/manake.jpeg',
+    imagePosition: '50% 45%',
     reactions: '640',
     comments: 22,
   },
@@ -997,9 +1023,9 @@ function App() {
           </div>
 
           <figure className="founder-photo">
-            <img src="/images/team/manaketeam.jpeg" alt="Manake leadership and outreach team" />
+            <img src="/images/team/manake.jpeg" alt="Sibongile Maonde Sokhani and Manake leadership team" />
             <figcaption>
-              <strong>Sibongile Maonde Sokhani</strong>
+              <strong>Sibongile Maonde Sokhani and team</strong>
               <span>Founder and visionary leadership, supported by the wider Manake team.</span>
             </figcaption>
           </figure>
@@ -1166,6 +1192,24 @@ function App() {
                   <h3>Share story</h3>
                 </div>
                 <span className="panel-status">Moderated community space</span>
+              </div>
+
+              <div className="social-channel-row" aria-label="Manake social and support links">
+                {socialChannels.map((channel) => (
+                  <a
+                    className="social-channel"
+                    href={channel.href}
+                    key={channel.label}
+                    target={channel.external ? '_blank' : undefined}
+                    rel={channel.external ? 'noreferrer' : undefined}
+                  >
+                    <span>
+                      <Icon name={channel.icon} />
+                    </span>
+                    <strong>{channel.label}</strong>
+                    <small>{channel.detail}</small>
+                  </a>
+                ))}
               </div>
 
               <form className="composer" onSubmit={handlePostSubmit}>
