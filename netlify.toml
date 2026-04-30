@@ -4,12 +4,4 @@
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "22"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api"
-  status = 200
-
-[functions]
-  directory = "netlify/functions"
+  NODE_VERSION = "18"
