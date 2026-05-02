@@ -100,11 +100,57 @@ type PathwayTile = {
   accent: string
 }
 
+type SnippetFolder = {
+  id: string
+  name: string
+}
+
+type Snippet = {
+  id: string
+  title: string
+  folderId: string
+  code: string
+  updatedAt: string
+}
+
+type SnippetDraft = {
+  title: string
+  folderId: string
+  code: string
+}
+
 const phoneDisplay = '+263 77 577 2277'
 const phoneHref = '+263775772277'
 const email = 'info@manake.org.zw'
 const location = 'Norton, Mashonaland West, Zimbabwe'
 const whatsappBase = `https://wa.me/${phoneHref.replace('+', '')}`
+const snippetStorageKey = 'manake-snippet-library'
+
+const defaultSnippetFolders: SnippetFolder[] = [
+  { id: 'sql-starters', name: 'SQL starters' },
+]
+
+const defaultSnippets: Snippet[] = [
+  {
+    id: 'starter-select-limit',
+    title: 'Select table sample',
+    folderId: 'sql-starters',
+    code: `SELECT
+  *
+FROM
+  < TABLE >
+LIMIT
+  10;`,
+    updatedAt: 'Saved starter',
+  },
+]
+
+const emptySnippetTemplate = `SELECT
+  *
+FROM
+  < TABLE >
+LIMIT
+  10;`
 
 const navItems = [{ label: 'Home', href: '/' }, ...primarySectionNav]
 
@@ -639,6 +685,19 @@ function scrollToSection(id: string) {
   })
 }
 
+function makeSnippetId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
+
+function formatSnippetDate() {
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date())
+}
+
 function App() {
   const [helpForm, setHelpForm] = useState<HelpForm>(initialHelpForm)
   const [donation, setDonation] = useState('50')
@@ -672,9 +731,22 @@ function App() {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [assistantTopic, setAssistantTopic] = useState(assistantPrompts[0].label)
   const [assistantReply, setAssistantReply] = useState(assistantPrompts[0].reply)
+  const [snippetFolders, setSnippetFolders] = useState<SnippetFolder[]>(defaultSnippetFolders)
+  const [snippets, setSnippets] = useState<Snippet[]>(defaultSnippets)
+  const [activeSnippetFolderId, setActiveSnippetFolderId] = useState(defaultSnippetFolders[0].id)
+  const [selectedSnippetId, setSelectedSnippetId] = useState(defaultSnippets[0].id)
+  const [snippetDraft, setSnippetDraft] = useState<SnippetDraft>({
+    title: defaultSnippets[0].title,
+    folderId: defaultSnippets[0].folderId,
+    code: defaultSnippets[0].code,
+  })
+  const [snippetNotice, setSnippetNotice] = useState('')
+  const [snippetsLoaded, setSnippetsLoaded] = useState(false)
 
   const whatsappUrl = useMemo(() => buildWhatsAppUrl(helpForm), [helpForm])
   const donationValue = customDonation || donation
+  const activeFolderSnippets = snippets.filter((snippet) => snippet.folderId === activeSnippetFolderId)
+  const selectedSnippet = snippets.find((snippet) => snippet.id === selectedSnippetId)
 
   useEffect(() => {
     if (!shareStatus) return undefined
@@ -683,6 +755,72 @@ function App() {
 
     return () => window.clearTimeout(timeout)
   }, [shareStatus])
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(snippetStorageKey)
+      if (!saved) {
+        setSnippetsLoaded(true)
+        return
+      }
+
+      const parsed = JSON.parse(saved) as {
+        folders?: SnippetFolder[]
+        snippets?: Snippet[]
+      }
+
+      if (!Array.isArray(parsed.folders) || !Array.isArray(parsed.snippets) || parsed.snippets.length === 0) {
+        setSnippetsLoaded(true)
+        return
+      }
+
+      const firstSnippet = parsed.snippets[0]
+      setSnippetFolders(parsed.folders.length ? parsed.folders : defaultSnippetFolders)
+      setSnippets(parsed.snippets)
+      setActiveSnippetFolderId(firstSnippet.folderId)
+      setSelectedSnippetId(firstSnippet.id)
+      setSnippetDraft({
+        title: firstSnippet.title,
+        folderId: firstSnippet.folderId,
+        code: firstSnippet.code,
+      })
+    } catch {
+      setSnippetNotice('Saved snippets could not be read, so the starter snippet was loaded.')
+    } finally {
+      setSnippetsLoaded(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!snippetsLoaded) return
+
+    window.localStorage.setItem(
+      snippetStorageKey,
+      JSON.stringify({
+        folders: snippetFolders,
+        snippets,
+      }),
+    )
+  }, [snippetFolders, snippets, snippetsLoaded])
+
+  useEffect(() => {
+    const nextSelectedSnippet = snippets.find((snippet) => snippet.id === selectedSnippetId)
+    if (!nextSelectedSnippet) return
+
+    setSnippetDraft({
+      title: nextSelectedSnippet.title,
+      folderId: nextSelectedSnippet.folderId,
+      code: nextSelectedSnippet.code,
+    })
+  }, [selectedSnippetId, snippets])
+
+  useEffect(() => {
+    if (!snippetNotice) return undefined
+
+    const timeout = window.setTimeout(() => setSnippetNotice(''), 2600)
+
+    return () => window.clearTimeout(timeout)
+  }, [snippetNotice])
 
   function updateHelpForm(field: keyof HelpForm, value: string) {
     setHelpForm((current) => ({ ...current, [field]: value }))
@@ -760,6 +898,82 @@ function App() {
     setAuthNotice(
       `${authMode === 'login' ? 'Login' : 'Sign up'} demo submitted. Connect this form to the backend when credentials are ready.`,
     )
+  }
+
+  function handleSnippetFolderCreate() {
+    const folder: SnippetFolder = {
+      id: makeSnippetId('folder'),
+      name: `Folder ${snippetFolders.length + 1}`,
+    }
+
+    setSnippetFolders((current) => [...current, folder])
+    setActiveSnippetFolderId(folder.id)
+    setSnippetNotice('Folder created in browser storage.')
+  }
+
+  function handleSnippetCreate() {
+    const snippet: Snippet = {
+      id: makeSnippetId('snippet'),
+      title: 'Untitled snippet',
+      folderId: activeSnippetFolderId,
+      code: emptySnippetTemplate,
+      updatedAt: formatSnippetDate(),
+    }
+
+    setSnippets((current) => [snippet, ...current])
+    setSelectedSnippetId(snippet.id)
+    setSnippetDraft({
+      title: snippet.title,
+      folderId: snippet.folderId,
+      code: snippet.code,
+    })
+    setSnippetNotice('Snippet created. Edit and save when ready.')
+  }
+
+  function handleSnippetSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const title = snippetDraft.title.trim() || 'Untitled snippet'
+    const code = snippetDraft.code.trim() || emptySnippetTemplate
+
+    setSnippets((current) =>
+      current.map((snippet) =>
+        snippet.id === selectedSnippetId
+          ? {
+              ...snippet,
+              title,
+              folderId: snippetDraft.folderId,
+              code,
+              updatedAt: formatSnippetDate(),
+            }
+          : snippet,
+      ),
+    )
+    setActiveSnippetFolderId(snippetDraft.folderId)
+    setSnippetNotice('Snippet saved to browser storage.')
+  }
+
+  function handleSnippetDelete() {
+    const remainingSnippets = snippets.filter((snippet) => snippet.id !== selectedSnippetId)
+    const nextSnippet = remainingSnippets[0]
+
+    if (!nextSnippet) {
+      const replacement = {
+        ...defaultSnippets[0],
+        id: makeSnippetId('snippet'),
+        updatedAt: formatSnippetDate(),
+      }
+
+      setSnippets([replacement])
+      setActiveSnippetFolderId(replacement.folderId)
+      setSelectedSnippetId(replacement.id)
+      setSnippetNotice('Last snippet was replaced with the starter snippet.')
+      return
+    }
+
+    setSnippets(remainingSnippets)
+    setActiveSnippetFolderId(nextSnippet.folderId)
+    setSelectedSnippetId(nextSnippet.id)
+    setSnippetNotice('Snippet removed from browser storage.')
   }
 
   function handleAssistantPrompt(prompt: AssistantPrompt) {
@@ -1298,6 +1512,135 @@ function App() {
                 </button>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className="section snippet-section" id="snippets">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Snippets</p>
+              <h2>Save reusable SQL notes in browser storage.</h2>
+            </div>
+            <p>
+              Create new snippets with the + button, group them in folders, and keep the starter
+              query close for quick edits.
+            </p>
+          </div>
+
+          <div className="snippet-workspace">
+            <aside className="snippet-sidebar" aria-label="Snippet folders">
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Folders</p>
+                  <h3>Library</h3>
+                </div>
+                <button className="snippet-icon-button" type="button" onClick={handleSnippetFolderCreate} aria-label="Create folder">
+                  +
+                </button>
+              </div>
+
+              <div className="folder-list">
+                {snippetFolders.map((folder) => (
+                  <button
+                    className={folder.id === activeSnippetFolderId ? 'active' : ''}
+                    key={folder.id}
+                    type="button"
+                    onClick={() => setActiveSnippetFolderId(folder.id)}
+                  >
+                    <span>{folder.name}</span>
+                    <small>{snippets.filter((snippet) => snippet.folderId === folder.id).length}</small>
+                  </button>
+                ))}
+              </div>
+            </aside>
+
+            <div className="snippet-list-panel">
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Saved snippets</p>
+                  <h3>{snippetFolders.find((folder) => folder.id === activeSnippetFolderId)?.name || 'Folder'}</h3>
+                </div>
+                <button className="snippet-add-button" type="button" onClick={handleSnippetCreate} aria-label="Create snippet">
+                  <span>+</span>
+                  New snippet
+                </button>
+              </div>
+
+              <div className="snippet-list">
+                {activeFolderSnippets.length ? (
+                  activeFolderSnippets.map((snippet) => (
+                    <button
+                      className={snippet.id === selectedSnippetId ? 'active' : ''}
+                      key={snippet.id}
+                      type="button"
+                      onClick={() => setSelectedSnippetId(snippet.id)}
+                    >
+                      <strong>{snippet.title}</strong>
+                      <small>{snippet.updatedAt}</small>
+                      <code>{snippet.code.split('\n')[0]}</code>
+                    </button>
+                  ))
+                ) : (
+                  <div className="snippet-empty">
+                    <strong>No snippets in this folder yet.</strong>
+                    <button className="button button-primary" type="button" onClick={handleSnippetCreate}>
+                      Create snippet
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <form className="snippet-editor" onSubmit={handleSnippetSave}>
+              <div className="panel-heading">
+                <div>
+                  <p className="eyebrow">Editor</p>
+                  <h3>{selectedSnippet?.title || 'Snippet'}</h3>
+                </div>
+                <button className="button button-secondary" type="button" onClick={handleSnippetDelete}>
+                  Delete
+                </button>
+              </div>
+
+              <label>
+                <span>Snippet name</span>
+                <input
+                  value={snippetDraft.title}
+                  onChange={(event) => setSnippetDraft((current) => ({ ...current, title: event.target.value }))}
+                  placeholder="Snippet name"
+                />
+              </label>
+
+              <label>
+                <span>Folder</span>
+                <select
+                  value={snippetDraft.folderId}
+                  onChange={(event) => setSnippetDraft((current) => ({ ...current, folderId: event.target.value }))}
+                >
+                  {snippetFolders.map((folder) => (
+                    <option key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>SQL</span>
+                <textarea
+                  className="snippet-code"
+                  value={snippetDraft.code}
+                  onChange={(event) => setSnippetDraft((current) => ({ ...current, code: event.target.value }))}
+                  rows={8}
+                  spellCheck="false"
+                />
+              </label>
+
+              <button className="button button-primary" type="submit">
+                Save snippet
+              </button>
+              {snippetNotice ? <p className="notice">{snippetNotice}</p> : null}
+            </form>
           </div>
         </section>
 

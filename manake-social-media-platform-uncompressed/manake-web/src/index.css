@@ -474,6 +474,9 @@ svg {
 .message-panel,
 .assistant-preview-card,
 .product-card,
+.snippet-sidebar,
+.snippet-list-panel,
+.snippet-editor,
 .team-card,
 .trust-grid article,
 .faq-grid details,
@@ -497,6 +500,9 @@ svg {
 .message-panel,
 .assistant-preview-card,
 .product-card,
+.snippet-sidebar,
+.snippet-list-panel,
+.snippet-editor,
 .team-card,
 .feed-card,
 .discover-card,
@@ -1376,6 +1382,144 @@ svg {
   margin-top: 16px;
 }
 
+.snippet-workspace {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.55fr) minmax(240px, 0.8fr) minmax(360px, 1.25fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.snippet-sidebar,
+.snippet-list-panel,
+.snippet-editor {
+  padding: 20px;
+}
+
+.snippet-icon-button {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--gradient-main);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.folder-list,
+.snippet-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.folder-list button,
+.snippet-list button {
+  display: grid;
+  width: 100%;
+  gap: 6px;
+  padding: 13px 14px;
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  background: var(--slate-50);
+  color: var(--slate-700);
+  text-align: left;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    transform 160ms ease;
+}
+
+.folder-list button {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.folder-list button:hover,
+.snippet-list button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(168, 85, 247, 0.34);
+}
+
+.folder-list button.active,
+.snippet-list button.active {
+  border-color: rgba(168, 85, 247, 0.42);
+  background: rgba(168, 85, 247, 0.09);
+}
+
+.folder-list span,
+.snippet-list strong,
+.snippet-list code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-list small,
+.snippet-list small {
+  color: var(--slate-500);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.snippet-list code,
+.snippet-code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+
+.snippet-add-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--slate-900);
+  color: var(--white);
+  font-weight: 800;
+}
+
+.snippet-add-button span {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  line-height: 1;
+}
+
+.snippet-empty {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px dashed var(--slate-300);
+  border-radius: 16px;
+  background: var(--slate-50);
+}
+
+.snippet-editor label {
+  display: grid;
+  gap: 8px;
+}
+
+.snippet-editor label span {
+  color: var(--slate-600);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.snippet-code {
+  min-height: 260px;
+  background: #111827;
+  color: #f8fafc;
+  line-height: 1.6;
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2088,6 +2232,7 @@ address a {
   .founder-section,
   .story-feature,
   .community-shell,
+  .snippet-workspace,
   .action-grid,
   .contact-section,
   .section-page-hero {
