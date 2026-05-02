@@ -1,6 +1,7 @@
 'use client'
 
 import { type CSSProperties, type FormEvent, useEffect, useMemo, useState } from 'react'
+import { mediaGallery, mediaVideos, primarySectionNav } from './sectionPages'
 
 type IconName =
   | 'leaf'
@@ -105,18 +106,7 @@ const email = 'info@manake.org.zw'
 const location = 'Norton, Mashonaland West, Zimbabwe'
 const whatsappBase = `https://wa.me/${phoneHref.replace('+', '')}`
 
-const navItems = [
-  { label: 'Home', href: '#home' },
-  { label: 'Stories', href: '#stories' },
-  { label: 'Programs', href: '#programs' },
-  { label: 'Products', href: '#products' },
-  { label: 'Team', href: '#team' },
-  { label: 'Social', href: '#social' },
-  { label: 'Messaging', href: '#messaging' },
-  { label: 'Get Help', href: '#get-help' },
-  { label: 'About', href: '#about' },
-  { label: 'Contact', href: '#contact' },
-]
+const navItems = [{ label: 'Home', href: '/' }, ...primarySectionNav]
 
 const impactStats = [
   { value: '500+', label: 'Youth helped', note: 'Lives transformed' },
@@ -399,14 +389,14 @@ const socialChannels = [
   {
     label: 'Stories',
     detail: 'Recovery journeys',
-    href: '#stories',
+    href: '/stories',
     icon: 'heart' as const,
     external: false,
   },
   {
     label: 'Donate',
     detail: 'Support care packs',
-    href: '#donate',
+    href: '/donate',
     icon: 'gift' as const,
     external: false,
   },
@@ -416,42 +406,42 @@ const pathwayTiles: PathwayTile[] = [
   {
     title: 'Get Help',
     copy: 'Immediate support and admissions',
-    href: '#get-help',
+    href: '/get-help',
     icon: 'shield',
     accent: 'from-pink-to-purple',
   },
   {
     title: 'Stories',
     copy: 'Recovery journeys and hope',
-    href: '#stories',
+    href: '/stories',
     icon: 'heart',
     accent: 'from-purple-to-indigo',
   },
   {
     title: 'Programs',
     copy: 'Counselling and residential care',
-    href: '#programs',
+    href: '/programs',
     icon: 'leaf',
     accent: 'from-indigo-to-blue',
   },
   {
     title: 'Community',
     copy: 'Family, mentors, and outreach',
-    href: '#social',
+    href: '/community',
     icon: 'users',
     accent: 'from-blue-to-cyan',
   },
   {
     title: 'Products',
     copy: 'Practical sponsorship pathways',
-    href: '#products',
+    href: '/products',
     icon: 'gift',
     accent: 'from-cyan-to-emerald',
   },
   {
     title: 'Manake AI',
     copy: 'Guided support for first steps',
-    href: '#contact',
+    href: '/contact',
     icon: 'sparkle',
     accent: 'from-emerald-to-purple',
   },
@@ -704,7 +694,7 @@ function App() {
   }
 
   async function shareStory(story: Story) {
-    const url = `${window.location.origin}${window.location.pathname}#stories`
+    const url = `${window.location.origin}/stories`
     const text = `${story.title} - ${story.copy}`
 
     try {
@@ -796,7 +786,7 @@ function App() {
       </a>
 
       <header className="site-header">
-        <a className="brand" href="#home" aria-label="Manake home">
+        <a className="brand" href="/" aria-label="Manake home">
           <span className="brand-mark">
             <Icon name="leaf" />
           </span>
@@ -815,13 +805,13 @@ function App() {
         </nav>
 
         <div className="header-actions">
-          <a className="quiet-link" href="#auth" onClick={() => setAuthMode('login')}>
+          <a className="quiet-link" href="/auth/login" onClick={() => setAuthMode('login')}>
             Login
           </a>
-          <a className="quiet-link" href="#auth" onClick={() => setAuthMode('signup')}>
+          <a className="quiet-link" href="/auth/signup" onClick={() => setAuthMode('signup')}>
             Sign Up
           </a>
-          <a className="button button-primary button-small donate-cta" href="#donate">
+          <a className="button button-primary button-small donate-cta" href="/donate">
             <span className="donate-label-full">Donate Now</span>
             <span className="donate-label-short">Donate</span>
           </a>
@@ -833,10 +823,10 @@ function App() {
                   {item.label}
                 </a>
               ))}
-              <a href="#auth" onClick={() => setAuthMode('login')}>
+              <a href="/auth/login" onClick={() => setAuthMode('login')}>
                 Login
               </a>
-              <a href="#auth" onClick={() => setAuthMode('signup')}>
+              <a href="/auth/signup" onClick={() => setAuthMode('signup')}>
                 Sign Up
               </a>
             </div>
@@ -854,10 +844,10 @@ function App() {
               to help young people rebuild their lives with dignity and purpose.
             </p>
             <div className="hero-actions">
-              <a className="button button-primary" href="#get-help">
+              <a className="button button-primary" href="/get-help">
                 Get Help Today
               </a>
-              <a className="button button-secondary" href="#get-help">
+              <a className="button button-secondary" href="/get-help">
                 Refer Someone
               </a>
             </div>
@@ -940,7 +930,7 @@ function App() {
               <div className="overview-card compact-card">
                 <h3>Get Started</h3>
                 <p>Complete the first referral steps and we&apos;ll guide the next move privately.</p>
-                <a className="button button-primary" href="#get-help">
+                <a className="button button-primary" href="/get-help">
                   Start Referral
                 </a>
               </div>
@@ -978,7 +968,7 @@ function App() {
                   </article>
                 ))}
               </div>
-              <a className="button button-secondary-dark" href="#social">
+              <a className="button button-secondary-dark" href="/social">
                 Create Post
               </a>
             </div>
@@ -1013,10 +1003,10 @@ function App() {
               </span>
             </div>
             <div className="founder-actions">
-              <a className="button button-ghost" href="#team">
+              <a className="button button-ghost" href="/team">
                 Meet Our Team
               </a>
-              <a className="button button-ghost" href="#stories">
+              <a className="button button-ghost" href="/about">
                 Our Story
               </a>
             </div>
@@ -1086,7 +1076,7 @@ function App() {
               <span>Tendai M., 24</span>
               <span>Now a certified electrician and business owner</span>
             </div>
-            <a className="text-link" href="#story-grid">
+            <a className="text-link" href="/stories">
               Read more success stories
             </a>
           </div>
@@ -1333,7 +1323,7 @@ function App() {
                 <h3>{product.title}</h3>
                 <p>{product.copy}</p>
                 <small>{product.detail}</small>
-                <a href="#contact">Learn more</a>
+                <a href="/contact">Learn more</a>
               </article>
             ))}
           </div>
@@ -1355,6 +1345,46 @@ function App() {
                   <h3>{person.name}</h3>
                   <strong>{person.role}</strong>
                   <p>{person.copy}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="section media-section" id="media">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Photos and videos</p>
+              <h2>Manake moments from the local media folder.</h2>
+            </div>
+            <a className="text-link align-end" href="/media">
+              Open media page
+            </a>
+          </div>
+
+          <div className="video-showcase-grid">
+            {mediaVideos.map((video) => (
+              <article className="video-card" key={video.title}>
+                <video controls preload="metadata" poster="/images/manake/center-exterior.jpg">
+                  <source src={video.image} type="video/mp4" />
+                </video>
+                <div>
+                  <strong>{video.title}</strong>
+                  <p>{video.copy}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="media-showcase-grid">
+            {mediaGallery.slice(0, 12).map((item) => (
+              <article className="gallery-card" key={item.image}>
+                <div className="media-frame">
+                  <img src={item.image} alt={item.title} />
+                </div>
+                <div>
+                  <strong>{item.title}</strong>
+                  <small>{item.meta}</small>
                 </div>
               </article>
             ))}
@@ -1567,7 +1597,7 @@ function App() {
               <p className="eyebrow">Suggested for you</p>
               <h2>Keep exploring the Manake community.</h2>
             </div>
-            <a className="text-link align-end" href="#stories">
+            <a className="text-link align-end" href="/stories">
               See all
             </a>
           </div>
@@ -1595,11 +1625,11 @@ function App() {
           <small>Developed by Munyaradzi Chenjerai</small>
         </div>
         <nav aria-label="Footer navigation">
-          <a href="#about">About</a>
-          <a href="#get-help">Help</a>
-          <a href="#contact">Contact</a>
-          <a href="#auth">Privacy</a>
-          <a href="#auth">Terms</a>
+          <a href="/about">About</a>
+          <a href="/get-help">Help</a>
+          <a href="/contact">Contact</a>
+          <a href="/account">Privacy</a>
+          <a href="/account">Terms</a>
         </nav>
         <small>© 2026 Manake Rehabilitation Center</small>
       </footer>
