@@ -649,11 +649,41 @@ function scrollToSection(id: string) {
   })
 }
 
+async function apiRequest<T>(path: string, options: { method?: string; body?: unknown } = {}) {
+  const response = await fetch(path, {
+    method: options.method || 'GET',
+    headers: options.body ? { 'content-type': 'application/json' } : undefined,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  })
+
+  const data = (await response.json().catch(() => ({}))) as T & { error?: string }
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Request failed')
+  }
+
+  return data
+}
+
+type AuthResponse = {
+  user: {
+    id: string
+    email: string
+    name: string
+    role: string
+  }
+  session: {
+    token: string
+    expiresAt: string
+  }
+}
+
 function App() {
   const [helpForm, setHelpForm] = useState<HelpForm>(initialHelpForm)
   const [donation, setDonation] = useState('50')
   const [customDonation, setCustomDonation] = useState('')
   const [shareStatus, setShareStatus] = useState('')
+  const [actionNotice, setActionNotice] = useState('')
   const [postText, setPostText] = useState('')
   const [posts, setPosts] = useState(initialPosts)
   const [messages, setMessages] = useState<Message[]>([
@@ -679,6 +709,11 @@ function App() {
   const [messageDraft, setMessageDraft] = useState('')
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [authNotice, setAuthNotice] = useState('')
+  const [isSubmittingHelp, setIsSubmittingHelp] = useState(false)
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false)
+  const [isSendingMessage, setIsSendingMessage] = useState(false)
+  const [isPledging, setIsPledging] = useState(false)
+  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [assistantTopic, setAssistantTopic] = useState(assistantPrompts[0].label)
   const [assistantReply, setAssistantReply] = useState(assistantPrompts[0].reply)
@@ -694,13 +729,61 @@ function App() {
     return () => window.clearTimeout(timeout)
   }, [shareStatus])
 
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadCommunityData() {
+      try {
+        const [postData, messageData] = await Promise.all([
+          apiRequest<{ posts: SocialPost[] }>('/api/posts'),
+          apiRequest<{ messages: Message[] }>('/api/messages'),
+        ])
+
+        if (!isMounted) return
+
+        if (postData.posts.length > 0) {
+          setPosts(postData.posts)
+        }
+
+        if (messageData.messages.length > 0) {
+          setMessages(messageData.messages)
+        }
+      } catch {
+        if (isMounted) {
+          setActionNotice('Live community data is temporarily unavailable.')
+        }
+      }
+    }
+
+    loadCommunityData()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   function updateHelpForm(field: keyof HelpForm, value: string) {
     setHelpForm((current) => ({ ...current, [field]: value }))
   }
 
-  function handleHelpSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleHelpSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+    setIsSubmittingHelp(true)
+
+    try {
+      await apiRequest('/api/help-requests', {
+        method: 'POST',
+        body: helpForm,
+      })
+      setActionNotice('Referral details were saved for follow-up.')
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+      setHelpForm(initialHelpForm)
+    } catch {
+      setActionNotice('Referral details could not be saved. WhatsApp is still available.')
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer')
+    } finally {
+      setIsSubmittingHelp(false)
+    }
   }
 
   async function shareStory(story: Story) {
@@ -720,56 +803,101 @@ function App() {
     }
   }
 
-  function handlePostSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handlePostSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const text = postText.trim()
 
     if (!text) return
 
-    setPosts((current) => [
-      {
-        id: Date.now(),
-        author: 'You',
-        role: 'Community supporter',
-        label: 'New update',
-        text,
-        reactions: '0',
-        comments: 0,
-      },
-      ...current,
-    ])
-    setPostText('')
+    setIsSubmittingPost(true)
+
+    try {
+      const data = await apiRequest<{ post: SocialPost }>('/api/posts', {
+        method: 'POST',
+        body: { text },
+      })
+      setPosts((current) => [data.post, ...current])
+      setPostText('')
+      setActionNotice('Community update was saved.')
+    } catch {
+      setActionNotice('Community update could not be saved right now.')
+    } finally {
+      setIsSubmittingPost(false)
+    }
   }
 
-  function handleMessageSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleMessageSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const text = messageDraft.trim()
 
     if (!text) return
 
-    setMessages((current) => [
-      ...current,
-      {
-        id: Date.now(),
-        from: 'visitor',
-        text,
-        time: 'Now',
-      },
-      {
-        id: Date.now() + 1,
-        from: 'team',
-        text: 'Thanks. A support worker would continue this conversation privately.',
-        time: 'Now',
-      },
-    ])
-    setMessageDraft('')
+    setIsSendingMessage(true)
+
+    try {
+      const data = await apiRequest<{ messages: Message[] }>('/api/messages', {
+        method: 'POST',
+        body: { text },
+      })
+      setMessages((current) => [...current, ...data.messages])
+      setMessageDraft('')
+    } catch {
+      setActionNotice('Message could not be saved right now.')
+    } finally {
+      setIsSendingMessage(false)
+    }
   }
 
-  function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleDonationPledge() {
+    const amount = Number(donationValue)
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setActionNotice('Enter a valid pledge amount.')
+      return
+    }
+
+    setIsPledging(true)
+
+    try {
+      await apiRequest('/api/donation-pledges', {
+        method: 'POST',
+        body: { amount },
+      })
+      setActionNotice(`Donation pledge for $${donationValue} was saved.`)
+    } catch {
+      setActionNotice('Donation pledge could not be saved right now.')
+    } finally {
+      setIsPledging(false)
+    }
+  }
+
+  async function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setAuthNotice(
-      `${authMode === 'login' ? 'Login' : 'Sign up'} demo submitted. Connect this form to the backend when credentials are ready.`,
-    )
+    const form = event.currentTarget
+    const formData = new FormData(event.currentTarget)
+    const emailValue = String(formData.get('email') || '')
+    const nameValue = String(formData.get('name') || '')
+    const passwordValue = String(formData.get('password') || '')
+
+    setIsAuthSubmitting(true)
+
+    try {
+      const data = await apiRequest<AuthResponse>(`/api/auth/${authMode}`, {
+        method: 'POST',
+        body: {
+          name: nameValue,
+          email: emailValue,
+          password: passwordValue,
+        },
+      })
+      window.localStorage.setItem('manakeSession', JSON.stringify(data))
+      setAuthNotice(`${authMode === 'login' ? 'Welcome back' : 'Account created'}, ${data.user.name}.`)
+      form.reset()
+    } catch (error) {
+      setAuthNotice(error instanceof Error ? error.message : 'Account request could not be completed right now.')
+    } finally {
+      setIsAuthSubmitting(false)
+    }
   }
 
   function handleAssistantPrompt(prompt: AssistantPrompt) {
@@ -815,10 +943,10 @@ function App() {
         </nav>
 
         <div className="header-actions">
-          <a className="quiet-link" href="#auth" onClick={() => setAuthMode('login')}>
+          <a className="quiet-link" href="/auth/login">
             Login
           </a>
-          <a className="quiet-link" href="#auth" onClick={() => setAuthMode('signup')}>
+          <a className="quiet-link" href="/auth/signup">
             Sign Up
           </a>
           <a className="button button-primary button-small donate-cta" href="#donate">
@@ -833,10 +961,10 @@ function App() {
                   {item.label}
                 </a>
               ))}
-              <a href="#auth" onClick={() => setAuthMode('login')}>
+              <a href="/auth/login">
                 Login
               </a>
-              <a href="#auth" onClick={() => setAuthMode('signup')}>
+              <a href="/auth/signup">
                 Sign Up
               </a>
             </div>
@@ -1220,7 +1348,7 @@ function App() {
                   rows={4}
                 />
                 <button className="button button-primary" type="submit">
-                  Post update
+                  {isSubmittingPost ? 'Saving...' : 'Post update'}
                 </button>
               </form>
 
@@ -1284,7 +1412,7 @@ function App() {
                     placeholder="Type a private message..."
                   />
                   <button className="button button-primary" type="submit">
-                    Send
+                    {isSendingMessage ? 'Sending...' : 'Send'}
                   </button>
                 </form>
               </div>
@@ -1452,9 +1580,10 @@ function App() {
                 rows={4}
               />
               <button className="button button-primary" type="submit">
-                Open WhatsApp referral
+                {isSubmittingHelp ? 'Saving...' : 'Open WhatsApp referral'}
               </button>
             </form>
+            {actionNotice ? <p className="notice">{actionNotice}</p> : null}
           </div>
 
           <div className="donate-card" id="donate">
@@ -1481,12 +1610,14 @@ function App() {
               placeholder="Custom amount"
               inputMode="decimal"
             />
-            <a
+            <button
               className="button button-primary"
-              href={`mailto:${email}?subject=Donation%20pledge%20for%20Manake&body=Hello%20Manake%2C%20I%20would%20like%20to%20pledge%20${encodeURIComponent(donationValue)}.`}
+              type="button"
+              onClick={handleDonationPledge}
+              disabled={isPledging}
             >
-              Pledge {donationValue ? `$${donationValue}` : 'support'}
-            </a>
+              {isPledging ? 'Saving...' : `Pledge ${donationValue ? `$${donationValue}` : 'support'}`}
+            </button>
           </div>
 
           <div className="auth-card" id="auth">
@@ -1508,15 +1639,18 @@ function App() {
             </div>
             <h2>{authMode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
             <form onSubmit={handleAuthSubmit}>
-              {authMode === 'signup' ? <input placeholder="Full name" autoComplete="name" /> : null}
-              <input placeholder="Email address" autoComplete="email" />
+              {authMode === 'signup' ? <input name="name" placeholder="Full name" autoComplete="name" required /> : null}
+              <input name="email" placeholder="Email address" type="email" autoComplete="email" required />
               <input
+                name="password"
                 placeholder="Password"
                 type="password"
                 autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                minLength={8}
+                required
               />
               <button className="button button-primary" type="submit">
-                {authMode === 'login' ? 'Log in' : 'Sign up'}
+                {isAuthSubmitting ? 'Saving...' : authMode === 'login' ? 'Log in' : 'Sign up'}
               </button>
             </form>
             {authNotice ? <p className="notice">{authNotice}</p> : null}
