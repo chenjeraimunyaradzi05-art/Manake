@@ -1544,7 +1544,8 @@ summary:focus-visible {
 }
 
 .amount-grid button,
-.auth-tabs button {
+.auth-tabs button,
+.auth-tabs a {
   min-height: 44px;
   border-radius: 14px;
   background: var(--slate-100);
@@ -1553,9 +1554,45 @@ summary:focus-visible {
 }
 
 .amount-grid button.selected,
-.auth-tabs button.active {
+.auth-tabs button.active,
+.auth-tabs a.active {
   background: var(--gradient-main);
   color: var(--white);
+}
+
+.auth-tabs a {
+  display: inline-grid;
+  place-items: center;
+  text-align: center;
+}
+
+.auth-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background:
+    linear-gradient(135deg, rgba(8, 120, 95, 0.12), rgba(217, 164, 65, 0.1)),
+    url('/images/manake/center-exterior.jpg') center / cover;
+}
+
+.auth-panel {
+  width: min(100%, 460px);
+  padding: 28px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-panel-heading {
+  margin: 24px 0;
+}
+
+.auth-panel h1 {
+  margin: 4px 0 10px;
+  font-size: clamp(2rem, 6vw, 3rem);
+  line-height: 1;
 }
 
 .auth-tabs {
