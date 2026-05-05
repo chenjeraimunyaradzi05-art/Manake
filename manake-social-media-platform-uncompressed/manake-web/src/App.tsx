@@ -109,32 +109,75 @@ const whatsappBase = `https://wa.me/${phoneHref.replace('+', '')}`
 const navItems = [{ label: 'Home', href: '/' }, ...primarySectionNav]
 
 const impactStats = [
-  { value: '500+', label: 'Youth helped', note: 'Lives transformed' },
-  { value: '85%', label: 'Recovery continuity', note: 'Structured aftercare' },
-  { value: '1,000+', label: 'Supporters', note: 'Donors and partners' },
-  { value: '5', label: 'Years', note: 'Serving Zimbabwe' },
+  { value: '24/7', label: 'First-step support', note: 'Phone and WhatsApp pathways' },
+  { value: '3', label: 'Support pillars', note: 'Community, resources, mentorship' },
+  { value: 'Private', label: 'First contact', note: 'Sensitive details handled with care' },
+  { value: 'Local', label: 'Zimbabwe roots', note: 'Community-led recovery support' },
+]
+
+const sanctuaryTrust = [
+  {
+    title: 'Community-led',
+    copy: 'People who understand the path you are walking, without judgment.',
+    icon: 'users' as const,
+  },
+  {
+    title: 'Mentor-supported',
+    copy: 'Steady encouragement from people prepared to walk beside recovery.',
+    icon: 'heart' as const,
+  },
+  {
+    title: 'Resource-based',
+    copy: 'Practical guides, reflection tools, and aftercare prompts for hard moments.',
+    icon: 'leaf' as const,
+  },
+  {
+    title: 'Privacy-conscious',
+    copy: 'Clear first steps that keep sensitive details private until support responds.',
+    icon: 'shield' as const,
+  },
+]
+
+const supportAreas = [
+  {
+    title: 'Community',
+    copy: 'Find people who understand recovery as a daily path, not a label.',
+    icon: 'users' as const,
+  },
+  {
+    title: 'Resources',
+    copy: 'Use practical guides, reflection tools, and recovery resources when you need them most.',
+    icon: 'leaf' as const,
+  },
+  {
+    title: 'Mentorship',
+    copy: 'Connect with mentors who can offer encouragement, lived experience, and steady support.',
+    icon: 'heart' as const,
+  },
+]
+
+const safetyPromises = [
+  'No public sharing of sensitive first-contact details.',
+  'Plain-language support paths for families, youth, mentors, and partners.',
+  'Visible crisis contact options before any account is required.',
+  'Gentle motion with reduced-motion support for visitors who prefer stillness.',
 ]
 
 const admissionSteps = [
   {
     step: '01',
-    title: 'Contact us',
-    copy: 'Call or WhatsApp the helpline. We listen first, respond quickly, and keep the first conversation private.',
+    title: 'Join',
+    copy: 'Start with a private call, WhatsApp message, or account. You can share only what feels safe at first.',
   },
   {
     step: '02',
-    title: 'Assessment',
-    copy: 'The team considers safety, substance use, mental health, family context, and practical needs.',
+    title: 'Connect',
+    copy: 'Meet community support, resources, and mentor pathways matched to the person and their situation.',
   },
   {
     step: '03',
-    title: 'Personalised plan',
-    copy: 'Counselling, family support, life skills, routine, and aftercare are matched to the young person.',
-  },
-  {
-    step: '04',
-    title: 'Begin recovery',
-    copy: 'The person enters a rhythm of care, accountability, belonging, and longer-term follow-up.',
+    title: 'Grow',
+    copy: 'Build routine, family connection, aftercare habits, and practical confidence one steady step at a time.',
   },
 ]
 
@@ -299,11 +342,11 @@ const team: Person[] = [
 
 const trustItems = [
   { title: 'Qualified staff', copy: 'Support combines therapeutic care, practical guidance, and structured referral pathways.', icon: 'shield' as const },
-  { title: 'Registered facility', copy: 'Families need a centre that feels accountable, grounded, and professionally run.', icon: 'leaf' as const },
-  { title: 'Complete confidentiality', copy: 'Every first step is handled with care and private information is treated respectfully.', icon: 'chat' as const },
-  { title: 'Community partners', copy: 'Recovery is strengthened by churches, schools, families, and local organisations.', icon: 'users' as const },
-  { title: 'Proven support', copy: 'Aftercare, routine, and community connection help young people sustain momentum.', icon: 'sparkle' as const },
+  { title: 'Privacy-minded care', copy: 'Every first step is handled with care and private information is treated respectfully.', icon: 'chat' as const },
+  { title: 'Community partners', copy: 'Recovery is strengthened by schools, churches, families, mentors, and local organisations.', icon: 'users' as const },
+  { title: 'Aftercare focus', copy: 'Routine, relapse-prevention tools, and community connection help people sustain momentum.', icon: 'sparkle' as const },
   { title: 'Family-centered', copy: 'Healing is strongest when the wider family is guided alongside the young person.', icon: 'heart' as const },
+  { title: 'Nonprofit transparency', copy: 'Supporters should be able to see where help is needed and how practical support reaches people.', icon: 'gift' as const },
 ]
 
 const testimonials = [
@@ -669,6 +712,7 @@ function App() {
   const [messageDraft, setMessageDraft] = useState('')
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
   const [authNotice, setAuthNotice] = useState('')
+  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [assistantTopic, setAssistantTopic] = useState(assistantPrompts[0].label)
   const [assistantReply, setAssistantReply] = useState(assistantPrompts[0].reply)
@@ -755,11 +799,51 @@ function App() {
     setMessageDraft('')
   }
 
-  function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setAuthNotice(
-      `${authMode === 'login' ? 'Login' : 'Sign up'} demo submitted. Connect this form to the backend when credentials are ready.`,
-    )
+    setAuthNotice('')
+    setIsAuthSubmitting(true)
+
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    const name = String(formData.get('name') ?? '').trim()
+    const emailValue = String(formData.get('email') ?? '').trim().toLowerCase()
+    const password = String(formData.get('password') ?? '')
+
+    if (!emailValue || !password || (authMode === 'signup' && !name)) {
+      setAuthNotice(authMode === 'signup' ? 'Please enter your name, email, and password.' : 'Please enter your email and password.')
+      setIsAuthSubmitting(false)
+      return
+    }
+
+    const response = await fetch(`/api/auth/${authMode === 'login' ? 'login' : 'signup'}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(authMode === 'signup' ? { name, email: emailValue, password } : { email: emailValue, password }),
+    })
+
+    const result = await response.json().catch(() => ({
+      success: false,
+      error: 'Unable to read the server response.',
+    }))
+
+    setIsAuthSubmitting(false)
+
+    if (!response.ok || !result.success) {
+      setAuthNotice(result.error ?? 'The account request could not be completed.')
+      return
+    }
+
+    if (authMode === 'signup') {
+      setAuthMode('login')
+      form.reset()
+      setAuthNotice('Account created. You can log in with those details now.')
+      return
+    }
+
+    setAuthNotice(`Welcome back${result.user?.name ? `, ${result.user.name}` : ''}. Your account is connected.`)
   }
 
   function handleAssistantPrompt(prompt: AssistantPrompt) {
@@ -837,18 +921,22 @@ function App() {
       <main id="main-content">
         <section className="hero section" id="home">
           <div className="hero-copy">
-            <p className="eyebrow">Zimbabwe&apos;s premier youth rehabilitation center</p>
-            <h1>Manake helps young people and families see the next safe step.</h1>
+            <p className="eyebrow">Digital recovery companion</p>
+            <h1>Manake</h1>
+            <p className="hero-kicker">Recovery is easier when you are not alone.</p>
             <p className="hero-lead">
-              Professional rehabilitation programs, life skills training, and ongoing support
-              to help young people rebuild their lives with dignity and purpose.
+              Connect with mentors, community support, and practical recovery resources in one
+              safe, hopeful place.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href="/get-help">
-                Get Help Today
+                Start Your Journey
               </a>
-              <a className="button button-secondary" href="/get-help">
-                Refer Someone
+              <a className="button button-secondary" href="/programs">
+                Explore Resources
+              </a>
+              <a className="button button-secondary" href="/community">
+                Become a Mentor
               </a>
             </div>
             <div className="contact-row">
@@ -880,24 +968,39 @@ function App() {
               </div>
             </article>
 
-            <div className="hero-panel" aria-label="Impact highlights">
-              {impactStats.map((stat) => (
-                <article key={stat.label}>
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
-                  <small>{stat.note}</small>
-                </article>
-              ))}
-            </div>
           </div>
+        </section>
+
+        <section className="sanctuary-strip section" aria-label="Manake trust signals">
+          {sanctuaryTrust.map((item) => (
+            <article key={item.title}>
+              <span>
+                <Icon name={item.icon} />
+              </span>
+              <strong>{item.title}</strong>
+              <p>{item.copy}</p>
+            </article>
+          ))}
+        </section>
+
+        <section className="support-area-strip section" aria-label="Core Manake support areas">
+          {supportAreas.map((area) => (
+            <article key={area.title}>
+              <span>
+                <Icon name={area.icon} />
+              </span>
+              <strong>{area.title}</strong>
+              <p>{area.copy}</p>
+            </article>
+          ))}
         </section>
 
         <section className="section overview-section">
           <div className="overview-grid">
             <div className="overview-card">
               <div className="overview-heading">
-                <p className="eyebrow">Explore</p>
-                <h2>Clear pathways for help, recovery, and reintegration.</h2>
+                <p className="eyebrow">Safe pathways</p>
+                <h2>Find support. Build strength. Walk forward together.</h2>
               </div>
               <nav className="pathway-list" aria-label="Manake pathways">
                 {pathwayTiles.map((tile) => (
@@ -916,7 +1019,7 @@ function App() {
 
             <div className="overview-stack">
               <div className="overview-card compact-card">
-                <h3>Platform Stats</h3>
+                <h3>Trust Signals</h3>
                 <div className="compact-stat-list">
                   {impactStats.slice(0, 3).map((stat) => (
                     <div key={stat.label}>
@@ -929,9 +1032,9 @@ function App() {
 
               <div className="overview-card compact-card">
                 <h3>Get Started</h3>
-                <p>Complete the first referral steps and we&apos;ll guide the next move privately.</p>
+                <p>Choose the first step that feels right. The next move can stay private and practical.</p>
                 <a className="button button-primary" href="/get-help">
-                  Start Referral
+                  Start Your Journey
                 </a>
               </div>
 
@@ -947,13 +1050,13 @@ function App() {
 
             <div className="overview-card">
               <div className="overview-heading">
-                <p className="eyebrow">Social</p>
-                <h2>Community updates</h2>
+                <p className="eyebrow">Community care</p>
+                <h2>A growing circle built around support, dignity, and hope.</h2>
               </div>
               <div className="social-mini-stats">
-                <span>My Network 0</span>
-                <span>Saved Posts 0</span>
-                <span>Following 0</span>
+                <span>Community-led</span>
+                <span>Mentor-supported</span>
+                <span>Resource-based</span>
               </div>
               <div className="mini-feed">
                 {initialPosts.map((post) => (
@@ -969,7 +1072,7 @@ function App() {
                 ))}
               </div>
               <a className="button button-secondary-dark" href="/social">
-                Create Post
+                Visit Community
               </a>
             </div>
           </div>
@@ -994,12 +1097,12 @@ function App() {
                 Established
               </span>
               <span>
-                <strong>500+</strong>
-                Lives touched
+                <strong>24/7</strong>
+                First-step contact
               </span>
               <span>
-                <strong>100%</strong>
-                Commitment
+                <strong>Hope</strong>
+                Built into every pathway
               </span>
             </div>
             <div className="founder-actions">
@@ -1046,11 +1149,11 @@ function App() {
 
         <section className="section" id="admission">
           <div className="section-heading center">
-            <p className="eyebrow">How admission works</p>
-            <h2>Getting help is simple.</h2>
+            <p className="eyebrow">How Manake works</p>
+            <h2>Join, connect, grow.</h2>
             <p>
-              We guide families and young people through each step with compassion, confidentiality,
-              and a clear sense of what happens next.
+              Clear steps help families, young people, mentors, and supporters understand what
+              happens next without pressure or confusion.
             </p>
           </div>
           <div className="step-grid">
@@ -1169,8 +1272,8 @@ function App() {
               <h2>Community updates and private guidance in one place.</h2>
             </div>
             <p>
-              The social feed, support chat, and AI guide are presented as part of the same help
-              journey, not as separate demos floating off to the side.
+              Share encouragement, prepare a first message, and find the right support pathway
+              without losing the calm of the moment.
             </p>
           </div>
 
@@ -1308,8 +1411,8 @@ function App() {
               <h2>Practical support that connects recovery to real life.</h2>
             </div>
             <p>
-              This keeps the products area useful and credible: practical sponsorship routes instead
-              of mismatched images.
+              Support can become transport help, family care packs, work-readiness tools, and the
+              essentials that make recovery easier to sustain.
             </p>
           </div>
 
@@ -1333,7 +1436,7 @@ function App() {
           <div className="section-heading center">
             <p className="eyebrow">Team</p>
             <h2>Professional care with a real human face.</h2>
-            <p>These photos now lean on the stronger local assets instead of the weaker composites.</p>
+            <p>Care feels safer when visitors can see the people and community behind the work.</p>
           </div>
           <div className="team-grid">
             {team.map((person) => (
@@ -1355,7 +1458,7 @@ function App() {
           <div className="section-heading">
             <div>
               <p className="eyebrow">Photos and videos</p>
-              <h2>Manake moments from the local media folder.</h2>
+              <h2>Human moments from Manake&apos;s recovery community.</h2>
             </div>
             <a className="text-link align-end" href="/media">
               Open media page
@@ -1406,6 +1509,39 @@ function App() {
                 <p>{item.copy}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section className="section safety-section" id="safety">
+          <div className="safety-panel">
+            <p className="eyebrow">Safety and privacy</p>
+            <h2>A calmer first step for sensitive recovery conversations.</h2>
+            <p>
+              Manake should feel like a protected threshold: clear choices, plain language, and
+              no pressure to share more than is needed before a private response.
+            </p>
+            <div className="safety-list">
+              {safetyPromises.map((promise) => (
+                <span key={promise}>{promise}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mentor-panel">
+            <p className="eyebrow">For mentors and volunteers</p>
+            <h2>Help build a recovery community where no one has to walk alone.</h2>
+            <p>
+              Mentors, partners, and volunteers can support practical aftercare, family guidance,
+              community outreach, and steady encouragement for young people rebuilding their lives.
+            </p>
+            <div className="mentor-actions">
+              <a className="button button-primary" href="/community">
+                Become a Mentor
+              </a>
+              <a className="button button-secondary-dark" href="/donate">
+                Support the Mission
+              </a>
+            </div>
           </div>
         </section>
 
@@ -1538,18 +1674,20 @@ function App() {
             </div>
             <h2>{authMode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
             <form onSubmit={handleAuthSubmit}>
-              {authMode === 'signup' ? <input placeholder="Full name" autoComplete="name" /> : null}
-              <input placeholder="Email address" autoComplete="email" />
+              {authMode === 'signup' ? <input name="name" placeholder="Full name" autoComplete="name" required /> : null}
+              <input name="email" placeholder="Email address" type="email" autoComplete="email" required />
               <input
+                name="password"
                 placeholder="Password"
                 type="password"
                 autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
+                required
               />
-              <button className="button button-primary" type="submit">
-                {authMode === 'login' ? 'Log in' : 'Sign up'}
+              <button className="button button-primary" type="submit" disabled={isAuthSubmitting}>
+                {isAuthSubmitting ? 'Connecting...' : authMode === 'login' ? 'Log in' : 'Sign up'}
               </button>
             </form>
-            {authNotice ? <p className="notice">{authNotice}</p> : null}
+            {authNotice ? <p className="notice" role="status">{authNotice}</p> : null}
           </div>
         </section>
 
@@ -1558,8 +1696,8 @@ function App() {
             <p className="eyebrow">Contact</p>
             <h2>Need immediate help?</h2>
             <p>
-              Our helpline is available 24/7 for emergencies. The contact area now looks more like
-              the live Manake experience: direct, calm, and action-oriented.
+              Our helpline is available 24/7 for urgent situations. Start with a call or WhatsApp,
+              and keep sensitive details brief until the team responds privately.
             </p>
             <div className="contact-actions">
               <a className="button button-primary" href={`tel:${phoneHref}`}>

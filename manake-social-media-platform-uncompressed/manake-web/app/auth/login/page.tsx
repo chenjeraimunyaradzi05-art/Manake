@@ -15,7 +15,7 @@ export default function LoginPage() {
         </a>
         <p className="eyebrow">Member access</p>
         <h1>Login</h1>
-        <p>Access is ready for Neon-backed accounts once credentials are configured.</p>
+        <p>Access your Manake account with a Neon-backed profile.</p>
         <LoginClientForm />
         <div className="auth-page-links">
           <a href="/auth/signup">Create account</a>

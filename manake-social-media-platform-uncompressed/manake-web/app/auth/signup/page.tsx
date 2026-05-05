@@ -15,7 +15,7 @@ export default function SignUpPage() {
         </a>
         <p className="eyebrow">Create account</p>
         <h1>Sign Up</h1>
-        <p>Account creation is ready to connect to Neon through the Prisma user model.</p>
+        <p>Create a private account for recovery support, mentorship, and community connection.</p>
         <SignUpClientForm />
         <div className="auth-page-links">
           <a href="/auth/login">Login</a>

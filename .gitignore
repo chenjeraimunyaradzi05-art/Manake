@@ -6,3 +6,6 @@ coverage/
 playwright-report/
 *.log
 *.tsbuildinfo
+.env
+.env.*
+!.env.example
