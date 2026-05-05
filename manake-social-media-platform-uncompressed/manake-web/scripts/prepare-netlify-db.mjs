@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { join } from 'node:path'
 
 const databaseEnvKeys = [
   'DATABASE_URL',
@@ -11,11 +12,11 @@ const databaseEnvKeys = [
 
 const databaseUrlKey = databaseEnvKeys.find((key) => Boolean(process.env[key]))
 const databaseUrl = databaseUrlKey ? process.env[databaseUrlKey] : undefined
+const prismaCliPath = join(process.cwd(), 'node_modules', 'prisma', 'build', 'index.js')
 
-function run(command, args, options = {}) {
-  execFileSync(command, args, {
+function runPrisma(args, options = {}) {
+  execFileSync(process.execPath, [prismaCliPath, ...args], {
     stdio: 'inherit',
-    shell: process.platform === 'win32',
     ...options,
   })
 }
@@ -28,7 +29,7 @@ const prismaEnv = databaseUrl
   : process.env
 
 console.log('Preparing Prisma client for Manake.')
-run('npx', ['prisma', 'generate'], { env: prismaEnv })
+runPrisma(['generate'], { env: prismaEnv })
 
 if (!databaseUrl) {
   console.log('No Netlify/Neon database URL is available. Skipping Prisma schema push.')
@@ -36,4 +37,4 @@ if (!databaseUrl) {
 }
 
 console.log(`Pushing Prisma schema using ${databaseUrlKey}.`)
-run('npx', ['prisma', 'db', 'push', '--skip-generate'], { env: prismaEnv })
+runPrisma(['db', 'push', '--skip-generate'], { env: prismaEnv })
