@@ -516,70 +516,93 @@ CREATE UNIQUE INDEX IF NOT EXISTS "SocialAccount_userId_platform_platformUserId_
 CREATE UNIQUE INDEX IF NOT EXISTS "SocialPostMetric_platform_postId_key" ON "SocialPostMetric"("platform", "postId");
 
 -- AddForeignKey - RefreshToken_userId_fkey
+ALTER TABLE "RefreshToken" DROP CONSTRAINT IF EXISTS "RefreshToken_userId_fkey";
 ALTER TABLE "RefreshToken" ADD CONSTRAINT "RefreshToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - Story_submittedById_fkey
+ALTER TABLE "Story" DROP CONSTRAINT IF EXISTS "Story_submittedById_fkey";
 ALTER TABLE "Story" ADD CONSTRAINT "Story_submittedById_fkey" FOREIGN KEY ("submittedById") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey - StoryComment_storyId_fkey
+ALTER TABLE "StoryComment" DROP CONSTRAINT IF EXISTS "StoryComment_storyId_fkey";
 ALTER TABLE "StoryComment" ADD CONSTRAINT "StoryComment_storyId_fkey" FOREIGN KEY ("storyId") REFERENCES "Story"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - StoryLike_userId_fkey
+ALTER TABLE "StoryLike" DROP CONSTRAINT IF EXISTS "StoryLike_userId_fkey";
 ALTER TABLE "StoryLike" ADD CONSTRAINT "StoryLike_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - StoryLike_storyId_fkey
+ALTER TABLE "StoryLike" DROP CONSTRAINT IF EXISTS "StoryLike_storyId_fkey";
 ALTER TABLE "StoryLike" ADD CONSTRAINT "StoryLike_storyId_fkey" FOREIGN KEY ("storyId") REFERENCES "Story"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - Post_authorId_fkey
+ALTER TABLE "Post" DROP CONSTRAINT IF EXISTS "Post_authorId_fkey";
 ALTER TABLE "Post" ADD CONSTRAINT "Post_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - PostLike_userId_fkey
+ALTER TABLE "PostLike" DROP CONSTRAINT IF EXISTS "PostLike_userId_fkey";
 ALTER TABLE "PostLike" ADD CONSTRAINT "PostLike_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - PostLike_postId_fkey
+ALTER TABLE "PostLike" DROP CONSTRAINT IF EXISTS "PostLike_postId_fkey";
 ALTER TABLE "PostLike" ADD CONSTRAINT "PostLike_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - PostComment_postId_fkey
+ALTER TABLE "PostComment" DROP CONSTRAINT IF EXISTS "PostComment_postId_fkey";
 ALTER TABLE "PostComment" ADD CONSTRAINT "PostComment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - PostComment_authorId_fkey
+ALTER TABLE "PostComment" DROP CONSTRAINT IF EXISTS "PostComment_authorId_fkey";
 ALTER TABLE "PostComment" ADD CONSTRAINT "PostComment_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - InternalPost_authorId_fkey
+ALTER TABLE "InternalPost" DROP CONSTRAINT IF EXISTS "InternalPost_authorId_fkey";
 ALTER TABLE "InternalPost" ADD CONSTRAINT "InternalPost_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - InternalPostLike_userId_fkey
+ALTER TABLE "InternalPostLike" DROP CONSTRAINT IF EXISTS "InternalPostLike_userId_fkey";
 ALTER TABLE "InternalPostLike" ADD CONSTRAINT "InternalPostLike_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - InternalPostLike_internalPostId_fkey
+ALTER TABLE "InternalPostLike" DROP CONSTRAINT IF EXISTS "InternalPostLike_internalPostId_fkey";
 ALTER TABLE "InternalPostLike" ADD CONSTRAINT "InternalPostLike_internalPostId_fkey" FOREIGN KEY ("internalPostId") REFERENCES "InternalPost"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - Connection_userId_fkey
+ALTER TABLE "Connection" DROP CONSTRAINT IF EXISTS "Connection_userId_fkey";
 ALTER TABLE "Connection" ADD CONSTRAINT "Connection_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - Connection_connectedUserId_fkey
+ALTER TABLE "Connection" DROP CONSTRAINT IF EXISTS "Connection_connectedUserId_fkey";
 ALTER TABLE "Connection" ADD CONSTRAINT "Connection_connectedUserId_fkey" FOREIGN KEY ("connectedUserId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - Mentorship_mentorId_fkey
+ALTER TABLE "Mentorship" DROP CONSTRAINT IF EXISTS "Mentorship_mentorId_fkey";
 ALTER TABLE "Mentorship" ADD CONSTRAINT "Mentorship_mentorId_fkey" FOREIGN KEY ("mentorId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey - Mentorship_menteeId_fkey
+ALTER TABLE "Mentorship" DROP CONSTRAINT IF EXISTS "Mentorship_menteeId_fkey";
 ALTER TABLE "Mentorship" ADD CONSTRAINT "Mentorship_menteeId_fkey" FOREIGN KEY ("menteeId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey - Notification_userId_fkey
+ALTER TABLE "Notification" DROP CONSTRAINT IF EXISTS "Notification_userId_fkey";
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - Message_userId_fkey
+ALTER TABLE "Message" DROP CONSTRAINT IF EXISTS "Message_userId_fkey";
 ALTER TABLE "Message" ADD CONSTRAINT "Message_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey - GroupMember_userId_fkey
+ALTER TABLE "GroupMember" DROP CONSTRAINT IF EXISTS "GroupMember_userId_fkey";
 ALTER TABLE "GroupMember" ADD CONSTRAINT "GroupMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - GroupMember_groupId_fkey
+ALTER TABLE "GroupMember" DROP CONSTRAINT IF EXISTS "GroupMember_groupId_fkey";
 ALTER TABLE "GroupMember" ADD CONSTRAINT "GroupMember_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey - PushToken_userId_fkey
+ALTER TABLE "PushToken" DROP CONSTRAINT IF EXISTS "PushToken_userId_fkey";
 ALTER TABLE "PushToken" ADD CONSTRAINT "PushToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey - SocialAccount_userId_fkey
+ALTER TABLE "SocialAccount" DROP CONSTRAINT IF EXISTS "SocialAccount_userId_fkey";
 ALTER TABLE "SocialAccount" ADD CONSTRAINT "SocialAccount_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
