@@ -31,10 +31,8 @@ const prismaEnv = databaseUrl
 console.log('Preparing Prisma client for Manake.')
 runPrisma(['generate'], { env: prismaEnv })
 
-if (!databaseUrl) {
-  console.log('No Netlify/Neon database URL is available. Skipping Prisma schema push.')
-  process.exit(0)
+if (databaseUrl) {
+  console.log(`Prisma client generated with ${databaseUrlKey}. Netlify will apply SQL migrations automatically.`)
+} else {
+  console.log('No Netlify/Neon database URL is available locally. Prisma client generation completed.')
 }
-
-console.log(`Pushing Prisma schema using ${databaseUrlKey}.`)
-runPrisma(['db', 'push', '--skip-generate'], { env: prismaEnv })
