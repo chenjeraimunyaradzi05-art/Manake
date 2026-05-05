@@ -1,7 +1,7 @@
 'use client'
 
 import { type CSSProperties, type FormEvent, useEffect, useMemo, useState } from 'react'
-import { mediaGallery, mediaVideos, primarySectionNav } from './sectionPages'
+import { mediaGallery, mediaVideos } from './sectionPages'
 
 type IconName =
   | 'leaf'
@@ -105,8 +105,6 @@ const phoneHref = '+263775772277'
 const email = 'info@manake.org.zw'
 const location = 'Norton, Mashonaland West, Zimbabwe'
 const whatsappBase = `https://wa.me/${phoneHref.replace('+', '')}`
-
-const navItems = [{ label: 'Home', href: '/' }, ...primarySectionNav]
 
 const impactStats = [
   { value: '24/7', label: 'First-step support', note: 'Phone and WhatsApp pathways' },
