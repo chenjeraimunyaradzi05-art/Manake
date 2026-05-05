@@ -591,13 +591,14 @@ function Icon({ name }: { name: IconName }) {
     stroke: 'currentColor',
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
-    strokeWidth: 1.85,
+    strokeWidth: 2.05,
   }
 
   switch (name) {
     case 'leaf':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M19 4c-7 0-12 4.5-12 11 0 3.2 1.8 5 4.5 5C17 20 20 15.7 20 10c0-2.2-.3-4-.8-6Z" />
           <path {...commonProps} d="M8 20c1.2-4.6 4.3-8.2 9.5-11.5" />
         </svg>
@@ -605,6 +606,7 @@ function Icon({ name }: { name: IconName }) {
     case 'sparkle':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="m12 3 1.8 4.7L18.5 9l-4.7 1.3L12 15l-1.8-4.7L5.5 9l4.7-1.3L12 3Z" />
           <path {...commonProps} d="m18.5 15 1 2.6 2.5.7-2.5.7-1 2.5-.9-2.5-2.6-.7 2.6-.7.9-2.6Z" />
           <path {...commonProps} d="m5 15 .8 2 2 .6-2 .5-.8 2-.8-2-2-.5 2-.6.8-2Z" />
@@ -613,6 +615,7 @@ function Icon({ name }: { name: IconName }) {
     case 'shield':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M12 3 5.5 5.5V11c0 4.3 2.5 7.7 6.5 10 4-2.3 6.5-5.7 6.5-10V5.5L12 3Z" />
           <path {...commonProps} d="m9.5 12 1.7 1.7 3.5-3.7" />
         </svg>
@@ -620,6 +623,7 @@ function Icon({ name }: { name: IconName }) {
     case 'chat':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M5 18.5V6.8A2.8 2.8 0 0 1 7.8 4h8.4A2.8 2.8 0 0 1 19 6.8v6.4A2.8 2.8 0 0 1 16.2 16H9l-4 2.5Z" />
           <path {...commonProps} d="M8.5 9.5h7M8.5 12.5h5.5" />
         </svg>
@@ -627,12 +631,14 @@ function Icon({ name }: { name: IconName }) {
     case 'phone':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M6.8 4.8 9.5 7a1.8 1.8 0 0 1 .4 2.3l-1.2 2a13.8 13.8 0 0 0 4 4l2-1.2a1.8 1.8 0 0 1 2.3.4l2.2 2.7a1.8 1.8 0 0 1-.1 2.5l-1 1A3 3 0 0 1 15.5 21C9.7 20.4 3.6 14.3 3 8.5A3 3 0 0 1 4 5.9l1-1a1.8 1.8 0 0 1 1.8-.1Z" />
         </svg>
       )
     case 'users':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M8.5 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM15.8 11a2.8 2.8 0 1 0 0-5.6" />
           <path {...commonProps} d="M3.5 20a5 5 0 0 1 10 0M14 20a4 4 0 0 1 6.5-3.1" />
         </svg>
@@ -640,6 +646,7 @@ function Icon({ name }: { name: IconName }) {
     case 'briefcase':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M8 6V4.8A1.8 1.8 0 0 1 9.8 3h4.4A1.8 1.8 0 0 1 16 4.8V6" />
           <path {...commonProps} d="M4.8 6h14.4A1.8 1.8 0 0 1 21 7.8v9.4A1.8 1.8 0 0 1 19.2 19H4.8A1.8 1.8 0 0 1 3 17.2V7.8A1.8 1.8 0 0 1 4.8 6Z" />
           <path {...commonProps} d="M3 11.5h18M10 6h4" />
@@ -648,12 +655,14 @@ function Icon({ name }: { name: IconName }) {
     case 'heart':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M12 20.5C5 16 3.5 11.3 3.5 8.3A4.3 4.3 0 0 1 7.8 4a4.8 4.8 0 0 1 4.2 2.3A4.8 4.8 0 0 1 16.2 4a4.3 4.3 0 0 1 4.3 4.3c0 3-1.5 7.7-8.5 12.2Z" />
         </svg>
       )
     case 'gift':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M4 9h16v11H4zM12 9v11M4 13.5h16" />
           <path {...commonProps} d="M8.7 9H7.5A2.5 2.5 0 1 1 10 6.5V9M15.3 9h1.2A2.5 2.5 0 1 0 14 6.5V9" />
         </svg>
@@ -661,6 +670,7 @@ function Icon({ name }: { name: IconName }) {
     case 'close':
       return (
         <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="m6 6 12 12M18 6 6 18" />
         </svg>
       )
@@ -792,52 +802,6 @@ function App() {
       },
     ])
     setMessageDraft('')
-  }
-
-    event.preventDefault()
-    setAuthNotice('')
-    setIsAuthSubmitting(true)
-
-    const form = event.currentTarget
-    const formData = new FormData(form)
-    const name = String(formData.get('name') ?? '').trim()
-    const emailValue = String(formData.get('email') ?? '').trim().toLowerCase()
-    const password = String(formData.get('password') ?? '')
-
-    if (!emailValue || !password || (authMode === 'signup' && !name)) {
-      setAuthNotice(authMode === 'signup' ? 'Please enter your name, email, and password.' : 'Please enter your email and password.')
-      setIsAuthSubmitting(false)
-      return
-    }
-
-    const response = await fetch(`/api/auth/${authMode === 'login' ? 'login' : 'signup'}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(authMode === 'signup' ? { name, email: emailValue, password } : { email: emailValue, password }),
-    })
-
-    const result = await response.json().catch(() => ({
-      success: false,
-      error: 'Unable to read the server response.',
-    }))
-
-    setIsAuthSubmitting(false)
-
-    if (!response.ok || !result.success) {
-      setAuthNotice(result.error ?? 'The account request could not be completed.')
-      return
-    }
-
-    if (authMode === 'signup') {
-      setAuthMode('login')
-      form.reset()
-      setAuthNotice('Account created. You can log in with those details now.')
-      return
-    }
-
-    setAuthNotice(`Welcome back${result.user?.name ? `, ${result.user.name}` : ''}. Your account is connected.`)
   }
 
   function handleAssistantPrompt(prompt: AssistantPrompt) {
