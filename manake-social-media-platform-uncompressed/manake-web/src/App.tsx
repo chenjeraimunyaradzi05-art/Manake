@@ -881,41 +881,21 @@ function App() {
         </a>
 
         <nav className="nav-links" aria-label="Primary navigation">
-          {navItems.map((item) => (
-            <a key={item.href} href={item.href}>
-              {item.label}
-            </a>
-          ))}
+          <a href="/">Home</a>
+          <a href="/stories">Stories</a>
+          <a href="/programs">Programs</a>
+          <a href="/media">Media</a>
+          <a href="/products">Products</a>
+          <a href="/community">Team</a>
+          <a href="/social">Social</a>
+          <a href="/contact">Messaging</a>
+          <a href="/get-help">Get Help</a>
+          <a href="/about">About</a>
+          <a href="/contact">Contact</a>
+          <a href="/auth/login">Login</a>
+          <a href="/auth/signup">Sign Up</a>
+          <a href="/donate" className="donate-cta">Donate Now</a>
         </nav>
-
-        <div className="header-actions">
-          <a className="quiet-link" href="/auth/login" onClick={() => setAuthMode('login')}>
-            Login
-          </a>
-          <a className="quiet-link" href="/auth/signup" onClick={() => setAuthMode('signup')}>
-            Sign Up
-          </a>
-          <a className="button button-primary button-small donate-cta" href="/donate">
-            <span className="donate-label-full">Donate Now</span>
-            <span className="donate-label-short">Donate</span>
-          </a>
-          <details className="more-menu">
-            <summary>More</summary>
-            <div>
-              {navItems.map((item) => (
-                <a key={item.href} href={item.href}>
-                  {item.label}
-                </a>
-              ))}
-              <a href="/auth/login" onClick={() => setAuthMode('login')}>
-                Login
-              </a>
-              <a href="/auth/signup" onClick={() => setAuthMode('signup')}>
-                Sign Up
-              </a>
-            </div>
-          </details>
-        </div>
       </header>
 
       <main id="main-content">
