@@ -1633,41 +1633,7 @@ function App() {
             </a>
           </div>
 
-          <div className="auth-card" id="auth">
-            <div className="auth-tabs">
-              <button
-                className={authMode === 'login' ? 'active' : ''}
-                type="button"
-                onClick={() => setAuthMode('login')}
-              >
-                Login
-              </button>
-              <button
-                className={authMode === 'signup' ? 'active' : ''}
-                type="button"
-                onClick={() => setAuthMode('signup')}
-              >
-                Sign Up
-              </button>
-            </div>
-            <h2>{authMode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
-            <form onSubmit={handleAuthSubmit}>
-              {authMode === 'signup' ? <input name="name" placeholder="Full name" autoComplete="name" required /> : null}
-              <input name="email" placeholder="Email address" type="email" autoComplete="email" required />
-              <input
-                name="password"
-                placeholder="Password"
-                type="password"
-                autoComplete={authMode === 'login' ? 'current-password' : 'new-password'}
-                required
-              />
-              <button className="button button-primary" type="submit" disabled={isAuthSubmitting}>
-                {isAuthSubmitting ? 'Connecting...' : authMode === 'login' ? 'Log in' : 'Sign up'}
-              </button>
-            </form>
-            {authNotice ? <p className="notice" role="status">{authNotice}</p> : null}
-          </div>
-        </section>
+                  </section>
 
         <section className="section contact-section" id="contact">
           <div className="contact-copy">
