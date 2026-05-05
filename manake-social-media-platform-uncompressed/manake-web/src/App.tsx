@@ -708,9 +708,6 @@ function App() {
     },
   ])
   const [messageDraft, setMessageDraft] = useState('')
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
-  const [authNotice, setAuthNotice] = useState('')
-  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false)
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [assistantTopic, setAssistantTopic] = useState(assistantPrompts[0].label)
   const [assistantReply, setAssistantReply] = useState(assistantPrompts[0].reply)
@@ -797,7 +794,6 @@ function App() {
     setMessageDraft('')
   }
 
-  async function handleAuthSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setAuthNotice('')
     setIsAuthSubmitting(true)
