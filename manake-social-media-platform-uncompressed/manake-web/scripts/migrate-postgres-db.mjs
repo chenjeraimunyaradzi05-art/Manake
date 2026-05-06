@@ -33,6 +33,11 @@ function findDatabaseUrl() {
 const databaseUrl = findDatabaseUrl()
 const prismaCliPath = join(process.cwd(), 'node_modules', 'prisma', 'build', 'index.js')
 const optional = process.argv.includes('--optional')
+const netlifyManagedDatabaseKeys = new Set([
+  'NETLIFY_DB_URL',
+  'NETLIFY_DATABASE_URL',
+  'NETLIFY_DATABASE_EXTENSION',
+])
 
 if (!databaseUrl) {
   const message = 'No Postgres database URL is available. Set DATABASE_URL, RAILWAY_DATABASE_URL, NETLIFY_DB_URL, NEON_DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL before running migrations.'
@@ -44,6 +49,11 @@ if (!databaseUrl) {
 
   console.error(message)
   process.exit(1)
+}
+
+if (netlifyManagedDatabaseKeys.has(databaseUrl.key)) {
+  console.log(`Skipping Prisma migrate deploy for ${databaseUrl.key}; Netlify Database applies migrations from netlify/database/migrations before the build command.`)
+  process.exit(0)
 }
 
 console.log(`Applying Prisma migrations with ${databaseUrl.key}.`)
