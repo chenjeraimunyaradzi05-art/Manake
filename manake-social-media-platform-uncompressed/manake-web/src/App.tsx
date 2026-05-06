@@ -917,12 +917,12 @@ function App() {
       <main id="main-content">
         <section className="hero section" id="home">
           <div className="hero-copy">
-            <p className="eyebrow">Digital recovery companion</p>
-            <h1>Manake</h1>
+            <p className="eyebrow">Official Manake homepage</p>
+            <h1>Manake Rehabilitation Center</h1>
             <p className="hero-kicker">Recovery is easier when you are not alone.</p>
             <p className="hero-lead">
-              Connect with mentors, community support, and practical recovery resources in one
-              safe, hopeful place.
+              A warm Zimbabwean sanctuary for young people and families navigating substance use recovery,
+              counselling, life skills, mentorship, and reintegration.
             </p>
             <div className="hero-actions">
               <a className="button button-primary" href="/get-help">
@@ -949,6 +949,20 @@ function App() {
                 WhatsApp Support
               </a>
             </div>
+            <div className="hero-home-strip" aria-label="Manake homepage highlights">
+              <span>
+                <strong>Residential care</strong>
+                <small>Structured recovery environment</small>
+              </span>
+              <span>
+                <strong>Counselling</strong>
+                <small>Individual, group, and family support</small>
+              </span>
+              <span>
+                <strong>Aftercare</strong>
+                <small>Mentorship beyond admission</small>
+              </span>
+            </div>
           </div>
 
           <div className="hero-media">
@@ -968,7 +982,18 @@ function App() {
                 <small>Residential care, counselling, aftercare, and family support.</small>
               </div>
             </article>
-
+            <div className="hero-panel" aria-label="Homepage recovery snapshot">
+              <article>
+                <strong>Private</strong>
+                <span>First contact</span>
+                <small>Start through a call, WhatsApp message, or confidential form.</small>
+              </article>
+              <article>
+                <strong>Family</strong>
+                <span>Guided support</span>
+                <small>Care pathways include the young person, relatives, mentors, and community.</small>
+              </article>
+            </div>
           </div>
         </section>
 
