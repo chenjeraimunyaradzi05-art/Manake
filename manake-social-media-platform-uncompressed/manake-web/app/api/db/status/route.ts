@@ -3,6 +3,18 @@ import { prisma } from '../../../../src/lib/prisma'
 
 export const dynamic = 'force-dynamic'
 
+function getHealthyNextSteps(provider: string) {
+  if (provider === 'railway') {
+    return ['Run npm run db:migrate during Railway deploys', 'Confirm Railway and the app service share the same environment']
+  }
+
+  if (provider === 'netlify' || provider === 'netlify-neon') {
+    return ['Netlify Database migrations should run during production deploys', 'Confirm the Neon/Netlify database branch is attached to this site']
+  }
+
+  return ['Run npm run db:migrate for production migrations', 'Run npm run db:generate after Prisma schema changes']
+}
+
 export async function GET() {
   const status = getDatabaseStatus()
 
@@ -11,8 +23,8 @@ export async function GET() {
       ...status,
       connected: false,
       nextSteps: [
-        'Create or connect a Netlify Database / Neon Postgres database',
-        'Set DATABASE_URL locally and in Netlify, or enable Netlify Database for the site',
+        'Set DATABASE_URL to a Railway, Neon, or Postgres connection string',
+        'If using Netlify Database, confirm the database extension is enabled for the deployed site',
       ],
     })
   }
@@ -23,7 +35,7 @@ export async function GET() {
     return Response.json({
       ...status,
       connected: true,
-      nextSteps: ['Run npm run db:generate', 'Run npm run db:push for first setup or npm run db:migrate for migrations'],
+      nextSteps: getHealthyNextSteps(status.provider),
     })
   } catch (error) {
     return Response.json({
@@ -31,8 +43,9 @@ export async function GET() {
       connected: false,
       error: error instanceof Error ? error.message : 'Unable to connect to the database.',
       nextSteps: [
-        'Verify the Neon connection string in DATABASE_URL or the Netlify Database connection',
-        'Check Netlify environment variables and Prisma schema configuration',
+        'Verify DATABASE_URL points to the database reachable from this hosting platform',
+        'For Railway, use the database variable injected into the same service/environment as the app',
+        'For Netlify, confirm the production deploy has the database extension or DATABASE_URL variable attached',
       ],
     })
   }

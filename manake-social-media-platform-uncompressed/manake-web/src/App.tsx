@@ -13,6 +13,12 @@ type IconName =
   | 'briefcase'
   | 'heart'
   | 'gift'
+  | 'home'
+  | 'book'
+  | 'target'
+  | 'megaphone'
+  | 'seedling'
+  | 'handshake'
   | 'close'
 
 type Story = {
@@ -127,7 +133,7 @@ const sanctuaryTrust = [
   {
     title: 'Resource-based',
     copy: 'Practical guides, reflection tools, and aftercare prompts for hard moments.',
-    icon: 'leaf' as const,
+    icon: 'book' as const,
   },
   {
     title: 'Privacy-conscious',
@@ -145,12 +151,12 @@ const supportAreas = [
   {
     title: 'Resources',
     copy: 'Use practical guides, reflection tools, and recovery resources when you need them most.',
-    icon: 'leaf' as const,
+    icon: 'book' as const,
   },
   {
     title: 'Mentorship',
     copy: 'Connect with mentors who can offer encouragement, lived experience, and steady support.',
-    icon: 'heart' as const,
+    icon: 'handshake' as const,
   },
 ]
 
@@ -268,7 +274,7 @@ const programs: Program[] = [
     copy: 'A stable recovery environment with daily rhythm, peer support, and supervised routines.',
     features: ['Structured days', 'Recovery groups', 'Wellbeing routines'],
     badge: 'Safe environment',
-    icon: 'leaf',
+    icon: 'home',
   },
   {
     title: 'Life skills',
@@ -282,14 +288,14 @@ const programs: Program[] = [
     copy: 'Aftercare planning, coping strategies, and support circles for long-term recovery.',
     features: ['Aftercare plan', 'Check-ins', 'Support network'],
     badge: 'Ongoing support',
-    icon: 'users',
+    icon: 'target',
   },
   {
     title: 'Community outreach',
     copy: 'Prevention and early intervention for schools, churches, families, and local partners.',
     features: ['Awareness sessions', 'Referral guidance', 'Partner briefings'],
     badge: 'Prevention work',
-    icon: 'chat',
+    icon: 'megaphone',
   },
 ]
 
@@ -462,14 +468,14 @@ const pathwayTiles: PathwayTile[] = [
     title: 'Programs',
     copy: 'Counselling and residential care',
     href: '/programs',
-    icon: 'leaf',
+    icon: 'seedling',
     accent: 'from-indigo-to-blue',
   },
   {
     title: 'Community',
     copy: 'Family, mentors, and outreach',
     href: '/community',
-    icon: 'users',
+    icon: 'handshake',
     accent: 'from-blue-to-cyan',
   },
   {
@@ -665,6 +671,58 @@ function Icon({ name }: { name: IconName }) {
           <circle className="icon-halo" cx="12" cy="12" r="9.35" />
           <path {...commonProps} d="M4 9h16v11H4zM12 9v11M4 13.5h16" />
           <path {...commonProps} d="M8.7 9H7.5A2.5 2.5 0 1 1 10 6.5V9M15.3 9h1.2A2.5 2.5 0 1 0 14 6.5V9" />
+        </svg>
+      )
+    case 'home':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
+          <path {...commonProps} d="m4 11 8-7 8 7" />
+          <path {...commonProps} d="M6.5 10v9.2h11V10" />
+          <path {...commonProps} d="M10 19v-5h4v5" />
+        </svg>
+      )
+    case 'book':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
+          <path {...commonProps} d="M5 5.8A2.8 2.8 0 0 1 7.8 3H20v16H7.8A2.8 2.8 0 0 0 5 21.8V5.8Z" />
+          <path {...commonProps} d="M5 18a2.8 2.8 0 0 1 2.8-2.8H20M9 7.5h6.5M9 10.5h5" />
+        </svg>
+      )
+    case 'target':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
+          <path {...commonProps} d="M20.5 12a8.5 8.5 0 1 1-17 0 8.5 8.5 0 0 1 17 0Z" />
+          <path {...commonProps} d="M16.4 12a4.4 4.4 0 1 1-8.8 0 4.4 4.4 0 0 1 8.8 0Z" />
+          <path {...commonProps} d="M12 9.7V12l1.5 1.5" />
+        </svg>
+      )
+    case 'megaphone':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
+          <path {...commonProps} d="M5 14.5H3.8A1.8 1.8 0 0 1 2 12.7v-1.4a1.8 1.8 0 0 1 1.8-1.8H5l10-4v13l-10-4Z" />
+          <path {...commonProps} d="M8 15.8 9.6 20h2.2l-1.2-4M18 9.2a4 4 0 0 1 0 5.6M20.5 7a7.1 7.1 0 0 1 0 10" />
+        </svg>
+      )
+    case 'seedling':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
+          <path {...commonProps} d="M12 21V10" />
+          <path {...commonProps} d="M12 11.5C9 7 5.7 6.2 3.5 6.5 3.8 9.7 6 12.5 12 12" />
+          <path {...commonProps} d="M12 10.5C14.2 6.2 17.8 4.4 21 4.7 20.7 8.7 17.6 11.2 12 11" />
+        </svg>
+      )
+    case 'handshake':
+      return (
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle className="icon-halo" cx="12" cy="12" r="9.35" />
+          <path {...commonProps} d="m8 12 2.3-2.3a2.4 2.4 0 0 1 3.4 0L16 12" />
+          <path {...commonProps} d="M3.5 12.5 7 9l4.5 4.5a1.5 1.5 0 0 1-2.1 2.1L8.3 14.5" />
+          <path {...commonProps} d="m20.5 12.5-3.5-3.5-5.4 5.4M10.8 16.2l1.2 1.2a1.5 1.5 0 0 0 2.1 0l3.9-3.9" />
         </svg>
       )
     case 'close':
@@ -899,6 +957,11 @@ function App() {
                 src="/images/manake/center-exterior.jpg"
                 alt="Manake Rehabilitation Center in Norton"
               />
+              <div className="hero-signal-stack" aria-label="Manake support highlights">
+                <span>24/7</span>
+                <span>Care</span>
+                <span>Hope</span>
+              </div>
               <div className="hero-photo-caption">
                 <span className="hero-badge">Verified centre</span>
                 <strong>Norton, Mashonaland West</strong>
