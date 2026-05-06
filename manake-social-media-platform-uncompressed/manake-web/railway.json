@@ -5,7 +5,7 @@
     "buildCommand": "npm run build"
   },
   "deploy": {
-    "startCommand": "sh -lc 'npm run db:migrate || true; npm run start:next'",
+    "startCommand": "sh -lc 'npm run db:migrate && npm run start:next'",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }

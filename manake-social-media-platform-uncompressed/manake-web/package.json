@@ -8,7 +8,7 @@
     "dev": "next dev",
     "dev:server": "npx tsx src/server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
-    "build": "npm run db:prepare && next build",
+    "build": "npm run db:prepare && npm run db:migrate:optional && next build",
     "build:server": "tsc --project tsconfig.server.json",
     "start": "node dist/server/index.js",
     "start:next": "next start",
@@ -22,7 +22,8 @@
     "db:generate": "prisma generate",
     "db:prepare": "node scripts/prepare-postgres-db.mjs",
     "db:push": "prisma db push",
-    "db:migrate": "prisma migrate deploy",
+    "db:migrate": "node scripts/migrate-postgres-db.mjs",
+    "db:migrate:optional": "node scripts/migrate-postgres-db.mjs --optional",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts"
   },

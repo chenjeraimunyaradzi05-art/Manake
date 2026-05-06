@@ -32,26 +32,25 @@ function findDatabaseUrl() {
 
 const databaseUrl = findDatabaseUrl()
 const prismaCliPath = join(process.cwd(), 'node_modules', 'prisma', 'build', 'index.js')
+const optional = process.argv.includes('--optional')
 
-function runPrisma(args, options = {}) {
-  execFileSync(process.execPath, [prismaCliPath, ...args], {
-    stdio: 'inherit',
-    ...options,
-  })
+if (!databaseUrl) {
+  const message = 'No Postgres database URL is available. Set DATABASE_URL, RAILWAY_DATABASE_URL, NETLIFY_DB_URL, NEON_DATABASE_URL, POSTGRES_PRISMA_URL, or POSTGRES_URL before running migrations.'
+
+  if (optional) {
+    console.log(`${message} Skipping optional migration step.`)
+    process.exit(0)
+  }
+
+  console.error(message)
+  process.exit(1)
 }
 
-const prismaEnv = databaseUrl
-  ? {
-      ...process.env,
-      DATABASE_URL: databaseUrl.value,
-    }
-  : process.env
-
-console.log('Preparing Prisma client for Manake Postgres.')
-runPrisma(['generate'], { env: prismaEnv })
-
-if (databaseUrl) {
-  console.log(`Prisma client generated with ${databaseUrl.key}. Use db:migrate on Railway or Netlify Database migrations for schema changes.`)
-} else {
-  console.log('No Postgres database URL is available locally. Prisma client generation completed.')
-}
+console.log(`Applying Prisma migrations with ${databaseUrl.key}.`)
+execFileSync(process.execPath, [prismaCliPath, 'migrate', 'deploy'], {
+  stdio: 'inherit',
+  env: {
+    ...process.env,
+    DATABASE_URL: databaseUrl.value,
+  },
+})
