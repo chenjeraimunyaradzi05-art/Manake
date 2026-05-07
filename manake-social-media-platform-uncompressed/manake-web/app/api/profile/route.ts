@@ -103,6 +103,7 @@ export async function PATCH(request: Request) {
   const isMentor = Boolean(body.isMentor)
   const interests = list(body.interests)
   const skills = list(body.skills)
+  const hobbies = list(body.hobbies)
 
   await ensureAuthDatabase()
 
@@ -116,6 +117,13 @@ export async function PATCH(request: Request) {
       "location" = ${text(body.location, 120)},
       "interests" = ${textArray(interests)},
       "skills" = ${textArray(skills)},
+      "hobbies" = ${textArray(hobbies)},
+      "education" = ${text(body.education, 200)},
+      "employmentStatus" = ${text(body.employmentStatus, 60)},
+      "occupation" = ${text(body.occupation, 120)},
+      "avatar" = ${text(body.avatar, 800)},
+      "bannerImage" = ${text(body.bannerImage, 800)},
+      "videoIntroUrl" = ${text(body.videoIntroUrl, 800)},
       "isMentor" = ${isMentor},
       "mentorshipStyle" = ${isMentor ? text(body.mentorshipStyle, 160) : null},
       "yearsInRecovery" = ${years(body.yearsInRecovery)},
@@ -135,6 +143,13 @@ export async function PATCH(request: Request) {
       "location",
       "interests",
       "skills",
+      "hobbies",
+      "education",
+      "employmentStatus",
+      "occupation",
+      "avatar",
+      "bannerImage",
+      "videoIntroUrl",
       "isMentor",
       "mentorshipStyle",
       "yearsInRecovery",
@@ -151,6 +166,7 @@ export async function PATCH(request: Request) {
       ...updatedUser,
       interests: Array.isArray(updatedUser.interests) ? updatedUser.interests.filter(Boolean) : [],
       skills: Array.isArray(updatedUser.skills) ? updatedUser.skills.filter(Boolean) : [],
+      hobbies: Array.isArray(updatedUser.hobbies) ? updatedUser.hobbies.filter(Boolean) : [],
     },
   })
 }

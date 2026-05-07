@@ -37,6 +37,12 @@ async function initializeAuthDatabase() {
   await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "allowMentorRequests" BOOLEAN NOT NULL DEFAULT true;')
   await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailNotifications" BOOLEAN NOT NULL DEFAULT true;')
   await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "blockList" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];')
+  await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "hobbies" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];')
+  await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "education" TEXT;')
+  await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "employmentStatus" TEXT;')
+  await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "occupation" TEXT;')
+  await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "bannerImage" TEXT;')
+  await prisma.$executeRawUnsafe('ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "videoIntroUrl" TEXT;')
   await prisma.$executeRawUnsafe('CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");')
   await prisma.$queryRawUnsafe('SELECT "id", "email", "passwordHash", "name", "bio", "headline" FROM "User" LIMIT 1;')
 }

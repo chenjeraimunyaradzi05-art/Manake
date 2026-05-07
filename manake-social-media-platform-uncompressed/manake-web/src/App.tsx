@@ -83,6 +83,15 @@ type HelpForm = {
   message: string
 }
 
+type AppMember = {
+  name: string
+  email: string
+} | null
+
+type AppProps = {
+  initialMember?: AppMember
+}
+
 type Suggestion = {
   title: string
   label: string
@@ -748,7 +757,7 @@ function scrollToSection(id: string) {
   })
 }
 
-function App() {
+function App({ initialMember = null }: AppProps = {}) {
   const [helpForm, setHelpForm] = useState<HelpForm>(initialHelpForm)
   const [donation, setDonation] = useState('50')
   const [customDonation, setCustomDonation] = useState('')
@@ -908,8 +917,17 @@ function App() {
           <a href="/get-help">Get Help</a>
           <a href="/about">About</a>
           <a href="/contact">Contact</a>
-          <a href="/auth/login">Login</a>
-          <a href="/auth/signup">Sign Up</a>
+          {initialMember ? (
+            <>
+              <a href="/dashboard">Dashboard</a>
+              <a href="/profile">Profile</a>
+            </>
+          ) : (
+            <>
+              <a href="/auth/login">Login</a>
+              <a href="/auth/signup">Sign Up</a>
+            </>
+          )}
           <a href="/donate" className="donate-cta">Donate Now</a>
         </nav>
       </header>

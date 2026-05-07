@@ -1,12 +1,21 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 import LoginClientForm from './LoginClientForm'
+import { getSessionFromCookies } from '../../../src/lib/auth-session'
 
 export const metadata: Metadata = {
   title: 'Login | Manake Rehabilitation Center',
   description: 'Login to the Manake recovery and support platform.',
 }
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export default function LoginPage() {
+  if (getSessionFromCookies()) {
+    redirect('/dashboard')
+  }
+
   return (
     <main className="auth-page-main">
       <section className="auth-page-card">

@@ -23,6 +23,13 @@ export type MemberProfile = SessionUser & {
   location: string | null
   interests: string[]
   skills: string[]
+  hobbies: string[]
+  education: string | null
+  employmentStatus: string | null
+  occupation: string | null
+  avatar: string | null
+  bannerImage: string | null
+  videoIntroUrl: string | null
   isMentor: boolean
   mentorshipStyle: string | null
   yearsInRecovery: number | null
@@ -129,6 +136,13 @@ export async function getCurrentUser(): Promise<MemberProfile | null> {
       "location",
       "interests",
       "skills",
+      "hobbies",
+      "education",
+      "employmentStatus",
+      "occupation",
+      "avatar",
+      "bannerImage",
+      "videoIntroUrl",
       "isMentor",
       "mentorshipStyle",
       "yearsInRecovery",
@@ -151,5 +165,6 @@ export async function getCurrentUser(): Promise<MemberProfile | null> {
     ...user,
     interests: normalizeList(user.interests),
     skills: normalizeList(user.skills),
+    hobbies: normalizeList(user.hobbies),
   }
 }
