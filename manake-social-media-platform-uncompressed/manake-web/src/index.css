@@ -2716,6 +2716,69 @@ summary:focus-visible {
     var(--manake-midnight);
 }
 
+.auth-page-card {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: linear-gradient(145deg, rgba(8, 20, 36, 0.96), rgba(16, 42, 67, 0.94));
+  color: #f8fafc;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.38);
+}
+
+.auth-page-card h1 {
+  color: #ffffff;
+}
+
+.auth-page-card p,
+.auth-page-card .form-error {
+  color: #dbeafe;
+}
+
+.auth-page-card .eyebrow {
+  color: #7ffbf1;
+}
+
+.auth-page-card .section-back-link,
+.auth-page-card .auth-page-links a {
+  color: #ffd1e4;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.auth-page-card .section-back-link:hover,
+.auth-page-card .section-back-link:focus-visible,
+.auth-page-card .auth-page-links a:hover,
+.auth-page-card .auth-page-links a:focus-visible {
+  color: #7ffbf1;
+}
+
+.auth-page-card input {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.96);
+  color: #06111f;
+}
+
+.auth-page-card input::placeholder {
+  color: #475569;
+  opacity: 1;
+}
+
+.auth-page-card input:focus {
+  border-color: #7ffbf1;
+  outline: 3px solid rgba(127, 251, 241, 0.28);
+}
+
+.auth-page-card .db-status.connected {
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  background: rgba(6, 78, 59, 0.74);
+  color: #d1fae5;
+}
+
+.auth-page-card .db-status.disconnected {
+  border: 1px solid rgba(248, 113, 113, 0.48);
+  background: rgba(127, 29, 29, 0.74);
+  color: #fee2e2;
+}
+
 .site-footer {
   border-top: 1px solid var(--manake-line);
   background: rgba(4, 10, 18, 0.96);
