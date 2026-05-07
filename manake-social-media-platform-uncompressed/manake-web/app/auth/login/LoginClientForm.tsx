@@ -48,9 +48,9 @@ export default function LoginClientForm() {
       return
     }
 
-    setSuccess('Login successful. Opening your community dashboard…')
-    router.push('/community')
-    window.location.assign('/community')
+    setSuccess('Login successful. Opening your dashboard…')
+    router.push('/dashboard')
+    window.location.assign('/dashboard')
   }
 
   return (
