@@ -9,6 +9,8 @@ export const runtime = 'nodejs'
 
 const visibilityOptions = new Set(['public', 'members', 'private'])
 const messageOptions = new Set(['everyone', 'connections', 'none'])
+const maxImageTextLength = 1_600_000
+const maxVideoTextLength = 3_000_000
 
 function text(value: unknown, maxLength: number) {
   if (typeof value !== 'string') {
@@ -18,6 +20,27 @@ function text(value: unknown, maxLength: number) {
   const trimmed = value.trim()
 
   return trimmed ? trimmed.slice(0, maxLength) : null
+}
+
+function mediaText(value: unknown, maxLength: number, label: string) {
+  if (typeof value !== 'string') {
+    return { value: null }
+  }
+
+  const trimmed = value.trim()
+
+  if (!trimmed) {
+    return { value: null }
+  }
+
+  if (trimmed.length > maxLength) {
+    return {
+      value: null,
+      error: `${label} is too large to save. Please upload a smaller file or use a hosted URL.`,
+    }
+  }
+
+  return { value: trimmed }
 }
 
 function list(value: unknown) {
@@ -104,6 +127,20 @@ export async function PATCH(request: Request) {
   const interests = list(body.interests)
   const skills = list(body.skills)
   const hobbies = list(body.hobbies)
+  const avatar = mediaText(body.avatar, maxImageTextLength, 'Profile photo')
+  const bannerImage = mediaText(body.bannerImage, maxImageTextLength, 'Banner image')
+  const videoIntroUrl = mediaText(body.videoIntroUrl, maxVideoTextLength, 'Introduction video')
+  const mediaError = avatar.error ?? bannerImage.error ?? videoIntroUrl.error
+
+  if (mediaError) {
+    return Response.json(
+      {
+        success: false,
+        error: mediaError,
+      },
+      { status: 413 },
+    )
+  }
 
   await ensureAuthDatabase()
 
@@ -121,9 +158,9 @@ export async function PATCH(request: Request) {
       "education" = ${text(body.education, 200)},
       "employmentStatus" = ${text(body.employmentStatus, 60)},
       "occupation" = ${text(body.occupation, 120)},
-      "avatar" = ${text(body.avatar, 800)},
-      "bannerImage" = ${text(body.bannerImage, 800)},
-      "videoIntroUrl" = ${text(body.videoIntroUrl, 800)},
+      "avatar" = ${avatar.value},
+      "bannerImage" = ${bannerImage.value},
+      "videoIntroUrl" = ${videoIntroUrl.value},
       "isMentor" = ${isMentor},
       "mentorshipStyle" = ${isMentor ? text(body.mentorshipStyle, 160) : null},
       "yearsInRecovery" = ${years(body.yearsInRecovery)},

@@ -23,6 +23,10 @@ const employmentOptions = [
 ]
 
 const MAX_IMAGE_BYTES = 700 * 1024
+const MAX_IMAGE_SOURCE_BYTES = 6 * 1024 * 1024
+const MAX_IMAGE_DATA_URL_CHARS = 1_500_000
+const MAX_VIDEO_BYTES = 2 * 1024 * 1024
+const MAX_VIDEO_DATA_URL_CHARS = 2_900_000
 
 function toList(value: string) {
   return value
@@ -44,6 +48,86 @@ function readFileAsDataUrl(file: File) {
     reader.onerror = () => reject(reader.error ?? new Error('Unable to read file.'))
     reader.readAsDataURL(file)
   })
+}
+
+function loadImage(objectUrl: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image()
+
+    image.onload = () => resolve(image)
+    image.onerror = () => reject(new Error('Unable to load image.'))
+    image.src = objectUrl
+  })
+}
+
+async function optimizeImageFile(file: File, maxWidth: number, maxHeight: number) {
+  const objectUrl = URL.createObjectURL(file)
+
+  try {
+    const image = await loadImage(objectUrl)
+    const scale = Math.min(1, maxWidth / image.naturalWidth, maxHeight / image.naturalHeight)
+    const width = Math.max(1, Math.round(image.naturalWidth * scale))
+    const height = Math.max(1, Math.round(image.naturalHeight * scale))
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+
+    if (!context) {
+      throw new Error('Unable to prepare image.')
+    }
+
+    canvas.width = width
+    canvas.height = height
+    context.drawImage(image, 0, 0, width, height)
+
+    return canvas.toDataURL('image/jpeg', file.size > MAX_IMAGE_BYTES ? 0.78 : 0.86)
+  } finally {
+    URL.revokeObjectURL(objectUrl)
+  }
+}
+
+function getVideoEmbedUrl(value: string) {
+  if (!value) {
+    return null
+  }
+
+  try {
+    const url = new URL(value)
+    const hostname = url.hostname.replace(/^www\./, '')
+
+    if (hostname === 'youtu.be') {
+      const id = url.pathname.split('/').filter(Boolean)[0]
+
+      return id ? `https://www.youtube.com/embed/${id}` : null
+    }
+
+    if (hostname === 'youtube.com' || hostname === 'm.youtube.com') {
+      const id = url.searchParams.get('v') || url.pathname.match(/\/(?:shorts|embed)\/([^/?#]+)/)?.[1]
+
+      return id ? `https://www.youtube.com/embed/${id}` : null
+    }
+
+    if (hostname === 'vimeo.com' || hostname === 'player.vimeo.com') {
+      const id = url.pathname.match(/\/(?:video\/)?(\d+)/)?.[1]
+
+      return id ? `https://player.vimeo.com/video/${id}` : null
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function isPlayableVideoSource(value: string) {
+  if (value.startsWith('data:video/')) {
+    return true
+  }
+
+  try {
+    return /\.(mp4|webm|ogg|mov)$/i.test(new URL(value).pathname)
+  } catch {
+    return false
+  }
 }
 
 export default function ProfileClientForm({ user }: ProfileClientFormProps) {
@@ -76,6 +160,11 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
   async function handleImageUpload(
     event: ChangeEvent<HTMLInputElement>,
     setter: (value: string) => void,
+    options: {
+      label: string
+      maxWidth: number
+      maxHeight: number
+    },
   ) {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -87,17 +176,54 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
       return
     }
 
-    if (file.size > MAX_IMAGE_BYTES) {
-      setError('Please choose an image smaller than 700KB, or paste a hosted image URL instead.')
+    if (file.size > MAX_IMAGE_SOURCE_BYTES) {
+      setError(`Please choose a ${options.label} smaller than 6MB, or paste a hosted image URL instead.`)
+      return
+    }
+
+    try {
+      const dataUrl = await optimizeImageFile(file, options.maxWidth, options.maxHeight)
+
+      if (dataUrl.length > MAX_IMAGE_DATA_URL_CHARS) {
+        setError(`Please choose a smaller ${options.label}, or paste a hosted image URL instead.`)
+        return
+      }
+
+      setter(dataUrl)
+      setError(null)
+    } catch {
+      setError(`Unable to prepare the chosen ${options.label}.`)
+    }
+  }
+
+  async function handleVideoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) return
+
+    if (!file.type.startsWith('video/')) {
+      setError('Please choose a video file.')
+      return
+    }
+
+    if (file.size > MAX_VIDEO_BYTES) {
+      setError('Please choose an intro video smaller than 2MB, or paste a hosted video URL instead.')
       return
     }
 
     try {
       const dataUrl = await readFileAsDataUrl(file)
-      setter(dataUrl)
+
+      if (dataUrl.length > MAX_VIDEO_DATA_URL_CHARS) {
+        setError('Please choose a smaller intro video, or paste a hosted video URL instead.')
+        return
+      }
+
+      setVideoIntroUrl(dataUrl)
       setError(null)
     } catch {
-      setError('Unable to read the chosen image.')
+      setError('Unable to read the chosen intro video.')
     }
   }
 
@@ -155,6 +281,9 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
     setIsSubmitting(false)
     router.refresh()
   }
+
+  const videoEmbedUrl = getVideoEmbedUrl(videoIntroUrl)
+  const playableVideoSource = isPlayableVideoSource(videoIntroUrl)
 
   return (
     <form className="profile-form" onSubmit={handleSubmit}>
@@ -281,7 +410,7 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
 
       <div className="profile-media">
         <div className="profile-media-card">
-          <div className="profile-media-preview">
+          <div className="profile-media-preview profile-media-preview-avatar">
             {avatar ? (
               <img src={avatar} alt="Profile photo preview" />
             ) : (
@@ -294,8 +423,8 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
             <input
               value={avatar}
               onChange={(event) => setAvatar(event.target.value)}
-              placeholder="https://..."
-              type="url"
+              placeholder="https://... or uploaded image data"
+              type="text"
             />
             <div className="profile-media-actions">
               <label className="button button-secondary button-small">
@@ -303,7 +432,11 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(event) => handleImageUpload(event, setAvatar)}
+                  onChange={(event) => handleImageUpload(event, setAvatar, {
+                    label: 'profile photo',
+                    maxWidth: 700,
+                    maxHeight: 700,
+                  })}
                   hidden
                 />
               </label>
@@ -326,8 +459,8 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
             <input
               value={bannerImage}
               onChange={(event) => setBannerImage(event.target.value)}
-              placeholder="https://..."
-              type="url"
+              placeholder="https://... or uploaded image data"
+              type="text"
             />
             <div className="profile-media-actions">
               <label className="button button-secondary button-small">
@@ -335,7 +468,11 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(event) => handleImageUpload(event, setBannerImage)}
+                  onChange={(event) => handleImageUpload(event, setBannerImage, {
+                    label: 'banner image',
+                    maxWidth: 1600,
+                    maxHeight: 720,
+                  })}
                   hidden
                 />
               </label>
@@ -350,8 +487,19 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
 
         <div className="profile-media-card">
           <div className="profile-media-preview profile-media-preview-video">
-            {videoIntroUrl ? (
+            {videoIntroUrl && videoEmbedUrl ? (
+              <iframe
+                src={videoEmbedUrl}
+                title="Introduction video preview"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            ) : videoIntroUrl && playableVideoSource ? (
               <video src={videoIntroUrl} controls preload="metadata" />
+            ) : videoIntroUrl ? (
+              <a className="profile-video-link" href={videoIntroUrl} target="_blank" rel="noreferrer">
+                Open video link
+              </a>
             ) : (
               <span aria-hidden="true">Intro video</span>
             )}
@@ -362,11 +510,20 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
             <input
               value={videoIntroUrl}
               onChange={(event) => setVideoIntroUrl(event.target.value)}
-              placeholder="https://..."
-              type="url"
+              placeholder="https://youtu.be/... or upload a short MP4/WebM"
+              type="text"
             />
-            {videoIntroUrl ? (
-              <div className="profile-media-actions">
+            <div className="profile-media-actions">
+              <label className="button button-secondary button-small">
+                Upload video
+                <input
+                  type="file"
+                  accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                  onChange={handleVideoUpload}
+                  hidden
+                />
+              </label>
+              {videoIntroUrl ? (
                 <button
                   className="button button-secondary button-small"
                   type="button"
@@ -374,8 +531,8 @@ export default function ProfileClientForm({ user }: ProfileClientFormProps) {
                 >
                   Remove video
                 </button>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
