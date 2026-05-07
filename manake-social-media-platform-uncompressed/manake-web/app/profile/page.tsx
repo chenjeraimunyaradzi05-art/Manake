@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   description: 'Create and update your private Manake member profile.',
 }
 
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
 export default async function ProfilePage() {
   const user = await getCurrentUser()
 
