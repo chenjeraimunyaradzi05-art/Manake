@@ -1,8 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { hash } from 'bcryptjs'
+import { NextResponse } from 'next/server'
 import { prisma } from '../../../../src/lib/prisma'
 import { getDatabaseStatus } from '../../../../src/lib/neon'
 import { ensureAuthDatabase } from '../../../../src/lib/auth-database'
+import { SESSION_COOKIE_NAME, createSessionToken, getSessionCookieOptions } from '../../../../src/lib/auth-session'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -31,6 +33,7 @@ export async function POST(request: Request) {
   const name = typeof body?.name === 'string' ? body.name.trim() : ''
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
   const password = typeof body?.password === 'string' ? body.password : ''
+  const signupReason = typeof body?.signupReason === 'string' ? body.signupReason.trim() : ''
 
   if (!name || !email || !password) {
     return Response.json(
@@ -67,20 +70,51 @@ export async function POST(request: Request) {
     const id = randomUUID()
 
     const users = await prisma.$queryRaw<AuthUser[]>`
-      INSERT INTO "User" ("id", "email", "passwordHash", "name", "updatedAt")
-      VALUES (${id}, ${email}, ${passwordHash}, ${name}, CURRENT_TIMESTAMP)
+      INSERT INTO "User" (
+        "id",
+        "email",
+        "passwordHash",
+        "name",
+        "bio",
+        "interests",
+        "skills",
+        "specializations",
+        "mentorPreferredTimes",
+        "blockList",
+        "lastLogin",
+        "updatedAt"
+      )
+      VALUES (
+        ${id},
+        ${email},
+        ${passwordHash},
+        ${name},
+        ${signupReason || null},
+        ARRAY[]::TEXT[],
+        ARRAY[]::TEXT[],
+        ARRAY[]::TEXT[],
+        ARRAY[]::TEXT[],
+        ARRAY[]::TEXT[],
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+      )
       RETURNING "id", "email", "name"
     `
     const user = users[0]
 
-    return Response.json({
+    const response = NextResponse.json({
       success: true,
+      redirectTo: '/profile?welcome=1',
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
       },
     })
+
+    response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(user), getSessionCookieOptions())
+
+    return response
   } catch (error) {
     return Response.json(
       {

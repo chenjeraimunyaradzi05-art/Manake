@@ -1,7 +1,9 @@
 import { compare } from 'bcryptjs'
+import { NextResponse } from 'next/server'
 import { prisma } from '../../../../src/lib/prisma'
 import { getDatabaseStatus } from '../../../../src/lib/neon'
 import { ensureAuthDatabase } from '../../../../src/lib/auth-database'
+import { SESSION_COOKIE_NAME, createSessionToken, getSessionCookieOptions } from '../../../../src/lib/auth-session'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -74,7 +76,13 @@ export async function POST(request: Request) {
       )
     }
 
-    return Response.json({
+    await prisma.$executeRaw`
+      UPDATE "User"
+      SET "lastLogin" = CURRENT_TIMESTAMP, "updatedAt" = CURRENT_TIMESTAMP
+      WHERE "id" = ${user.id}
+    `
+
+    const response = NextResponse.json({
       success: true,
       redirectTo: '/dashboard',
       user: {
@@ -83,6 +91,10 @@ export async function POST(request: Request) {
         name: user.name,
       },
     })
+
+    response.cookies.set(SESSION_COOKIE_NAME, createSessionToken(user), getSessionCookieOptions())
+
+    return response
   } catch (error) {
     return Response.json(
       {

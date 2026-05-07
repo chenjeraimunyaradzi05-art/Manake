@@ -1,10 +1,8 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function SignUpClientForm() {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -20,6 +18,7 @@ export default function SignUpClientForm() {
     const name = String(formData.get('name') ?? '').trim()
     const email = String(formData.get('email') ?? '').trim().toLowerCase()
     const password = String(formData.get('password') ?? '')
+    const signupReason = String(formData.get('signupReason') ?? '').trim()
 
     if (!name || !email || !password) {
       setError('Please enter your name, email, and password.')
@@ -32,7 +31,7 @@ export default function SignUpClientForm() {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, signupReason }),
     }).catch(() => null)
 
     if (!response) {
@@ -49,9 +48,8 @@ export default function SignUpClientForm() {
       return
     }
 
-    setSuccess('Account created. Opening the login page…')
-    router.push('/auth/login')
-    window.location.assign('/auth/login')
+    setSuccess('Account created. Opening your profile setup…')
+    window.location.assign(typeof result.redirectTo === 'string' ? result.redirectTo : '/profile?welcome=1')
   }
 
   return (
@@ -60,6 +58,12 @@ export default function SignUpClientForm() {
         <input name="name" placeholder="Full name" autoComplete="name" required />
         <input name="email" placeholder="Email address" type="email" autoComplete="email" required />
         <input name="password" placeholder="Password" type="password" autoComplete="new-password" required />
+        <textarea
+          name="signupReason"
+          placeholder="Why are you signing up?"
+          rows={4}
+          autoComplete="off"
+        />
         <button className="button button-primary" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Creating account…' : 'Sign Up'}
         </button>
