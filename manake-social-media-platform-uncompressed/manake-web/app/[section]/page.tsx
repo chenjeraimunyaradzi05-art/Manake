@@ -2,6 +2,10 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import type { CSSProperties, ReactNode } from 'react'
 import { getSectionPage, mediaGallery, mediaVideos, sectionPages, type SectionCard } from '../../src/sectionPages'
+import { getSessionFromCookies } from '../../src/lib/auth-session'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 type SectionRouteProps = {
   params: {
@@ -94,6 +98,7 @@ export default function SectionRoute({ params }: SectionRouteProps) {
     notFound()
   }
 
+  const session = getSessionFromCookies()
   const relatedPages = sectionPages.filter((item) => item.slug !== page.slug).slice(0, 6)
 
   return (
@@ -114,9 +119,23 @@ export default function SectionRoute({ params }: SectionRouteProps) {
           <a href="/contact">Contact</a>
         </nav>
         <div className="header-actions">
-          <a className="quiet-link" href="/auth/login">
-            Login
-          </a>
+          {session ? (
+            <>
+              <a className="quiet-link" href="/dashboard">
+                Dashboard
+              </a>
+              <a className="quiet-link" href="/profile">
+                Profile
+              </a>
+              <span className="member-chip" aria-label={`Signed in as ${session.name}`}>
+                {session.name.split(' ')[0]}
+              </span>
+            </>
+          ) : (
+            <a className="quiet-link" href="/auth/login">
+              Login
+            </a>
+          )}
           <a className="button button-primary button-small" href="/donate">
             Donate
           </a>

@@ -923,12 +923,17 @@ svg {
   gap: 6px;
   padding: 16px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(10px);
+  color: var(--slate-900);
+}
+
+.founder-photo figcaption strong {
+  color: var(--slate-900);
 }
 
 .founder-photo span {
-  color: var(--slate-600);
+  color: var(--slate-700);
   font-weight: 600;
 }
 
@@ -3645,8 +3650,18 @@ body::before {
 
 .assistant-reply {
   background:
-    linear-gradient(135deg, rgba(0, 229, 212, 0.14), rgba(255, 122, 182, 0.12)),
-    rgba(255, 255, 255, 0.06);
+    linear-gradient(135deg, rgba(0, 229, 212, 0.18), rgba(255, 122, 182, 0.16)),
+    rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.assistant-reply p {
+  color: #f1f5f9;
+}
+
+.assistant-reply strong {
+  color: #ffffff;
 }
 
 .assistant-actions {
