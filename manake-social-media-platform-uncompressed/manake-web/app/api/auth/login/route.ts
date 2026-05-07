@@ -1,8 +1,16 @@
 import { compare } from 'bcryptjs'
 import { prisma } from '../../../../src/lib/prisma'
 import { getDatabaseStatus } from '../../../../src/lib/neon'
+import { ensureAuthDatabase } from '../../../../src/lib/auth-database'
 
 export const dynamic = 'force-dynamic'
+
+type AuthUser = {
+  id: string
+  email: string
+  name: string
+  passwordHash: string
+}
 
 export async function POST(request: Request) {
   const status = getDatabaseStatus()
@@ -33,11 +41,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    })
+    await ensureAuthDatabase()
+
+    const users = await prisma.$queryRaw<AuthUser[]>`
+      SELECT "id", "email", "name", "passwordHash"
+      FROM "User"
+      WHERE "email" = ${email}
+      LIMIT 1
+    `
+    const user = users[0]
 
     if (!user) {
       return Response.json(

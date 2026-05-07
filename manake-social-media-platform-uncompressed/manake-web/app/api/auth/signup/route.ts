@@ -1,8 +1,16 @@
+import { randomUUID } from 'node:crypto'
 import { hash } from 'bcryptjs'
 import { prisma } from '../../../../src/lib/prisma'
 import { getDatabaseStatus } from '../../../../src/lib/neon'
+import { ensureAuthDatabase } from '../../../../src/lib/auth-database'
 
 export const dynamic = 'force-dynamic'
+
+type AuthUser = {
+  id: string
+  email: string
+  name: string
+}
 
 export async function POST(request: Request) {
   const status = getDatabaseStatus()
@@ -34,11 +42,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const existingUser = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    })
+    await ensureAuthDatabase()
+
+    const existingUsers = await prisma.$queryRaw<Array<{ id: string }>>`
+      SELECT "id"
+      FROM "User"
+      WHERE "email" = ${email}
+      LIMIT 1
+    `
+    const existingUser = existingUsers[0]
 
     if (existingUser) {
       return Response.json(
@@ -51,14 +63,14 @@ export async function POST(request: Request) {
     }
 
     const passwordHash = await hash(password, 10)
+    const id = randomUUID()
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        passwordHash,
-      },
-    })
+    const users = await prisma.$queryRaw<AuthUser[]>`
+      INSERT INTO "User" ("id", "email", "passwordHash", "name", "updatedAt")
+      VALUES (${id}, ${email}, ${passwordHash}, ${name}, CURRENT_TIMESTAMP)
+      RETURNING "id", "email", "name"
+    `
+    const user = users[0]
 
     return Response.json({
       success: true,
