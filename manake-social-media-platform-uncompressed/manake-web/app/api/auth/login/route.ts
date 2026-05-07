@@ -76,6 +76,7 @@ export async function POST(request: Request) {
 
     return Response.json({
       success: true,
+      redirectTo: '/dashboard',
       user: {
         id: user.id,
         email: user.email,

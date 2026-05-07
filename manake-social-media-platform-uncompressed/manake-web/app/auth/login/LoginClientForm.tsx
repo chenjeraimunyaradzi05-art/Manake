@@ -1,10 +1,8 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function LoginClientForm() {
-  const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -49,8 +47,7 @@ export default function LoginClientForm() {
     }
 
     setSuccess('Login successful. Opening your dashboard…')
-    router.push('/dashboard')
-    window.location.assign('/dashboard')
+    window.location.href = typeof result.redirectTo === 'string' ? result.redirectTo : '/dashboard'
   }
 
   return (
