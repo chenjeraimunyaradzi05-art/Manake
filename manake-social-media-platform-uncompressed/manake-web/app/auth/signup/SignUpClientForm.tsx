@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation'
 export default function SignUpClientForm() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSignupSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setSuccess(null)
     setIsSubmitting(true)
 
     const form = event.currentTarget
@@ -47,7 +49,9 @@ export default function SignUpClientForm() {
       return
     }
 
+    setSuccess('Account created. Opening the login page…')
     router.push('/auth/login')
+    window.location.assign('/auth/login')
   }
 
   return (
@@ -61,6 +65,7 @@ export default function SignUpClientForm() {
         </button>
       </form>
       {error ? <p className="form-error" role="alert">{error}</p> : null}
+      {success ? <p className="form-success" role="status">{success}</p> : null}
     </>
   )
 }

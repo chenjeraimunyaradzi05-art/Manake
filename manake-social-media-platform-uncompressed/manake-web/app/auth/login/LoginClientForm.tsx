@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation'
 export default function LoginClientForm() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleLoginSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
+    setSuccess(null)
     setIsSubmitting(true)
 
     const form = event.currentTarget
@@ -46,7 +48,9 @@ export default function LoginClientForm() {
       return
     }
 
+    setSuccess('Login successful. Opening your community dashboard…')
     router.push('/community')
+    window.location.assign('/community')
   }
 
   return (
@@ -59,6 +63,7 @@ export default function LoginClientForm() {
         </button>
       </form>
       {error ? <p className="form-error" role="alert">{error}</p> : null}
+      {success ? <p className="form-success" role="status">{success}</p> : null}
     </>
   )
 }

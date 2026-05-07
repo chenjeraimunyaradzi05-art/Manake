@@ -4,6 +4,7 @@ import { getDatabaseStatus } from '../../../../src/lib/neon'
 import { ensureAuthDatabase } from '../../../../src/lib/auth-database'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 type AuthUser = {
   id: string
