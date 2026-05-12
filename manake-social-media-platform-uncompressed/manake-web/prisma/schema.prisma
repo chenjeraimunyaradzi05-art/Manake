@@ -38,6 +38,11 @@ model User {
   location    String?
   interests   String[]
   skills      String[]
+  hobbies     String[]
+  education   String?
+  employmentStatus String?
+  occupation  String?
+  videoIntroUrl String?
 
   // Mentorship
   isMentor             Boolean  @default(false)
